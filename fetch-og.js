@@ -46,16 +46,17 @@ async function fetchTweetImage(tweetId) {
     if (data.photos && data.photos.length > 0) {
       return data.photos[0].url || null;
     }
+    // Check for X Article cover image
+    if (data.article?.cover_media?.media_info?.original_img_url) {
+      return data.article.cover_media.media_info.original_img_url;
+    }
     // Check for link card image (tweet links to an article with a preview)
     if (data.card) {
       const cardImg = data.card.thumbnail_image_original?.image_value?.url
         || data.card.summary_photo_image_original?.image_value?.url;
       if (cardImg) return cardImg;
     }
-    // User avatar as last resort (upgrade to 400x400)
-    if (data.user && data.user.profile_image_url_https) {
-      return data.user.profile_image_url_https.replace('_normal', '_400x400');
-    }
+    // Skip user avatar — it's not the tweet's image, let Microlink screenshot handle it
     return null;
   } catch (e) {
     console.log(`  [syndication] Failed for tweet ${tweetId}: ${e.message}`);

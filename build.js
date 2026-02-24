@@ -112,9 +112,16 @@ function build() {
   // Build index (latest briefing)
   const latest = briefings[0];
 
-  // For index page, rewrite image paths to point to the briefing's images dir
-  const indexBody = latest.body.replaceAll('./images/', `/briefings/${latest.slug}/images/`);
-  const latestHtml = marked(indexBody);
+  // Copy images to dist root so index.html can reference them with relative paths
+  const rootImagesDir = path.join(DIST_DIR, 'images');
+  const sourceImages = path.join(CONTENT_DIR, 'images');
+  if (fs.existsSync(sourceImages)) {
+    ensureDir(rootImagesDir);
+    copyDir(sourceImages, rootImagesDir);
+  }
+
+  // index.html lives at dist/index.html, images at dist/images/ — relative ./images/ works
+  const latestHtml = marked(latest.body);
   const indexContent = `<article>
     <h1>${latest.title || latest.slug}</h1>
     <p class="subtitle">${latest.subtitle || ''}</p>
