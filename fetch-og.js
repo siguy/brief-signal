@@ -46,10 +46,15 @@ async function fetchTweetImage(tweetId) {
     if (data.photos && data.photos.length > 0) {
       return data.photos[0].url || null;
     }
-    // Check for user avatar as last resort
+    // Check for link card image (tweet links to an article with a preview)
+    if (data.card) {
+      const cardImg = data.card.thumbnail_image_original?.image_value?.url
+        || data.card.summary_photo_image_original?.image_value?.url;
+      if (cardImg) return cardImg;
+    }
+    // User avatar as last resort (upgrade to 400x400)
     if (data.user && data.user.profile_image_url_https) {
-      // Get the original size (remove _normal suffix)
-      return data.user.profile_image_url_https.replace('_normal', '');
+      return data.user.profile_image_url_https.replace('_normal', '_400x400');
     }
     return null;
   } catch (e) {
@@ -58,14 +63,38 @@ async function fetchTweetImage(tweetId) {
   }
 }
 
+// Microlink screenshot fallback (free tier: 50 req/min)
+async function fetchMicrolinkScreenshot(tweetUrl) {
+  try {
+    const endpoint = `https://api.microlink.io?url=${encodeURIComponent(tweetUrl)}&screenshot=true&meta=false`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 15000);
+    const res = await fetch(endpoint, { signal: controller.signal });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (data.status !== 'success') return null;
+    return data.data?.screenshot?.url || null;
+  } catch (e) {
+    console.log(`  [microlink] Failed: ${e.message}`);
+    return null;
+  }
+}
+
 async function fetchOGImage(url) {
-  // For Twitter/X URLs, try the syndication API first
+  // For Twitter/X URLs, try the syndication API first, then Microlink screenshot
   const tweetId = extractTweetId(url);
   if (tweetId) {
     console.log(`  [twitter] Trying syndication API for tweet ${tweetId}...`);
     const tweetImg = await fetchTweetImage(tweetId);
     if (tweetImg) return tweetImg;
-    console.log(`  [twitter] No media in syndication response, falling back to OG...`);
+
+    // Fallback: Microlink screenshot (free, 50 req/min)
+    console.log(`  [twitter] Trying Microlink screenshot...`);
+    const microlinkImg = await fetchMicrolinkScreenshot(url);
+    if (microlinkImg) return microlinkImg;
+
+    console.log(`  [twitter] All Twitter methods failed, falling back to OG...`);
   }
 
   try {
