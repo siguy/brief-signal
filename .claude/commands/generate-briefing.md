@@ -14,7 +14,16 @@ Generate a weekly AI market briefing from recent extractions in the info-agg kno
    - **Conversational value:** Can a sales rep use this as an opener or talking point?
    - **Market signal strength:** Does this indicate a trend or shift?
 
-4. **Draft the briefing** — Write in TLDR-style casual tone. Save to `/Users/simonbrief/ai-briefing/content/briefings/YYYY-MM-DD.md` using today's date.
+4. **Assign each item to ONE section only** — No source should appear in multiple sections. Use this logic:
+   - **Big Picture** = macro trends, market shifts, industry-level moves (e.g., "YC says 20x companies are the future")
+   - **Builder's Corner** = specific tools, techniques, or technical patterns (e.g., "Gemini one-shots landing pages")
+   - **Founder Watch** = a specific person or company doing something noteworthy that ISN'T already covered above (e.g., "Rork Max raises $2.8M to replace Xcode")
+   - **Quick Hits** = 1-3 items that didn't fit above but are worth a mention. Must be from the MOST RECENT week's sources only.
+   - If a source could fit multiple sections, pick the ONE where it adds the most unique value. If a founder/company is used as a supporting example in Big Picture, they do NOT get their own Founder Watch entry.
+
+5. **Draft the briefing** — Write in TLDR-style casual tone. Save to `/Users/simonbrief/ai-briefing/content/briefings/YYYY-MM-DD.md` using today's date.
+
+6. **Apply voice overlay** — If `voice-overlay.md` exists in the repo root, read it and apply the voice/framing guidance to the draft. This adjusts tone, product references, and conversation angles for the target audience.
 
 ## Briefing Template
 
@@ -84,7 +93,7 @@ Specific people or companies shipping things worth knowing about. (2-3 items)
 
 - **[{Bold claim}](source-url)** — one sentence expanding on it
 - **[{Bold claim}](source-url)** — one sentence
-- (4-6 bullets total, each linked to source)
+- (1-3 bullets MAX, each linked to source, MUST be from this week's extractions only)
 
 ## Try This Week
 
@@ -136,4 +145,6 @@ Specific people or companies shipping things worth knowing about. (2-3 items)
      - [ ] Quick Hits are one sentence each, all linked
      - [ ] Try This Week is specific and actionable
      - [ ] Total length is ~800-1000 words
+     - [ ] No source appears in more than one section
+     - [ ] Quick Hits are 1-3 items from the most recent week only
      - [ ] No repeated content from previous edition

@@ -11,7 +11,63 @@ const CONTENT_DIR = path.join(__dirname, 'content', 'briefings');
 // The briefing author includes source links nearby — we extract the first
 // URL in the same section as each image tag.
 
+// Extract tweet ID from x.com or twitter.com URLs
+function extractTweetId(url) {
+  const match = url.match(/(?:x\.com|twitter\.com)\/\w+\/status\/(\d+)/);
+  return match ? match[1] : null;
+}
+
+// Generate the syndication API token from a tweet ID
+function syndicationToken(tweetId) {
+  return ((Number(tweetId) / 1e15) * Math.PI).toString(36).replace(/(0+|\.)/g, '');
+}
+
+// Try Twitter's syndication API for tweet media (no auth required)
+async function fetchTweetImage(tweetId) {
+  const token = syndicationToken(tweetId);
+  const url = `https://cdn.syndication.twimg.com/tweet-result?id=${tweetId}&token=${token}`;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+    });
+    clearTimeout(timeout);
+    if (!res.ok) return null;
+    const data = await res.json();
+
+    // Check for media in the tweet
+    if (data.mediaDetails && data.mediaDetails.length > 0) {
+      const media = data.mediaDetails[0];
+      return media.media_url_https || media.display_url || null;
+    }
+    // Check for photos array
+    if (data.photos && data.photos.length > 0) {
+      return data.photos[0].url || null;
+    }
+    // Check for user avatar as last resort
+    if (data.user && data.user.profile_image_url_https) {
+      // Get the original size (remove _normal suffix)
+      return data.user.profile_image_url_https.replace('_normal', '');
+    }
+    return null;
+  } catch (e) {
+    console.log(`  [syndication] Failed for tweet ${tweetId}: ${e.message}`);
+    return null;
+  }
+}
+
 async function fetchOGImage(url) {
+  // For Twitter/X URLs, try the syndication API first
+  const tweetId = extractTweetId(url);
+  if (tweetId) {
+    console.log(`  [twitter] Trying syndication API for tweet ${tweetId}...`);
+    const tweetImg = await fetchTweetImage(tweetId);
+    if (tweetImg) return tweetImg;
+    console.log(`  [twitter] No media in syndication response, falling back to OG...`);
+  }
+
   try {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
