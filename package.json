@@ -1,0 +1,12 @@
+{
+  "name": "ai-briefing",
+  "version": "1.0.0",
+  "description": "Weekly AI market briefing for Google Startups Sales",
+  "scripts": {
+    "build": "node build.js",
+    "preview": "node build.js && open dist/index.html"
+  },
+  "dependencies": {
+    "marked": "^15.0.0"
+  }
+}
