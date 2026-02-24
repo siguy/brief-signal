@@ -4,6 +4,7 @@
   "description": "Weekly AI market briefing for Google Startups Sales",
   "scripts": {
     "build": "node build.js",
+    "fetch-images": "node fetch-og.js",
     "preview": "node build.js && open dist/index.html"
   },
   "dependencies": {

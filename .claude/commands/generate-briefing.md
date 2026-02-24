@@ -38,13 +38,17 @@ Market moves that matter for founder conversations. (2-3 items)
 
 ### {Item Title}
 
-{2-3 sentence summary of what happened and why it matters.}
+![{descriptive alt text}](./images/{slug}.jpg)
+
+{2-3 sentence summary with [inline links](https://x.com/...) to source tweets/articles.}
 
 **Your angle with founders:** {One-liner the rep can use in conversation.}
 
 ### {Item Title}
 
-{Summary.}
+![{descriptive alt text}](./images/{slug}.jpg)
+
+{Summary with [source links](url).}
 
 **Your angle with founders:** {One-liner.}
 
@@ -54,7 +58,9 @@ What developers and founders are actually building with. (1-2 items)
 
 ### {Item Title}
 
-{Summary of what's being built or how it's being used.}
+![{descriptive alt text}](./images/{slug}.jpg)
+
+{Summary with [source links](url).}
 
 **Why founders care:** {One-liner connecting to their world.}
 
@@ -64,29 +70,45 @@ Specific people or companies shipping things worth knowing about. (2-3 items)
 
 ### {Person/Company — What They Did}
 
-{Summary.}
+{Summary with [source links](url).}
 
 **Conversation starter:** "{A literal question to ask in a meeting}"
 
 ### {Person/Company — What They Did}
 
-{Summary.}
+{Summary with [source links](url).}
 
 **Conversation starter:** "{Question}"
 
 ## Quick Hits
 
-- {One sentence each, 4-6 bullets}
-- {Cover things that didn't fit above but are worth a mention}
+- **[{Bold claim}](source-url)** — one sentence expanding on it
+- **[{Bold claim}](source-url)** — one sentence
+- (4-6 bullets total, each linked to source)
 
 ## Try This Week
 
-{One actionable thing to try or share with a founder. Be specific.}
+{One actionable thing to try or share with a founder. Be specific. Link to [source](url) if relevant.}
 
 ---
 
 *Sources: {n} bookmarks, {n} videos from the AI content library. [Archive](/archive)*
 ```
+
+## Link & Image Rules
+
+**Links:**
+- Every major claim must link to its source tweet or article
+- Use inline markdown links: `[text](url)`
+- Quick Hits items should bold-link the headline: `**[headline](url)**`
+- Source URLs come from the bookmark/playlist extraction files (look for `**Link:**` fields)
+
+**Images:**
+- Add `![alt](./images/{slug}.jpg)` to Big Picture and Builder's Corner sections (4-6 images per briefing)
+- Use descriptive kebab-case slugs: `openclaw-ecosystem`, `yc-20x-companies`
+- Founder Watch and Quick Hits do NOT need images
+- The first URL link after each image tag is used by `fetch-og.js` to find the OG image
+- YouTube URLs produce great thumbnails; X/Twitter URLs may produce placeholders
 
 ## Tone Guide
 
@@ -98,16 +120,20 @@ Specific people or companies shipping things worth knowing about. (2-3 items)
 
 ## After Drafting
 
-5. **Build the site** — Run `node build.js` in `/Users/simonbrief/ai-briefing/`
-6. **Report back** with:
+5. **Fetch images** — Run `npm run fetch-images` in `/Users/simonbrief/ai-briefing/`
+6. **Build the site** — Run `npm run build` in `/Users/simonbrief/ai-briefing/`
+7. **Report back** with:
    - Briefing title and edition number
    - Word count
+   - Images fetched (which succeeded, which got placeholders)
    - Sources used (which files were read)
    - Review checklist:
      - [ ] Headline is catchy and specific (not generic)
      - [ ] TLDR is ≤3 sentences
+     - [ ] Every claim links to its source
+     - [ ] Images present for Big Picture + Builder's Corner sections
      - [ ] Every "Your angle" / "Conversation starter" is actually usable
-     - [ ] Quick Hits are one sentence each
+     - [ ] Quick Hits are one sentence each, all linked
      - [ ] Try This Week is specific and actionable
      - [ ] Total length is ~800-1000 words
      - [ ] No repeated content from previous edition

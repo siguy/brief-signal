@@ -83,7 +83,18 @@ function build() {
   for (const b of briefings) {
     const briefingDir = path.join(DIST_DIR, 'briefings', b.slug);
     ensureDir(briefingDir);
-    const articleHtml = marked(b.body);
+
+    // Copy images for this briefing
+    const imagesDir = path.join(CONTENT_DIR, 'images');
+    if (fs.existsSync(imagesDir)) {
+      const destImages = path.join(briefingDir, 'images');
+      ensureDir(destImages);
+      copyDir(imagesDir, destImages);
+    }
+
+    // Rewrite ./images/ paths to absolute /briefings/slug/images/ for HTML
+    const bodyForBriefing = b.body;
+    const articleHtml = marked(bodyForBriefing);
     const content = `<article>
       <h1>${b.title || b.slug}</h1>
       <p class="subtitle">${b.subtitle || ''}</p>
@@ -100,7 +111,10 @@ function build() {
 
   // Build index (latest briefing)
   const latest = briefings[0];
-  const latestHtml = marked(latest.body);
+
+  // For index page, rewrite image paths to point to the briefing's images dir
+  const indexBody = latest.body.replaceAll('./images/', `/briefings/${latest.slug}/images/`);
+  const latestHtml = marked(indexBody);
   const indexContent = `<article>
     <h1>${latest.title || latest.slug}</h1>
     <p class="subtitle">${latest.subtitle || ''}</p>
