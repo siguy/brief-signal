@@ -1,172 +1,198 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{title}} — AI Briefing</title>
-  <meta name="description" content="{{subtitle}}">
-  <meta property="og:title" content="{{title}} — AI Briefing">
-  <meta property="og:description" content="{{subtitle}}">
-  <meta property="og:type" content="article">
-  <meta property="og:url" content="{{url}}">
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="{{title}} — AI Briefing">
-  <meta name="twitter:description" content="{{subtitle}}">
-  <link rel="icon" href="/favicon.ico" sizes="any">
-  <style>
-    :root {
-      --bg: #ffffff;
-      --text: #1a1a1a;
-      --text-secondary: #555;
-      --border: #e0e0e0;
-      --accent: #2563eb;
-      --accent-hover: #1d4ed8;
-      --code-bg: #f5f5f5;
-      --blockquote-bg: #f9fafb;
-      --blockquote-border: #2563eb;
-    }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --bg: #0d1117;
-        --text: #e6edf3;
-        --text-secondary: #8b949e;
-        --border: #30363d;
-        --accent: #58a6ff;
-        --accent-hover: #79b8ff;
-        --code-bg: #161b22;
-        --blockquote-bg: #161b22;
-        --blockquote-border: #58a6ff;
-      }
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.7;
-      padding: 2rem 1rem;
-    }
-    .container { max-width: 680px; margin: 0 auto; }
-    nav {
-      margin-bottom: 2rem;
-      padding-bottom: 1rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    nav a {
-      color: var(--accent);
-      text-decoration: none;
-      font-size: 0.9rem;
-    }
-    nav a:hover { text-decoration: underline; }
-    .site-title {
-      font-weight: 700;
-      font-size: 1rem;
-      color: var(--text);
-      text-decoration: none;
-    }
-    .site-title:hover { color: var(--accent); }
-    article h1 {
-      font-size: 1.8rem;
-      line-height: 1.2;
-      margin-bottom: 0.5rem;
-    }
-    .subtitle {
-      color: var(--text-secondary);
-      font-size: 0.9rem;
-      margin-bottom: 2rem;
-    }
-    article h2 {
-      font-size: 1.3rem;
-      margin-top: 2rem;
-      margin-bottom: 0.75rem;
-      padding-bottom: 0.3rem;
-      border-bottom: 1px solid var(--border);
-    }
-    article h3 {
-      font-size: 1.1rem;
-      margin-top: 1.5rem;
-      margin-bottom: 0.5rem;
-    }
-    article p { margin-bottom: 1rem; }
-    article ul, article ol {
-      margin-bottom: 1rem;
-      padding-left: 1.5rem;
-    }
-    article li { margin-bottom: 0.4rem; }
-    article a { color: var(--accent); text-decoration: none; }
-    article a:hover { text-decoration: underline; }
-    article strong { font-weight: 600; }
-    article em { font-style: italic; }
-    article blockquote {
-      background: var(--blockquote-bg);
-      border-left: 3px solid var(--blockquote-border);
-      padding: 0.75rem 1rem;
-      margin-bottom: 1rem;
-      border-radius: 0 4px 4px 0;
-    }
-    article blockquote p { margin-bottom: 0; }
-    article code {
-      background: var(--code-bg);
-      padding: 0.15rem 0.4rem;
-      border-radius: 3px;
-      font-size: 0.9em;
-    }
-    article img {
-      max-width: 100%;
-      height: auto;
-      border-radius: 8px;
-      margin-bottom: 1rem;
-    }
-    article hr {
-      border: none;
-      border-top: 1px solid var(--border);
-      margin: 2rem 0;
-    }
-    footer {
-      margin-top: 3rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--border);
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-    }
-    /* Archive page */
-    .archive-list { list-style: none; padding: 0; }
-    .archive-list li {
-      padding: 0.75rem 0;
-      border-bottom: 1px solid var(--border);
-    }
-    .archive-list li:last-child { border-bottom: none; }
-    .archive-list a {
-      color: var(--text);
-      text-decoration: none;
-      display: block;
-    }
-    .archive-list a:hover { color: var(--accent); }
-    .archive-date {
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-    }
-    .archive-title { font-weight: 600; }
-    @media (max-width: 480px) {
-      body { padding: 1rem 0.75rem; }
-      article h1 { font-size: 1.5rem; }
-      article h2 { font-size: 1.15rem; }
-    }
-  </style>
-</head>
-<body>
-  <div class="container">
-    <nav>
-      <a href="/" class="site-title">AI Briefing</a>
-      <a href="/archive">Archive</a>
+<!doctype html>
+<html lang="en" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{title}} — Brief Signal</title>
+    <meta name="description" content="{{subtitle}}" />
+    <meta property="og:title" content="{{title}} — Brief Signal" />
+    <meta property="og:description" content="{{subtitle}}" />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="{{url}}" />
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="{{title}} — Brief Signal" />
+    <meta name="twitter:description" content="{{subtitle}}" />
+    <link rel="icon" href="/favicon.ico" sizes="any" />
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:ital,wght@1,400;1,700&family=JetBrains+Mono&display=swap"
+      rel="stylesheet"
+    />
+
+    <link rel="stylesheet" href="/style.css" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  </head>
+  <body
+    class="bg-brand-bg text-brand-text font-sans antialiased relative min-h-screen selection:bg-brand-accent selection:text-brand-bg overflow-x-hidden"
+  >
+    <!-- Global Noise Texture -->
+    <div class="fixed inset-0 bg-noise pointer-events-none z-50"></div>
+
+    <!-- The Floating Island Navbar -->
+    <nav
+      id="navbar"
+      class="fixed top-6 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-2xl bg-brand-bg/80 backdrop-blur-xl border border-brand-border rounded-full px-6 py-3 flex justify-between items-center shadow-lg transition-all duration-300"
+    >
+      <a
+        href="/"
+        class="font-bold text-white tracking-wide hover:text-brand-accent transition-colors flex items-center gap-2"
+      >
+        <div class="w-2 h-2 rounded-full bg-brand-accent animate-pulse"></div>
+        Brief Signal
+      </a>
+      <div
+        class="flex items-center gap-6 font-mono text-xs uppercase tracking-widest text-brand-text-muted"
+      >
+        <a href="/archive" class="hover:text-brand-accent transition-colors"
+          >Archive</a
+        >
+        <a
+          href="https://cloud.google.com/startup"
+          target="_blank"
+          class="bg-brand-text text-brand-bg px-4 py-2 rounded-full hover:bg-white transition-colors duration-300 transform hover:scale-105"
+          >Join Us</a
+        >
+      </div>
     </nav>
-    {{content}}
-    <footer>
-      AI Briefing — Weekly market intelligence for startup conversations.
-    </footer>
-  </div>
-</body>
+
+    <main class="max-w-3xl mx-auto px-6 pt-40 pb-24">
+      <!-- Hero / Magazine Cover -->
+    <header id="heroHeader" class="mb-20">
+      <div class="flex flex-col md:flex-row md:items-center gap-4 md:gap-6 mb-8 opacity-0 translate-y-4" id="heroMeta">
+        <div class="inline-flex items-center font-mono text-[10px] md:text-xs uppercase tracking-[0.2em] text-brand-accent font-bold">
+          <span class="border border-brand-accent/30 px-4 py-1.5 rounded-full bg-brand-accent/10">{{subtitle}}</span>
+        </div>
+        <div class="hidden md:block w-1 h-1 rounded-full bg-brand-accent/50"></div>
+        <div class="font-serif italic text-brand-text-muted text-lg md:text-xl">Curated by <span class="text-brand-primary">Simon Brief</span></div>
+      </div>
+      
+      <h1 class="text-4xl md:text-5xl lg:text-6xl tracking-tighter leading-[1.1] text-brand-primary opacity-0 translate-y-8" id="heroTitle">
+        {{title}}
+      </h1>
+    </header>
+
+      <!-- Content Area -->
+      <div
+        id="articleContent"
+        class="opacity-0 translate-y-8 transition-opacity duration-1000"
+      >
+        {{content}}
+      </div>
+    </main>
+
+    <footer class="bg-transparent border-t border-brand-border mt-32 relative overflow-hidden">
+    <!-- Footer subtle glow -->
+    <div class="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-px bg-gradient-to-r from-transparent via-brand-accent/30 to-transparent"></div>
+    <div class="max-w-3xl mx-auto px-6 py-12 flex flex-col md:flex-row justify-between items-start md:items-center gap-6 relative z-10">
+      <div class="space-y-4">
+        <div>
+          <h4 class="font-serif italic text-2xl text-brand-primary mb-1">Brief Signal</h4>
+          <p class="text-xs text-brand-text-muted">Curated for <span class="text-brand-primary">Google Cloud Startups</span></p>
+        </div>
+        <p class="font-mono text-[10px] text-brand-text-muted uppercase tracking-widest flex items-center gap-2">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+          System Operational
+        </p>
+      </div>
+      <div class="text-sm text-brand-text-muted text-left md:text-right space-y-2">
+        <div class="text-xs italic opacity-80 max-w-xs">{{sources}}</div>
+        <p>Curated by <span class="text-brand-primary">Simon Brief</span></p>
+      </div>
+    </div>
+  </footer>
+
+    <script>
+      gsap.registerPlugin(ScrollTrigger);
+
+      document.addEventListener("DOMContentLoaded", () => {
+        // Entrance Animations
+        const tl = gsap.timeline({
+          defaults: { ease: "power3.out", duration: 1 },
+        });
+
+        tl.to("#heroMeta", { opacity: 1, y: 0 })
+          .to("#heroTitle", { opacity: 1, y: 0, duration: 1.2 }, "-=0.8")
+          .to(
+            "#articleContent",
+            { opacity: 1, y: 0, duration: 1.2, ease: "power2.out" },
+            "-=0.6",
+          );
+
+        // Scroll Animations for Article Elements
+        setTimeout(() => {
+          const paragraphs = document.querySelectorAll(
+            "article p, article h2, article h3, article blockquote, .our-play-section",
+          );
+
+          paragraphs.forEach((el) => {
+            gsap.fromTo(
+              el,
+              { opacity: 0, y: 20 },
+              {
+                opacity: 1,
+                y: 0,
+                duration: 1,
+                ease: "power2.out",
+                scrollTrigger: {
+                  trigger: el,
+                  start: "top 85%",
+                  toggleActions: "play none none reverse",
+                },
+              },
+            );
+          });
+
+          // Image Parallax
+          const images = document.querySelectorAll("article img");
+          images.forEach((img) => {
+            gsap.fromTo(
+              img,
+              { y: -30, scale: 1.05 },
+              {
+                y: 10,
+                scale: 1,
+                ease: "none",
+                scrollTrigger: {
+                  trigger: img,
+                  start: "top bottom",
+                  end: "bottom top",
+                  scrub: true,
+                },
+              },
+            );
+          });
+        }, 100);
+
+        // Navbar shrink on scroll
+        ScrollTrigger.create({
+          start: "top -100px",
+          onUpdate: (self) => {
+            if (self.direction === 1) {
+              // scrolling down
+              gsap.to("#navbar", { y: -100, opacity: 0, duration: 0.3 });
+            } else {
+              // scrolling up
+              gsap.to("#navbar", { y: 0, opacity: 1, duration: 0.3 });
+            }
+          },
+        });
+
+        gsap.to("#navbar", {
+          scrollTrigger: {
+            start: "100px top",
+            toggleActions: "play none none reverse",
+          },
+          paddingTop: "0.5rem",
+          paddingBottom: "0.5rem",
+          backgroundColor: "rgba(13, 13, 18, 0.95)",
+          duration: 0.3,
+        });
+      });
+    </script>
+  </body>
 </html>

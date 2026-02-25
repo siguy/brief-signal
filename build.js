@@ -23,7 +23,34 @@ function parseFrontmatter(raw) {
     }
     meta[key] = val;
   }
-  return { meta, body: match[2] };
+  
+  let bodyStr = match[2];
+  let sources = '';
+  
+  // Extract "*Sources: X bookmarks... [Archive](/archive)*"
+  const sourceMatch = bodyStr.match(/\n\*(Sources:[\s\S]*?)\*\s*$/);
+  if (sourceMatch) {
+    // Strip it out of the markdown body and render it to HTML directly for the footer
+    bodyStr = bodyStr.replace(sourceMatch[0], '');
+    sources = renderMarkdown(sourceMatch[1]).replace(/<\/?p>/g, ''); // strip paragraph wrappers
+  }
+  
+  return { meta, body: bodyStr, sources };
+}
+
+// Render markdown and inject custom styling wrappers (e.g. for "Our Play")
+function renderMarkdown(md) {
+  let html = marked(md);
+  
+  // Wrap the "Our Play" section in a special styled container.
+  // This looks for an <h2> that says "Our Play", and wraps it and all following 
+  // siblings until the next <h2> or end of file into a special div.
+  html = html.replace(
+    /(<h2[^>]*>Our Play<\/h2>)([\s\S]*?)(?=<h2|$)/gi, 
+    '<div class="our-play-section">\n$1\n$2\n</div>'
+  );
+  
+  return html;
 }
 
 // Read all briefings, sorted newest first
@@ -33,9 +60,9 @@ function loadBriefings() {
     .filter(f => f.endsWith('.md'))
     .map(f => {
       const raw = fs.readFileSync(path.join(CONTENT_DIR, f), 'utf-8');
-      const { meta, body } = parseFrontmatter(raw);
+      const { meta, body, sources } = parseFrontmatter(raw);
       const slug = f.replace('.md', '');
-      return { ...meta, slug, body, filename: f };
+      return { ...meta, slug, body, sources, filename: f };
     })
     .sort((a, b) => (b.date || b.slug).localeCompare(a.date || a.slug));
 }
@@ -69,7 +96,7 @@ function build() {
 
   if (briefings.length === 0) {
     const html = render(template, {
-      title: 'AI Briefing',
+      title: 'Brief Signal',
       subtitle: 'Weekly AI market intelligence for startup conversations',
       url: '/',
       content: '<article><h1>Coming Soon</h1><p>The first briefing is on its way.</p></article>',
@@ -94,16 +121,15 @@ function build() {
 
     // Rewrite ./images/ paths to absolute /briefings/slug/images/ for HTML
     const bodyForBriefing = b.body;
-    const articleHtml = marked(bodyForBriefing);
+    const articleHtml = renderMarkdown(bodyForBriefing);
     const content = `<article>
-      <h1>${b.title || b.slug}</h1>
-      <p class="subtitle">${b.subtitle || ''}</p>
       ${articleHtml}
     </article>`;
     const html = render(template, {
       title: b.title || b.slug,
       subtitle: b.subtitle || '',
       url: `/briefings/${b.slug}/`,
+      sources: b.sources || '',
       content,
     });
     fs.writeFileSync(path.join(briefingDir, 'index.html'), html);
@@ -121,16 +147,15 @@ function build() {
   }
 
   // index.html lives at dist/index.html, images at dist/images/ — relative ./images/ works
-  const latestHtml = marked(latest.body);
+  const latestHtml = renderMarkdown(latest.body);
   const indexContent = `<article>
-    <h1>${latest.title || latest.slug}</h1>
-    <p class="subtitle">${latest.subtitle || ''}</p>
     ${latestHtml}
   </article>`;
   const indexPage = render(template, {
     title: latest.title || latest.slug,
     subtitle: latest.subtitle || '',
     url: '/',
+    sources: latest.sources || '',
     content: indexContent,
   });
   fs.writeFileSync(path.join(DIST_DIR, 'index.html'), indexPage);
@@ -142,12 +167,12 @@ function build() {
   ).join('\n');
   const archiveContent = `<article>
     <h1>Archive</h1>
-    <p class="subtitle">All editions of the AI Briefing</p>
+    <p class="subtitle">All editions of Brief Signal</p>
     <ul class="archive-list">${archiveItems}</ul>
   </article>`;
   const archivePage = render(template, {
     title: 'Archive',
-    subtitle: 'All editions of the AI Briefing',
+    subtitle: 'All editions of Brief Signal',
     url: '/archive/',
     content: archiveContent,
   });

@@ -1,13 +1,20 @@
 {
-  "name": "ai-briefing",
+  "name": "brief-signal",
   "version": "1.0.0",
-  "description": "Weekly AI market briefing for Google Startups Sales",
+  "description": "Brief Signal — Weekly AI market intelligence for startup conversations",
   "scripts": {
-    "build": "node build.js",
+    "build:css": "tailwindcss -i input.css -o static/style.css",
+    "build": "npm run build:css && node build.js",
     "fetch-images": "node fetch-og.js",
-    "preview": "node build.js && open dist/index.html"
+    "preview": "npm run build && open dist/index.html"
   },
   "dependencies": {
-    "marked": "^15.0.0"
+    "autoprefixer": "^10.4.24",
+    "marked": "^15.0.0",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.2.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/cli": "^4.2.1"
   }
 }
