@@ -16,7 +16,7 @@ MONDAY_DATE=$(date -v+1d +%Y-%m-%d)
 BRANCH="briefing/${MONDAY_DATE}"
 PLAYLIST_URL="https://www.youtube.com/playlist?list=PL1FeClOi-gXpoHHLPfOgeGltGMNWY9Wjk"
 
-REPO="simonbrief/brief-signal"
+REPO="siguy/brief-signal"
 INFO_AGG_DIR="$HOME/info-agg"
 BRIEF_SIGNAL_DIR="$HOME/brief-signal"
 
