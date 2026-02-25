@@ -1,3 +1,8 @@
 node_modules/
 dist/
 .DS_Store
+voice-overlay.md
+.claude/
+scripts/logs/
+GEMINI.md
+vite-signal/
