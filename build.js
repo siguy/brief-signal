@@ -7,6 +7,10 @@ const TEMPLATE_PATH = path.join(__dirname, 'template.html');
 const STATIC_DIR = path.join(__dirname, 'static');
 const DIST_DIR = path.join(__dirname, 'dist');
 
+// Base path for GitHub Pages subdirectory deployment (e.g. "/brief-signal")
+// Set via BASE_PATH env var; defaults to "" for local dev / custom domain
+const BASE_PATH = (process.env.BASE_PATH || '').replace(/\/+$/, '');
+
 // Parse YAML-ish frontmatter (simple key: value pairs between --- fences)
 function parseFrontmatter(raw) {
   const match = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
@@ -33,6 +37,7 @@ function parseFrontmatter(raw) {
     // Strip it out of the markdown body and render it to HTML directly for the footer
     bodyStr = bodyStr.replace(sourceMatch[0], '');
     sources = renderMarkdown(sourceMatch[1]).replace(/<\/?p>/g, ''); // strip paragraph wrappers
+    sources = sources.replace(/href="\/archive"/g, `href="${BASE_PATH}/archive"`);
   }
   
   return { meta, body: bodyStr, sources };
@@ -69,6 +74,7 @@ function loadBriefings() {
 
 function render(template, vars) {
   let html = template;
+  vars.base = BASE_PATH;
   for (const [key, val] of Object.entries(vars)) {
     html = html.replaceAll(`{{${key}}}`, val || '');
   }
@@ -163,7 +169,7 @@ function build() {
   // Build archive page
   ensureDir(path.join(DIST_DIR, 'archive'));
   const archiveItems = briefings.map(b =>
-    `<li><a href="/briefings/${b.slug}/"><span class="archive-date">${b.date || b.slug}</span><br><span class="archive-title">${b.title || b.slug}</span></a></li>`
+    `<li><a href="${BASE_PATH}/briefings/${b.slug}/"><span class="archive-date">${b.date || b.slug}</span><br><span class="archive-title">${b.title || b.slug}</span></a></li>`
   ).join('\n');
   const archiveContent = `<article>
     <h1>Archive</h1>

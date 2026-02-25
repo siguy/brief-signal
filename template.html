@@ -12,7 +12,7 @@
     <meta name="twitter:card" content="summary" />
     <meta name="twitter:title" content="{{title}} — Brief Signal" />
     <meta name="twitter:description" content="{{subtitle}}" />
-    <link rel="icon" href="/favicon.ico" sizes="any" />
+    <link rel="icon" href="{{base}}/favicon.ico" sizes="any" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -22,7 +22,7 @@
       rel="stylesheet"
     />
 
-    <link rel="stylesheet" href="/style.css" />
+    <link rel="stylesheet" href="{{base}}/style.css" />
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
@@ -39,7 +39,7 @@
       class="fixed top-6 left-1/2 -translate-x-1/2 z-40 w-[90%] max-w-2xl bg-brand-bg/80 backdrop-blur-xl border border-brand-border rounded-full px-6 py-3 flex justify-between items-center shadow-lg transition-all duration-300"
     >
       <a
-        href="/"
+        href="{{base}}/"
         class="font-bold text-white tracking-wide hover:text-brand-accent transition-colors flex items-center gap-2"
       >
         <div class="w-2 h-2 rounded-full bg-brand-accent animate-pulse"></div>
@@ -48,7 +48,7 @@
       <div
         class="flex items-center gap-6 font-mono text-xs uppercase tracking-widest text-brand-text-muted"
       >
-        <a href="/archive" class="hover:text-brand-accent transition-colors"
+        <a href="{{base}}/archive" class="hover:text-brand-accent transition-colors"
           >Archive</a
         >
         <a
