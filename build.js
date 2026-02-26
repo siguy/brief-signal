@@ -141,30 +141,22 @@ function build() {
     fs.writeFileSync(path.join(briefingDir, 'index.html'), html);
   }
 
-  // Build index (latest briefing)
+  // Build index as redirect to latest briefing's permalink
   const latest = briefings[0];
-
-  // Copy images to dist root so index.html can reference them with relative paths
-  const rootImagesDir = path.join(DIST_DIR, 'images');
-  const sourceImages = path.join(CONTENT_DIR, 'images');
-  if (fs.existsSync(sourceImages)) {
-    ensureDir(rootImagesDir);
-    copyDir(sourceImages, rootImagesDir);
-  }
-
-  // index.html lives at dist/index.html, images at dist/images/ — relative ./images/ works
-  const latestHtml = renderMarkdown(latest.body);
-  const indexContent = `<article>
-    ${latestHtml}
-  </article>`;
-  const indexPage = render(template, {
-    title: latest.title || latest.slug,
-    subtitle: latest.subtitle || '',
-    url: '/',
-    sources: latest.sources || '',
-    content: indexContent,
-  });
-  fs.writeFileSync(path.join(DIST_DIR, 'index.html'), indexPage);
+  const latestUrl = `${BASE_PATH}/briefings/${latest.slug}/`;
+  const indexRedirect = `<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="refresh" content="0;url=${latestUrl}" />
+  <link rel="canonical" href="${latestUrl}" />
+  <title>Brief Signal</title>
+</head>
+<body>
+  <p>Redirecting to <a href="${latestUrl}">the latest briefing</a>...</p>
+</body>
+</html>`;
+  fs.writeFileSync(path.join(DIST_DIR, 'index.html'), indexRedirect);
 
   // Build archive page
   ensureDir(path.join(DIST_DIR, 'archive'));
