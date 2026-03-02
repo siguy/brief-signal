@@ -63,11 +63,11 @@ async function buttondown(method, endpoint, body) {
   return data;
 }
 
-async function alreadySent(slug) {
+async function alreadySent(title) {
   // Check recent emails to see if we already sent one for this edition
   const data = await buttondown('GET', 'emails?page=1');
   const emails = data.results || [];
-  return emails.some(e => e.subject && e.subject.includes(slug));
+  return emails.some(e => e.subject && e.subject.includes(title.slice(0, 40)));
 }
 
 async function main() {
@@ -77,21 +77,29 @@ async function main() {
   console.log(`Latest briefing: ${briefing.title} (${briefing.slug})`);
 
   // Idempotency: skip if already sent
-  if (await alreadySent(briefing.slug)) {
-    console.log(`Email for ${briefing.slug} already sent — skipping.`);
+  if (await alreadySent(briefing.title)) {
+    console.log(`Email for "${briefing.title}" already sent — skipping.`);
     return;
   }
 
-  const subject = `Brief Signal — ${briefing.title}`;
-  const body = [
-    `# ${briefing.title}`,
-    '',
-    `*${briefing.subtitle || ''}*`,
-    '',
-    briefing.tldr || '',
-    '',
-    `**[Read the full briefing →](${briefingUrl})**`,
-  ].join('\n');
+  const edition = briefing.edition ? `Edition #${briefing.edition}` : '';
+  const subject = `Brief Signal${edition ? ` — ${edition}` : ''}: ${briefing.title}`;
+  const subtitle = briefing.subtitle || '';
+  const tldr = briefing.tldr || '';
+
+  const body = `
+<div style="background-color: #0D0D12; padding: 40px 20px; font-family: 'Inter', -apple-system, sans-serif;">
+  <div style="max-width: 560px; margin: 0 auto;">
+    <p style="color: #C9A84C; font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; margin: 0 0 24px 0; font-weight: 600;">Brief Signal</p>
+    <h1 style="color: #FAF8F5; font-size: 24px; line-height: 1.3; margin: 0 0 12px 0; font-weight: 700;">${briefing.title}</h1>
+    <p style="color: #C9A84C; font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; margin: 0 0 32px 0; opacity: 0.8;">${subtitle}</p>
+    <div style="border-top: 1px solid rgba(201, 168, 76, 0.2); padding-top: 24px; margin-bottom: 32px;">
+      <p style="color: #B0ADA8; font-size: 15px; line-height: 1.6; margin: 0;">${tldr}</p>
+    </div>
+    <a href="${briefingUrl}" style="display: inline-block; background-color: #C9A84C; color: #0D0D12; padding: 12px 28px; text-decoration: none; font-size: 14px; font-weight: 600; border-radius: 6px;">Read the full briefing →</a>
+    <p style="color: #5A5862; font-size: 12px; margin-top: 40px;">Curated by Simon Brief</p>
+  </div>
+</div>`.trim();
 
   try {
     const email = await buttondown('POST', 'emails', {
