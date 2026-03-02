@@ -3,6 +3,16 @@
 ## Unreleased
 
 ### Added
+- **Audio briefing (beta)** — Spoken-word audio version of each weekly edition, generated via Google Cloud Gemini Pro TTS (Fenrir voice)
+- **Audio script generator** — `scripts/generate-audio-script.js` converts briefing markdown to conversational spoken-word script via Gemini 2.5 Flash
+- **Audio TTS generator** — `scripts/generate-audio.js` sends script to Gemini Pro TTS with configurable voice and style prompt, outputs MP3
+- **Audio script prompt** — `scripts/audio-script-prompt.md` defines the "colleague at the coffee machine" tone for script rewriting
+- **Audio player UI** — Custom HTML5 audio player with play/pause, progress bar, time display, and download button; styled in Midnight Luxe (champagne accent on dark)
+- **`npm run audio`** — Generate audio script from latest briefing
+- **`npm run audio:pr`** — Generate audio script and open PR for review
+- **`npm run audio:generate`** — Generate MP3 from reviewed audio script
+- **`@google-cloud/text-to-speech` dependency** — Google Cloud TTS SDK for Gemini Pro TTS
+- **Subscribe page** — `/subscribe` page with Buttondown email signup form
 - **Feedback CTA section** — "Signal Check" card on every briefing page links to Google Form for reader feedback (rating, comment, name/email)
 - **Auto-filled edition date** — `build.js` constructs Google Form URL with pre-filled date parameter so each briefing's feedback is tagged to its edition
 - **`.feedback-cta` styles** — Dark ghost card with champagne accent glow + gold CTA button, matching Midnight Luxe aesthetic

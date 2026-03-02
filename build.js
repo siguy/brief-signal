@@ -17,6 +17,9 @@ const BASE_PATH = (process.env.BASE_PATH || '').replace(/\/+$/, '');
 const GOOGLE_FORM_BASE_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeiTx6YoD4obRaed4sVz2oKjV-NubT68YmQPhAZHV4fg3eZWA/viewform';
 const GOOGLE_FORM_EDITION_ENTRY = 'entry.659640151';
 
+// Buttondown email subscribe — replace with your Buttondown username after signup
+const BUTTONDOWN_USERNAME = 'briefsignal';
+
 // Parse YAML-ish frontmatter (simple key: value pairs between --- fences)
 function parseFrontmatter(raw) {
   const match = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
@@ -169,6 +172,9 @@ function build() {
   <div class="audio-progress-wrap" id="audioProgressWrap">
     <div class="audio-progress-bar" id="audioProgressBar"></div>
   </div>
+  <a class="audio-download-btn" href="${audioUrl}" download="brief-signal-${b.slug}.mp3" aria-label="Download audio briefing">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+  </a>
   <audio id="audioElement" preload="metadata" src="${audioUrl}"></audio>
 </div>`;
     }
@@ -243,10 +249,42 @@ function build() {
   });
   fs.writeFileSync(path.join(DIST_DIR, 'archive', 'index.html'), archivePage);
 
+  // Build subscribe page
+  ensureDir(path.join(DIST_DIR, 'subscribe'));
+  const subscribeBase = getBase(1); // dist/subscribe/ → 1 level deep
+  const formAction = `https://buttondown.com/api/emails/embed-subscribe/${BUTTONDOWN_USERNAME}`;
+  const subscribeContent = `<article>
+    <div class="subscribe-section">
+      <p class="subscribe-label">Weekly Briefing</p>
+      <h2 class="subscribe-heading">The founder signal your competitors are missing.</h2>
+      <p class="subscribe-pitch">Every week, we distill a POV on what some startup founders are reading, building, and debating into a 5-minute briefing. Open source momentum, builder patterns, founder moves — the context that makes your next meeting land differently.</p>
+      <form class="subscribe-form" action="${formAction}" method="post" target="popupwindow">
+        <div class="subscribe-fields">
+          <input type="text" name="metadata__first_name" placeholder="First name" required class="subscribe-input" />
+          <input type="email" name="email" placeholder="Email address" required class="subscribe-input" />
+        </div>
+        <button type="submit" class="subscribe-btn">Subscribe</button>
+      </form>
+      <p class="subscribe-fine-print">One email per week. Unsubscribe anytime.</p>
+    </div>
+  </article>`;
+  const subscribePage = render(template, {
+    title: 'Never Miss a Signal',
+    subtitle: 'Subscribe',
+    url: '/subscribe/',
+    audio_player: '',
+    feedback_cta: '',
+    sources: '',
+    base: subscribeBase,
+    content: subscribeContent,
+  });
+  fs.writeFileSync(path.join(DIST_DIR, 'subscribe', 'index.html'), subscribePage);
+
   console.log(`Built ${briefings.length} briefing(s):`);
   for (const b of briefings) {
     console.log(`  - ${b.slug}: ${b.title || '(untitled)'}`);
   }
+  console.log(`Built subscribe page`);
   console.log(`Output: ${DIST_DIR}`);
 }
 

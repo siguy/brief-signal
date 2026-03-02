@@ -111,6 +111,12 @@ body {
     width: 0%;
     transition: width 0.1s linear;
   }
+  .audio-download-btn {
+    @apply flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 text-brand-text-muted hover:text-brand-accent;
+  }
+  .audio-download-btn svg {
+    @apply w-4 h-4;
+  }
 
   /* "Our Play" Special Section */
   .our-play-section {
@@ -159,5 +165,50 @@ body {
   .feedback-cta-btn:hover {
     @apply scale-105;
     background: #d4b35a;
+  }
+
+  /* Subscribe Page */
+  .subscribe-section {
+    @apply text-center max-w-lg mx-auto;
+  }
+  .subscribe-label {
+    @apply font-mono text-xs uppercase tracking-widest text-brand-accent font-bold mb-6;
+  }
+  .subscribe-heading {
+    @apply font-serif italic text-3xl md:text-4xl text-brand-primary mb-6 border-none mt-0 pt-0;
+    font-weight: 400;
+  }
+  .subscribe-pitch {
+    @apply text-lg leading-relaxed text-brand-text mb-10;
+  }
+  .subscribe-form {
+    @apply mb-4;
+  }
+  .subscribe-fields {
+    @apply flex flex-col sm:flex-row gap-3 mb-4;
+  }
+  .subscribe-input {
+    @apply flex-1 px-5 py-3 rounded-full text-sm font-sans border border-brand-border transition-all duration-200 outline-none;
+    background: rgba(250, 248, 245, 0.05);
+    color: var(--color-brand-primary);
+  }
+  .subscribe-input::placeholder {
+    color: var(--color-brand-text-muted);
+  }
+  .subscribe-input:focus {
+    border-color: var(--color-brand-accent);
+    box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15);
+  }
+  .subscribe-btn {
+    @apply w-full sm:w-auto px-8 py-3 rounded-full font-mono text-sm uppercase tracking-widest font-bold transition-all duration-300 cursor-pointer border-0;
+    background: var(--color-brand-accent);
+    color: var(--color-brand-bg);
+  }
+  .subscribe-btn:hover {
+    @apply scale-105;
+    background: #d4b35a;
+  }
+  .subscribe-fine-print {
+    @apply text-xs text-brand-text-muted mt-4;
   }
 }
