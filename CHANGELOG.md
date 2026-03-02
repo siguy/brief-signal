@@ -23,7 +23,11 @@
 - **Writing pattern in prompt** — "lead with the punch, link for depth" formula for tighter items
 - **Optional theme headings** — Section headings can include a theme when items cluster (e.g., "## The Big Picture: The Agent Infrastructure Shift")
 
+### Fixed
+- **Hero typography** — `whitespace-nowrap` on subtitle pill and `text-balance` on byline prevent orphaned single-word line wraps
+
 ### Changed
+- **Subscribe page copy** — "we distill our POV on what startup founders…" (was "a POV on what some startup founders…")
 - **generate-weekly.sh Stage 3** — Now runs `node scripts/generate-briefing.js` instead of `claude -p --dangerously-skip-permissions`
 - **Knowledge base path** — Briefing generator reads from `~/skills/` (was `~/info-agg/skills/`)
 - **Local dev asset paths** — `build.js` now computes relative paths (`../../style.css`) when `BASE_PATH` is not set, so `file://` URLs work without a server. GitHub Pages deployment (with `BASE_PATH`) still uses absolute paths.
