@@ -93,13 +93,20 @@ async function main() {
     `**[Read the full briefing →](${briefingUrl})**`,
   ].join('\n');
 
-  const email = await buttondown('POST', 'emails', {
-    subject,
-    body,
-    status: 'about_to_send',
-  });
-
-  console.log(`Email sent: "${subject}" (id: ${email.id})`);
+  try {
+    const email = await buttondown('POST', 'emails', {
+      subject,
+      body,
+      status: 'about_to_send',
+    });
+    console.log(`Email sent: "${subject}" (id: ${email.id})`);
+  } catch (err) {
+    if (err.message && err.message.includes('email_duplicate')) {
+      console.log(`Email for ${briefing.slug} already exists in Buttondown — skipping.`);
+      return;
+    }
+    throw err;
+  }
 }
 
 main().catch(err => {
