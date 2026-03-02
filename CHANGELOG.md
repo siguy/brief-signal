@@ -24,10 +24,17 @@
 - **Optional theme headings** — Section headings can include a theme when items cluster (e.g., "## The Big Picture: The Agent Infrastructure Shift")
 
 ### Fixed
-- **Hero typography** — `whitespace-nowrap` on subtitle pill and `text-balance` on byline prevent orphaned single-word line wraps
+- **Hero typography** — `whitespace-nowrap` on subtitle pill (desktop only) and `text-balance` on byline prevent orphaned words
+- **Mobile subtitle** — Subtitle pill wraps naturally on mobile, stays single-line on desktop (`md:whitespace-nowrap`)
+- **Buttondown duplicate handling** — `send-email.js` exits cleanly on `email_duplicate` instead of failing the deploy
 
 ### Changed
 - **Subscribe page copy** — "we distill our POV on what startup founders…" (was "a POV on what some startup founders…")
+- **Email subject** — Shortened to `Brief Signal — Edition #N: [title]` (was `Brief Signal — [full title]`)
+- **Email body** — HTML with Midnight Luxe styling (dark bg, champagne accent, gold CTA button); no longer duplicates title
+- **Email trigger** — Only sends when a new briefing file is added to `content/briefings/`, not on every deploy
+- **Audio intro/outro** — Script now opens with "Welcome to the Brief Signal" and closes with feedback CTA
+- **Audio script v2** — Regenerated Edition #2 audio with intro/outro (~1,000 words, up from ~710)
 - **generate-weekly.sh Stage 3** — Now runs `node scripts/generate-briefing.js` instead of `claude -p --dangerously-skip-permissions`
 - **Knowledge base path** — Briefing generator reads from `~/skills/` (was `~/info-agg/skills/`)
 - **Local dev asset paths** — `build.js` now computes relative paths (`../../style.css`) when `BASE_PATH` is not set, so `file://` URLs work without a server. GitHub Pages deployment (with `BASE_PATH`) still uses absolute paths.
