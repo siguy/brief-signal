@@ -38,3 +38,9 @@ jobs:
 
       - id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Notify subscribers via Buttondown
+        if: success()
+        run: node scripts/send-email.js
+        env:
+          BUTTONDOWN_API_KEY: ${{ secrets.BUTTONDOWN_API_KEY }}

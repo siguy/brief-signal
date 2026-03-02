@@ -9,7 +9,8 @@
     "audio": "node scripts/generate-audio-script.js",
     "audio:pr": "node scripts/generate-audio-script.js --pr",
     "audio:generate": "node scripts/generate-audio.js",
-    "preview": "npm run build && open dist/index.html"
+    "preview": "npm run build && open dist/index.html",
+    "notify": "node scripts/send-email.js"
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^6.4.0",
