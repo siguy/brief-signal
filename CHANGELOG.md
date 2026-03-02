@@ -12,7 +12,10 @@
 - **`npm run audio:pr`** — Generate audio script and open PR for review
 - **`npm run audio:generate`** — Generate MP3 from reviewed audio script
 - **`@google-cloud/text-to-speech` dependency** — Google Cloud TTS SDK for Gemini Pro TTS
-- **Subscribe page** — `/subscribe` page with Buttondown email signup form
+- **Subscribe page** — `/subscribe` page with Buttondown email signup form (first name + email), nav "Subscribe" button links to it
+- **Email notifications** — `scripts/send-email.js` sends subscriber email via Buttondown API on deploy; includes briefing title, subtitle, TLDR teaser, and link to full edition; idempotency check prevents double-sends
+- **Deploy workflow notification step** — `.github/workflows/deploy.yml` calls `send-email.js` after successful deploy using `BUTTONDOWN_API_KEY` secret
+- **`npm run notify`** — Manual trigger for subscriber email (for local testing)
 - **Feedback CTA section** — "Signal Check" card on every briefing page links to Google Form for reader feedback (rating, comment, name/email)
 - **Auto-filled edition date** — `build.js` constructs Google Form URL with pre-filled date parameter so each briefing's feedback is tagged to its edition
 - **`.feedback-cta` styles** — Dark ghost card with champagne accent glow + gold CTA button, matching Midnight Luxe aesthetic
