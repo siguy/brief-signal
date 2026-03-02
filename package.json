@@ -9,6 +9,7 @@
     "preview": "npm run build && open dist/index.html"
   },
   "dependencies": {
+    "@google/genai": "^1.43.0",
     "autoprefixer": "^10.4.24",
     "marked": "^15.0.0",
     "postcss": "^8.5.6",

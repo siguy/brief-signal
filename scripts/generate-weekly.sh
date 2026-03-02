@@ -62,7 +62,7 @@ git checkout main
 git pull origin main
 git checkout -b "$BRANCH"
 
-if claude -p --dangerously-skip-permissions "Run /generate-briefing" >> "$LOG_FILE" 2>&1; then
+if node scripts/generate-briefing.js >> "$LOG_FILE" 2>&1; then
   log "Stage 3 complete: briefing generated."
 else
   log "ERROR: Stage 3 failed (briefing generation). Cleaning up."

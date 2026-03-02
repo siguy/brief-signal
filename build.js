@@ -72,9 +72,18 @@ function loadBriefings() {
     .sort((a, b) => (b.date || b.slug).localeCompare(a.date || a.slug));
 }
 
+// Compute the base prefix for asset paths. On GitHub Pages (BASE_PATH set),
+// use the absolute prefix. For local dev (no BASE_PATH), use a relative path
+// so file:// URLs work without a server.
+function getBase(depth) {
+  if (BASE_PATH) return BASE_PATH;
+  if (depth <= 0) return '.';
+  return Array(depth).fill('..').join('/');
+}
+
 function render(template, vars) {
   let html = template;
-  vars.base = BASE_PATH;
+  vars.base = vars.base || BASE_PATH;
   for (const [key, val] of Object.entries(vars)) {
     html = html.replaceAll(`{{${key}}}`, val || '');
   }
@@ -136,6 +145,7 @@ function build() {
       subtitle: b.subtitle || '',
       url: `/briefings/${b.slug}/`,
       sources: b.sources || '',
+      base: getBase(2), // dist/briefings/slug/ → 2 levels deep
       content,
     });
     fs.writeFileSync(path.join(briefingDir, 'index.html'), html);
@@ -143,25 +153,28 @@ function build() {
 
   // Build index as redirect to latest briefing's permalink
   const latest = briefings[0];
-  const latestUrl = `${BASE_PATH}/briefings/${latest.slug}/`;
+  const latestUrlRel = `briefings/${latest.slug}/`;
+  const latestUrlAbs = `${BASE_PATH}/briefings/${latest.slug}/`;
+  const latestRedirect = BASE_PATH ? latestUrlAbs : latestUrlRel;
   const indexRedirect = `<!doctype html>
 <html>
 <head>
   <meta charset="UTF-8" />
-  <meta http-equiv="refresh" content="0;url=${latestUrl}" />
-  <link rel="canonical" href="${latestUrl}" />
+  <meta http-equiv="refresh" content="0;url=${latestRedirect}" />
+  <link rel="canonical" href="${latestUrlAbs}" />
   <title>Brief Signal</title>
 </head>
 <body>
-  <p>Redirecting to <a href="${latestUrl}">the latest briefing</a>...</p>
+  <p>Redirecting to <a href="${latestRedirect}">the latest briefing</a>...</p>
 </body>
 </html>`;
   fs.writeFileSync(path.join(DIST_DIR, 'index.html'), indexRedirect);
 
   // Build archive page
   ensureDir(path.join(DIST_DIR, 'archive'));
+  const archiveBase = BASE_PATH ? `${BASE_PATH}/briefings` : '../briefings';
   const archiveItems = briefings.map(b =>
-    `<li><a href="${BASE_PATH}/briefings/${b.slug}/"><span class="archive-date">${b.date || b.slug}</span><br><span class="archive-title">${b.title || b.slug}</span></a></li>`
+    `<li><a href="${archiveBase}/${b.slug}/"><span class="archive-date">${b.date || b.slug}</span><br><span class="archive-title">${b.title || b.slug}</span></a></li>`
   ).join('\n');
   const archiveContent = `<article>
     <h1>Archive</h1>
@@ -172,6 +185,7 @@ function build() {
     title: 'Archive',
     subtitle: 'All editions of Brief Signal',
     url: '/archive/',
+    base: getBase(1), // dist/archive/ → 1 level deep
     content: archiveContent,
   });
   fs.writeFileSync(path.join(DIST_DIR, 'archive', 'index.html'), archivePage);
