@@ -64,6 +64,60 @@ body {
     @apply w-full rounded-2xl shadow-xl my-10 border border-brand-border;
   }
   
+  /* Audio Player */
+  .audio-player {
+    @apply flex items-center gap-4 p-4 md:p-5 rounded-2xl mb-16 border border-brand-border;
+    background: rgba(250, 248, 245, 0.03);
+  }
+  .audio-play-btn {
+    @apply flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center transition-all duration-200 cursor-pointer border-0;
+    background: var(--color-brand-accent);
+    color: var(--color-brand-bg);
+  }
+  .audio-play-btn:hover {
+    @apply scale-110;
+    background: #d4b35a;
+  }
+  .audio-icon-play,
+  .audio-icon-pause {
+    @apply w-5 h-5;
+  }
+  .audio-icon-play {
+    margin-left: 2px; /* optical centering for play triangle */
+  }
+  .audio-info {
+    @apply flex-shrink-0 hidden sm:block;
+  }
+  .audio-label {
+    @apply text-sm font-semibold text-brand-primary;
+  }
+  .audio-beta {
+    @apply text-[10px] font-mono font-normal text-brand-text-muted uppercase tracking-wider;
+  }
+  .audio-time {
+    @apply text-xs font-mono text-brand-text-muted mt-0.5;
+  }
+  .audio-progress-wrap {
+    @apply flex-1 h-1.5 rounded-full cursor-pointer relative;
+    background: rgba(250, 248, 245, 0.1);
+  }
+  .audio-progress-wrap:hover {
+    @apply h-2.5;
+    transition: height 0.15s ease;
+  }
+  .audio-progress-bar {
+    @apply h-full rounded-full;
+    background: var(--color-brand-accent);
+    width: 0%;
+    transition: width 0.1s linear;
+  }
+  .audio-download-btn {
+    @apply flex-shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 text-brand-text-muted hover:text-brand-accent;
+  }
+  .audio-download-btn svg {
+    @apply w-4 h-4;
+  }
+
   /* "Our Play" Special Section */
   .our-play-section {
     @apply mt-16 p-8 md:p-12 rounded-[2rem] relative overflow-hidden bg-brand-primary border border-brand-border shadow-2xl;
@@ -83,5 +137,78 @@ body {
   /* Our play internal styling overrides */
   .our-play-section h3 {
     @apply text-brand-bg mt-8;
+  }
+
+  /* Feedback CTA Section */
+  .feedback-cta {
+    @apply mt-20 p-8 md:p-12 rounded-[2rem] relative overflow-hidden border border-brand-border text-center;
+    background: rgba(250, 248, 245, 0.03);
+  }
+  .feedback-cta::before {
+    content: '';
+    @apply absolute -bottom-24 -left-24 w-64 h-64 rounded-full opacity-10 blur-3xl pointer-events-none bg-brand-accent;
+  }
+  .feedback-cta .feedback-label {
+    @apply font-mono text-xs uppercase tracking-widest text-brand-accent font-bold mb-2;
+  }
+  .feedback-cta .feedback-heading {
+    @apply font-serif italic text-3xl text-brand-primary mb-4;
+  }
+  .feedback-cta .feedback-subtext {
+    @apply text-brand-text-muted text-base max-w-md mx-auto;
+  }
+  .feedback-cta-btn {
+    @apply inline-flex items-center gap-2 mt-6 px-8 py-3 rounded-full font-mono text-sm uppercase tracking-widest font-bold transition-all duration-300;
+    background: var(--color-brand-accent);
+    color: var(--color-brand-bg);
+  }
+  .feedback-cta-btn:hover {
+    @apply scale-105;
+    background: #d4b35a;
+  }
+
+  /* Subscribe Page */
+  .subscribe-section {
+    @apply text-center max-w-lg mx-auto;
+  }
+  .subscribe-label {
+    @apply font-mono text-xs uppercase tracking-widest text-brand-accent font-bold mb-6;
+  }
+  .subscribe-heading {
+    @apply font-serif italic text-3xl md:text-4xl text-brand-primary mb-6 border-none mt-0 pt-0;
+    font-weight: 400;
+  }
+  .subscribe-pitch {
+    @apply text-lg leading-relaxed text-brand-text mb-10;
+  }
+  .subscribe-form {
+    @apply mb-4;
+  }
+  .subscribe-fields {
+    @apply flex flex-col sm:flex-row gap-3 mb-4;
+  }
+  .subscribe-input {
+    @apply flex-1 px-5 py-3 rounded-full text-sm font-sans border border-brand-border transition-all duration-200 outline-none;
+    background: rgba(250, 248, 245, 0.05);
+    color: var(--color-brand-primary);
+  }
+  .subscribe-input::placeholder {
+    color: var(--color-brand-text-muted);
+  }
+  .subscribe-input:focus {
+    border-color: var(--color-brand-accent);
+    box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15);
+  }
+  .subscribe-btn {
+    @apply w-full sm:w-auto px-8 py-3 rounded-full font-mono text-sm uppercase tracking-widest font-bold transition-all duration-300 cursor-pointer border-0;
+    background: var(--color-brand-accent);
+    color: var(--color-brand-bg);
+  }
+  .subscribe-btn:hover {
+    @apply scale-105;
+    background: #d4b35a;
+  }
+  .subscribe-fine-print {
+    @apply text-xs text-brand-text-muted mt-4;
   }
 }

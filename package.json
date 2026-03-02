@@ -6,9 +6,14 @@
     "build:css": "tailwindcss -i input.css -o static/style.css",
     "build": "npm run build:css && node build.js",
     "fetch-images": "node fetch-og.js",
+    "audio": "node scripts/generate-audio-script.js",
+    "audio:pr": "node scripts/generate-audio-script.js --pr",
+    "audio:generate": "node scripts/generate-audio.js",
     "preview": "npm run build && open dist/index.html"
   },
   "dependencies": {
+    "@google-cloud/text-to-speech": "^6.4.0",
+    "@google/genai": "^1.43.0",
     "autoprefixer": "^10.4.24",
     "marked": "^15.0.0",
     "postcss": "^8.5.6",

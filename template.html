@@ -52,10 +52,9 @@
           >Archive</a
         >
         <a
-          href="https://cloud.google.com/startup"
-          target="_blank"
+          href="{{base}}/subscribe"
           class="bg-brand-text text-brand-bg px-4 py-2 rounded-full hover:bg-white transition-colors duration-300 transform hover:scale-105"
-          >Join Us</a
+          >Subscribe</a
         >
       </div>
     </nav>
@@ -76,6 +75,9 @@
       </h1>
     </header>
 
+      <!-- Audio Player (hidden when no audio exists) -->
+      {{audio_player}}
+
       <!-- Content Area -->
       <div
         id="articleContent"
@@ -83,6 +85,9 @@
       >
         {{content}}
       </div>
+
+      <!-- Feedback CTA -->
+      {{feedback_cta}}
     </main>
 
     <footer class="bg-transparent border-t border-brand-border mt-32 relative overflow-hidden">
@@ -126,7 +131,7 @@
         // Scroll Animations for Article Elements
         setTimeout(() => {
           const paragraphs = document.querySelectorAll(
-            "article p, article h2, article h3, article blockquote, .our-play-section",
+            "article p, article h2, article h3, article blockquote, .our-play-section, #feedbackCta",
           );
 
           paragraphs.forEach((el) => {
@@ -192,6 +197,58 @@
           backgroundColor: "rgba(13, 13, 18, 0.95)",
           duration: 0.3,
         });
+
+        // Audio Player
+        const audio = document.getElementById("audioElement");
+        if (audio) {
+          const playBtn = document.getElementById("audioPlayBtn");
+          const iconPlay = document.getElementById("audioIconPlay");
+          const iconPause = document.getElementById("audioIconPause");
+          const progressWrap = document.getElementById("audioProgressWrap");
+          const progressBar = document.getElementById("audioProgressBar");
+          const currentTime = document.getElementById("audioCurrent");
+          const durationEl = document.getElementById("audioDuration");
+
+          function fmt(s) {
+            const m = Math.floor(s / 60);
+            const sec = Math.floor(s % 60);
+            return m + ":" + (sec < 10 ? "0" : "") + sec;
+          }
+
+          audio.addEventListener("loadedmetadata", () => {
+            durationEl.textContent = fmt(audio.duration);
+          });
+
+          audio.addEventListener("timeupdate", () => {
+            if (audio.duration) {
+              progressBar.style.width = (audio.currentTime / audio.duration * 100) + "%";
+              currentTime.textContent = fmt(audio.currentTime);
+            }
+          });
+
+          audio.addEventListener("ended", () => {
+            iconPlay.style.display = "";
+            iconPause.style.display = "none";
+          });
+
+          playBtn.addEventListener("click", () => {
+            if (audio.paused) {
+              audio.play();
+              iconPlay.style.display = "none";
+              iconPause.style.display = "";
+            } else {
+              audio.pause();
+              iconPlay.style.display = "";
+              iconPause.style.display = "none";
+            }
+          });
+
+          progressWrap.addEventListener("click", (e) => {
+            const rect = progressWrap.getBoundingClientRect();
+            const pct = (e.clientX - rect.left) / rect.width;
+            audio.currentTime = pct * audio.duration;
+          });
+        }
       });
     </script>
   </body>
