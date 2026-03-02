@@ -257,7 +257,7 @@ function build() {
     <div class="subscribe-section">
       <p class="subscribe-label">Weekly Briefing</p>
       <h2 class="subscribe-heading">The founder signal your competitors are missing.</h2>
-      <p class="subscribe-pitch">Every week, we distill a POV on what some startup founders are reading, building, and debating into a 5-minute briefing. Open source momentum, builder patterns, founder moves — the context that makes your next meeting land differently.</p>
+      <p class="subscribe-pitch">Every week, we distill our POV on what startup founders are reading, building, and debating into a 5-minute briefing. Open source momentum, builder patterns, founder moves — the context that makes your next meeting land differently.</p>
       <form class="subscribe-form" action="${formAction}" method="post">
         <div class="subscribe-fields">
           <input type="text" name="metadata__first_name" placeholder="First name" required class="subscribe-input" />
