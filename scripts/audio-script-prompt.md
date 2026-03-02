@@ -16,15 +16,15 @@ Imagine the listener just ran into their sharpest, most well-read colleague in t
 - **Natural pacing.** Vary sentence length. Short punchy lines. Then a longer one that connects the dots and gives the listener time to absorb what you just said.
 
 **Anti-patterns — never do these:**
-- "Welcome to Brief Signal" or any podcast-style intro/outro
-- "In this episode we'll cover..." or any table-of-contents preview
+- Generic podcast-style intros ("In this episode we'll be covering...")
+- Table-of-contents previews ("we'll cover three things today...")
 - "Let's dive in" or "without further ado"
 - Marketing-speak: "leverage," "synergy," "best-in-class"
 - Breathless hype: "This changes EVERYTHING"
 - Reading out URLs or link text
 - Referencing visual elements ("as you can see in the image")
 - Section headers read aloud ("Moving to Builder's Corner...")
-- Sign-offs like "That's all for this week" or "See you next time"
+- Generic sign-offs like "That's all for this week" or "See you next time"
 
 ---
 
@@ -32,9 +32,10 @@ Imagine the listener just ran into their sharpest, most well-read colleague in t
 
 Transform the briefing into a natural spoken flow. Do NOT mirror the written structure section by section. Instead:
 
-1. **Open with the hook** (~15 seconds)
-   Start with the single most interesting thing from the briefing. Drop the listener right into it. No preamble.
-   Example: "So Apple just baked Claude Code directly into Xcode. And suddenly Cursor's twenty-nine billion dollar valuation is looking a lot more fragile."
+1. **Open** (~15 seconds)
+   Start with: "Welcome to the Brief Signal. Let's get into it."
+   Then immediately drop into the single most interesting thing from the briefing. No other preamble.
+   Example: "Welcome to the Brief Signal. Let's get into it. So Apple just baked Claude Code directly into Xcode. And suddenly Cursor's twenty-nine billion dollar valuation is looking a lot more fragile."
 
 2. **Build the narrative** (~5-6 minutes)
    Weave the key stories together into a flowing conversation. Connect themes naturally. Use transitions like:
@@ -52,7 +53,7 @@ Transform the briefing into a natural spoken flow. Do NOT mirror the written str
    Weave in the "Our Play" content naturally — connect it to the market themes you just discussed. Keep it honest and specific, not salesy.
 
 5. **End clean** (~15 seconds)
-   Land on a thought-provoking observation or question that ties the week together. No "thanks for listening" — just end with something that sticks.
+   Land on a thought-provoking observation or question that ties the week together. Then close with: "Thanks for listening. Leave feedback on this episode at the bottom of the page."
 
 ---
 
@@ -82,12 +83,12 @@ You'll receive the complete markdown briefing including frontmatter. Extract the
 ## Quality Check
 
 Before finalizing, verify:
-- [ ] No podcast-style intro or outro
+- [ ] Opens with "Welcome to the Brief Signal. Let's get into it."
 - [ ] No section headers read aloud
 - [ ] No URLs or link references
 - [ ] No visual references ("as shown above")
 - [ ] Numbers written as spoken words where natural
 - [ ] Transitions between topics feel organic, not listed
 - [ ] Total word count is 1,000-1,200
-- [ ] Ends with something that sticks, not a sign-off
+- [ ] Ends with "Thanks for listening. Leave feedback on this episode at the bottom of the page."
 - [ ] Google Cloud products only appear in context of market themes (not pitched)
