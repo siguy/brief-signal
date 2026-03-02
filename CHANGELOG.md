@@ -3,6 +3,9 @@
 ## Unreleased
 
 ### Added
+- **Feedback CTA section** — "Signal Check" card on every briefing page links to Google Form for reader feedback (rating, comment, name/email)
+- **Auto-filled edition date** — `build.js` constructs Google Form URL with pre-filled date parameter so each briefing's feedback is tagged to its edition
+- **`.feedback-cta` styles** — Dark ghost card with champagne accent glow + gold CTA button, matching Midnight Luxe aesthetic
 - **Gemini briefing generator** — `scripts/generate-briefing.js` calls Gemini 2.5 Flash via `@google/genai` SDK to generate weekly briefings (replaces `claude -p` in Stage 3)
 - **System prompt file** — `scripts/briefing-prompt.md` merges generate-briefing skill + voice-overlay into a single Gemini system instruction
 - **`@google/genai` dependency** — Google Gen AI SDK for Node.js

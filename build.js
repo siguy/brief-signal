@@ -3,6 +3,7 @@ const path = require('path');
 const { marked } = require('marked');
 
 const CONTENT_DIR = path.join(__dirname, 'content', 'briefings');
+const AUDIO_DIR = path.join(__dirname, 'content', 'audio');
 const TEMPLATE_PATH = path.join(__dirname, 'template.html');
 const STATIC_DIR = path.join(__dirname, 'static');
 const DIST_DIR = path.join(__dirname, 'dist');
@@ -10,6 +11,11 @@ const DIST_DIR = path.join(__dirname, 'dist');
 // Base path for GitHub Pages subdirectory deployment (e.g. "/brief-signal")
 // Set via BASE_PATH env var; defaults to "" for local dev / custom domain
 const BASE_PATH = (process.env.BASE_PATH || '').replace(/\/+$/, '');
+
+// Google Form for weekly feedback — replace with your actual form ID and entry ID
+// To get the entry ID: Form menu → "Get pre-filled link" → fill Edition Date → "Get link"
+const GOOGLE_FORM_BASE_URL = 'https://docs.google.com/forms/d/e/1FAIpQLSeiTx6YoD4obRaed4sVz2oKjV-NubT68YmQPhAZHV4fg3eZWA/viewform';
+const GOOGLE_FORM_EDITION_ENTRY = 'entry.659640151';
 
 // Parse YAML-ish frontmatter (simple key: value pairs between --- fences)
 function parseFrontmatter(raw) {
@@ -56,6 +62,12 @@ function renderMarkdown(md) {
   );
   
   return html;
+}
+
+// Check if an audio file exists for a given briefing slug
+function getAudioPath(slug) {
+  const mp3 = path.join(AUDIO_DIR, `${slug}.mp3`);
+  return fs.existsSync(mp3) ? mp3 : null;
 }
 
 // Read all briefings, sorted newest first
@@ -114,6 +126,8 @@ function build() {
       title: 'Brief Signal',
       subtitle: 'Weekly AI market intelligence for startup conversations',
       url: '/',
+      audio_player: '',
+      feedback_cta: '',
       content: '<article><h1>Coming Soon</h1><p>The first briefing is on its way.</p></article>',
     });
     fs.writeFileSync(path.join(DIST_DIR, 'index.html'), html);
@@ -134,17 +148,54 @@ function build() {
       copyDir(imagesDir, destImages);
     }
 
+    // Copy audio file if it exists
+    const audioSrc = getAudioPath(b.slug);
+    let audioPlayer = '';
+    if (audioSrc) {
+      const distAudioDir = path.join(DIST_DIR, 'audio');
+      ensureDir(distAudioDir);
+      const audioFilename = `${b.slug}.mp3`;
+      fs.copyFileSync(audioSrc, path.join(distAudioDir, audioFilename));
+      const audioUrl = `${getBase(2)}/audio/${audioFilename}`;
+      audioPlayer = `<div class="audio-player" id="audioPlayer">
+  <button class="audio-play-btn" id="audioPlayBtn" aria-label="Play audio briefing">
+    <svg class="audio-icon-play" id="audioIconPlay" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+    <svg class="audio-icon-pause" id="audioIconPause" viewBox="0 0 24 24" fill="currentColor" style="display:none"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+  </button>
+  <div class="audio-info">
+    <div class="audio-label">Listen to this briefing <span class="audio-beta">(beta)</span></div>
+    <div class="audio-time"><span id="audioCurrent">0:00</span> / <span id="audioDuration">0:00</span></div>
+  </div>
+  <div class="audio-progress-wrap" id="audioProgressWrap">
+    <div class="audio-progress-bar" id="audioProgressBar"></div>
+  </div>
+  <audio id="audioElement" preload="metadata" src="${audioUrl}"></audio>
+</div>`;
+    }
+
     // Rewrite ./images/ paths to absolute /briefings/slug/images/ for HTML
     const bodyForBriefing = b.body;
     const articleHtml = renderMarkdown(bodyForBriefing);
     const content = `<article>
       ${articleHtml}
     </article>`;
+
+    // Build feedback CTA with pre-filled edition date
+    const feedbackUrl = `${GOOGLE_FORM_BASE_URL}?usp=pp_url&${GOOGLE_FORM_EDITION_ENTRY}=${encodeURIComponent(b.date || b.slug)}`;
+    const feedbackCta = `<div class="feedback-cta" id="feedbackCta">
+  <p class="feedback-label">Signal Check</p>
+  <h3 class="feedback-heading">Was this briefing useful?</h3>
+  <p class="feedback-subtext">Takes 60 seconds. Your feedback shapes next week's edition.</p>
+  <a href="${feedbackUrl}" target="_blank" rel="noopener" class="feedback-cta-btn">Share Feedback</a>
+</div>`;
+
     const html = render(template, {
       title: b.title || b.slug,
       subtitle: b.subtitle || '',
       url: `/briefings/${b.slug}/`,
       sources: b.sources || '',
+      audio_player: audioPlayer,
+      feedback_cta: feedbackCta,
       base: getBase(2), // dist/briefings/slug/ → 2 levels deep
       content,
     });
@@ -185,6 +236,8 @@ function build() {
     title: 'Archive',
     subtitle: 'All editions of Brief Signal',
     url: '/archive/',
+    audio_player: '',
+    feedback_cta: '',
     base: getBase(1), // dist/archive/ → 1 level deep
     content: archiveContent,
   });
