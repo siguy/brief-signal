@@ -39,15 +39,15 @@ jobs:
       - id: deployment
         uses: actions/deploy-pages@v4
 
-      - name: Check for new briefing
-        id: check-briefing
+      - name: Check for new audio
+        id: check-audio
         run: |
-          if git diff HEAD~1 --name-status --diff-filter=A | grep -q '^A.*content/briefings/.*\.md$'; then
-            echo "new_briefing=true" >> "$GITHUB_OUTPUT"
+          if git diff HEAD~1 --name-status --diff-filter=A | grep -q '^A.*content/audio/.*\.mp3$'; then
+            echo "new_audio=true" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Notify subscribers via Buttondown
-        if: steps.check-briefing.outputs.new_briefing == 'true'
+        if: steps.check-audio.outputs.new_audio == 'true'
         run: node scripts/send-email.js
         env:
           BUTTONDOWN_API_KEY: ${{ secrets.BUTTONDOWN_API_KEY }}

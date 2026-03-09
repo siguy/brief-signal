@@ -9,6 +9,8 @@
 
 ### Changed
 - **Briefing frontmatter** — All editions now include `featured_topics` array (backfilled for #1 and #2)
+- **Email triggers on audio, not briefing** — `deploy.yml` now sends subscriber email when a new `.mp3` is added (audio PR merge), not when a briefing `.md` is added; ensures audio is ready before email goes out
+- **Weekly pipeline docs** — `generate-weekly.sh` header documents the two-PR flow: briefing PR first, then audio PR after review
 
 ---
 
