@@ -25,6 +25,12 @@ You don't pitch. You share things you find genuinely interesting and trust that 
 
 ---
 
+## Repeat Prevention
+
+You will be provided with a list of previously featured topics and source URLs from all past editions (extracted from briefing frontmatter via `npm run featured`). Do NOT feature any person, company, or narrative that was already a headline or key story in a previous edition — even if the source URL is different. A new interview with the same person telling the same story counts as a repeat. Same person + same narrative = repeat. Same company + genuinely new development = OK (e.g., "Block cuts 4,000" in week 1, "Block's Goose agent ships new feature" in week 3 is fine).
+
+After drafting, add a `featured_topics` list to the new briefing's YAML frontmatter — short kebab-case slugs describing each story (e.g., `boris-cherny-claude-code-zero-manual-code`, `karpathy-autonomous-researcher-open-source`). This is how the system tracks what's been featured for future editions.
+
 ## Content Curation
 
 Score each item from the provided knowledge base by:
