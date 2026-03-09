@@ -3,6 +3,18 @@
 ## Unreleased
 
 ### Added
+- **Edition #3 briefing** — `content/briefings/2026-03-08.md` with 5 new images
+- **Featured topics dedup system** — `featured_topics` YAML frontmatter in each briefing tracks what stories have been told; `scripts/get-featured-topics.js` (`npm run featured`) scans all editions and outputs the full list for repeat prevention
+- **Repeat prevention in generation prompts** — `scripts/briefing-prompt.md` and `.claude/commands/generate-briefing.md` now require checking previously featured topics before drafting; same person + same narrative = skip even if different source URL
+
+### Changed
+- **Briefing frontmatter** — All editions now include `featured_topics` array (backfilled for #1 and #2)
+
+---
+
+## 2026-03-01
+
+### Added
 - **Audio briefing (beta)** — Spoken-word audio version of each weekly edition, generated via Google Cloud Gemini Pro TTS (Fenrir voice)
 - **Audio script generator** — `scripts/generate-audio-script.js` converts briefing markdown to conversational spoken-word script via Gemini 2.5 Flash
 - **Audio TTS generator** — `scripts/generate-audio.js` sends script to Gemini Pro TTS with configurable voice and style prompt, outputs MP3
