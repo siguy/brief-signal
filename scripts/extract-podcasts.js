@@ -24,6 +24,25 @@ const L2_PROMPT_PATH = path.join(__dirname, "podcast-deep-dive-prompt.md");
 const MAX_DEEP_DIVES = 3;
 const LOOKBACK_DAYS = 7;
 
+// Input validation — prevent command injection via config or yt-dlp output
+function validateHandle(handle) {
+  if (!/^@[\w.-]+$/.test(handle)) {
+    throw new Error(`Invalid channel handle: ${handle}`);
+  }
+  return handle;
+}
+
+function validateVideoId(id) {
+  if (!/^[\w-]{11}$/.test(id)) {
+    throw new Error(`Invalid video ID: ${id}`);
+  }
+  return id;
+}
+
+function stripCodeFences(text) {
+  return text.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/, "");
+}
+
 function log(msg) {
   console.log(`[${new Date().toISOString().slice(11, 19)}] ${msg}`);
 }
@@ -79,7 +98,8 @@ function getRecentUploads(channelHandle, dateAfter) {
   // Note: --dateafter doesn't work with --flat-playlist (upload_date is NA in flat mode).
   // Use --playlist-end 10 to cap results — no podcast posts >10 episodes per week.
   // Deduplication against previous runs handles the rest.
-  const url = `https://www.youtube.com/${channelHandle}/videos`;
+  const safeHandle = validateHandle(channelHandle);
+  const url = `https://www.youtube.com/${safeHandle}/videos`;
   try {
     const output = execSync(
       `yt-dlp --flat-playlist --playlist-end 10 --print "%(id)s|||%(title)s|||%(channel)s|||%(duration)s|||%(upload_date)s|||%(url)s" "${url}"`,
@@ -107,13 +127,14 @@ function getRecentUploads(channelHandle, dateAfter) {
 }
 
 function downloadSubtitles(videoId) {
-  const outPath = path.join(EXTRACTIONS_DIR, videoId);
+  const safeId = validateVideoId(videoId);
+  const outPath = path.join(EXTRACTIONS_DIR, safeId);
   const vttFile = `${outPath}.en.vtt`;
   // Check if already downloaded
   if (fs.existsSync(vttFile)) return vttFile;
   try {
     execSync(
-      `yt-dlp --skip-download --write-auto-sub --sub-lang en --sub-format vtt -o "${outPath}" "https://www.youtube.com/watch?v=${videoId}"`,
+      `yt-dlp --skip-download --write-auto-sub --sub-lang en --sub-format vtt -o "${outPath}" "https://www.youtube.com/watch?v=${safeId}"`,
       { encoding: "utf-8", timeout: 60000 }
     );
     return fs.existsSync(vttFile) ? vttFile : null;
@@ -124,28 +145,20 @@ function downloadSubtitles(videoId) {
 
 function parseVtt(vttPath) {
   try {
-    const output = execSync(
-      `python3 -c "
-import re, sys
-with open(sys.argv[1]) as f:
-    content = f.read()
-lines = []
-seen = set()
-for line in content.split('\\n'):
-    line = line.strip()
-    if not line or line == 'WEBVTT' or line.startswith('Kind:') or line.startswith('Language:'):
-        continue
-    if re.match(r'^\\d{2}:\\d{2}', line) or re.match(r'^\\d+$', line):
-        continue
-    clean = re.sub(r'<[^>]+>', '', line)
-    if clean and clean not in seen:
-        seen.add(clean)
-        lines.append(clean)
-print(' '.join(lines))
-" "${vttPath}"`,
-      { encoding: "utf-8", timeout: 30000 }
-    );
-    return output.trim();
+    const content = fs.readFileSync(vttPath, "utf-8");
+    const seen = new Set();
+    const lines = [];
+    for (const raw of content.split("\n")) {
+      const line = raw.trim();
+      if (!line || line === "WEBVTT" || line.startsWith("Kind:") || line.startsWith("Language:")) continue;
+      if (/^\d{2}:\d{2}/.test(line) || /^\d+$/.test(line)) continue;
+      const clean = line.replace(/<[^>]+>/g, "");
+      if (clean && !seen.has(clean)) {
+        seen.add(clean);
+        lines.push(clean);
+      }
+    }
+    return lines.join(" ");
   } catch {
     return null;
   }
@@ -172,9 +185,10 @@ ${transcript}`;
   });
 
   try {
-    return JSON.parse(response.text);
+    return JSON.parse(stripCodeFences(response.text));
   } catch {
     warn(`Failed to parse Gemini response as JSON for ${episode.title}`);
+    warn(`Response preview: ${(response.text || "").slice(0, 200)}`);
     return null;
   }
 }
@@ -198,9 +212,10 @@ ${transcript}`;
   });
 
   try {
-    return JSON.parse(response.text);
+    return JSON.parse(stripCodeFences(response.text));
   } catch {
     warn(`Failed to parse deep dive JSON for ${level1Data.episode_title}`);
+    warn(`Response preview: ${(response.text || "").slice(0, 200)}`);
     return null;
   }
 }
