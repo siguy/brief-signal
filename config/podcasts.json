@@ -1,0 +1,152 @@
+[
+  {
+    "name": "All-In",
+    "source": "youtube",
+    "channelHandle": "@allin",
+    "category": "VC/Market",
+    "enabled": true
+  },
+  {
+    "name": "No Priors",
+    "source": "youtube",
+    "channelHandle": "@NoPriorsPodcast",
+    "category": "AI/Builder",
+    "enabled": true
+  },
+  {
+    "name": "Hard Fork",
+    "source": "youtube",
+    "channelHandle": "@hardfork",
+    "category": "News/Tech",
+    "enabled": true
+  },
+  {
+    "name": "Pivot",
+    "source": "youtube",
+    "channelHandle": "@pivot",
+    "category": "News/Tech",
+    "enabled": true
+  },
+  {
+    "name": "DOAC (Diary of a CEO)",
+    "source": "youtube",
+    "channelHandle": "@TheDiaryOfACEO",
+    "category": "Founder/Interview",
+    "enabled": true
+  },
+  {
+    "name": "My First Million",
+    "source": "youtube",
+    "channelHandle": "@MyFirstMillionPod",
+    "category": "Founder/Builder",
+    "enabled": true
+  },
+  {
+    "name": "a16z Podcast",
+    "source": "youtube",
+    "channelHandle": "@a16z",
+    "category": "VC/Builder",
+    "enabled": true
+  },
+  {
+    "name": "Gradient Dissent",
+    "source": "youtube",
+    "channelHandle": "@WeightsBiases",
+    "category": "AI/Builder",
+    "enabled": true
+  },
+  {
+    "name": "Grit (Kleiner Perkins)",
+    "source": "youtube",
+    "channelHandle": "@KleinerPerkinsVideos",
+    "category": "VC/Founder",
+    "enabled": true
+  },
+  {
+    "name": "AI & I (Dan Shipper)",
+    "source": "youtube",
+    "channelHandle": "@EveryInc",
+    "category": "AI/Builder",
+    "enabled": true
+  },
+  {
+    "name": "Latent Space",
+    "source": "youtube",
+    "channelHandle": "@LatentSpacePod",
+    "category": "AI/Builder",
+    "enabled": true
+  },
+  {
+    "name": "Lightcone (YC)",
+    "source": "youtube",
+    "channelHandle": "@ycombinator",
+    "category": "Startup/Builder",
+    "enabled": true
+  },
+  {
+    "name": "The Cognitive Revolution",
+    "source": "youtube",
+    "channelHandle": "@CognitiveRevolutionPodcast",
+    "category": "AI/Builder",
+    "enabled": true
+  },
+  {
+    "name": "Lenny's Podcast",
+    "source": "youtube",
+    "channelHandle": "@LennysPodcast",
+    "category": "Product/Growth",
+    "enabled": true
+  },
+  {
+    "name": "20VC",
+    "source": "youtube",
+    "channelHandle": "@20VC",
+    "category": "VC/Funding",
+    "enabled": true
+  },
+  {
+    "name": "BG2 Pod",
+    "source": "youtube",
+    "channelHandle": "@Bg2Pod",
+    "category": "VC/Market",
+    "enabled": true
+  },
+  {
+    "name": "Acquired",
+    "source": "rss",
+    "rssUrl": "https://feeds.transistor.fm/acquired",
+    "transcriptUrl": "https://www.acquired.fm/episodes/",
+    "category": "Deep Dive",
+    "enabled": true,
+    "note": "Scrape transcript from acquired.fm — speaker-labeled, highest quality"
+  },
+  {
+    "name": "AI Daily Brief",
+    "source": "rss",
+    "rssUrl": "https://anchor.fm/s/f7cac464/podcast/rss",
+    "category": "AI/News",
+    "enabled": true
+  },
+  {
+    "name": "10/10 GTM",
+    "source": "rss",
+    "rssUrl": "https://anchor.fm/s/751173b0/podcast/rss",
+    "category": "GTM",
+    "enabled": true
+  },
+  {
+    "name": "Rethinking with Adam Grant",
+    "source": "rss",
+    "rssUrl": "https://feeds.acast.com/public/shows/675858676d1777b3683ec351",
+    "category": "Leadership",
+    "enabled": true
+  },
+  {
+    "name": "Stratechery",
+    "source": "rss",
+    "rssUrl": null,
+    "category": "Strategy",
+    "enabled": false,
+    "note": "Paywalled — requires Stratechery Plus subscription for RSS access"
+  }
+]
