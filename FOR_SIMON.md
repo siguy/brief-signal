@@ -171,6 +171,20 @@ This pattern -- **extract structured data first, generate prose later** -- shows
 
 ---
 
+## The Twikit Bookmark Migration
+
+While building the podcast pipeline, we also replaced how bookmarks are fetched from X/Twitter. The old approach opened Chrome, scrolled through your bookmarks page for 15-30 minutes, and scraped the DOM. It was fragile, slow, and couldn't run headless in a cron job.
+
+The new approach uses **twikit**, a Python library that calls X's internal GraphQL API directly — the same API the X web app uses. With two cookies from your browser (`ct0` and `auth_token`), it fetches all your bookmarks in about 30 seconds. No browser needed.
+
+**The monkey patch:** When we built this, twikit was broken. X changed their JavaScript bundle format on March 18 2026, and twikit's regex for finding the transaction signing code stopped matching. The fix is a monkey patch at the top of `fetch-bookmarks.py` — it replaces the broken regex before twikit loads. The patch is clearly marked with comments and a link to the GitHub issue ([d60/twikit#408](https://github.com/d60/twikit/issues/408)). Remove it when twikit releases an update.
+
+**Cookie expiry:** The cookies last weeks to months, then expire without warning. When they do, the script prints a clear error. See `docs/cookie-refresh.md` for the 5-minute fix (copy two values from Chrome DevTools into `.env`).
+
+**The fallback:** The old browser-based scrolling is still documented in the `/extract-bookmarks` skill as Step 3. If twikit breaks and you can't wait for a fix, the browser method still works.
+
+---
+
 ## What to Build Next
 
 **RSS/whisper pipeline for audio-only podcasts.** The design is already written (see `docs/plans/2026-03-23-podcast-sources-design.md`, "Follow-Up" section). The approach:
