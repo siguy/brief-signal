@@ -281,25 +281,27 @@ function formatKnowledgeBase(extractions, deepDives, today) {
     // GCP
     if (ep.gcp_intelligence) {
       const gcp = ep.gcp_intelligence;
+      // Gemini sometimes returns objects instead of strings in arrays — stringify safely
+      const str = (v) => (typeof v === "string" ? v : JSON.stringify(v));
       md += `- **GCP Relevance:** ${gcp.relevance} — ${gcp.relevance_reason}\n`;
       if (gcp.migration_signals?.length) {
         for (const m of gcp.migration_signals)
-          md += `  - Migration: ${m}\n`;
+          md += `  - Migration: ${str(m)}\n`;
       }
       if (gcp.pain_points?.length) {
         for (const p of gcp.pain_points)
-          md += `  - Pain point: ${p}\n`;
+          md += `  - Pain point: ${str(p)}\n`;
       }
       if (gcp.competitive_mentions?.length) {
-        md += `  - Competitive: ${gcp.competitive_mentions.join(", ")}\n`;
+        md += `  - Competitive: ${gcp.competitive_mentions.map(str).join(", ")}\n`;
       }
       if (gcp.budget_data?.length) {
         for (const b of gcp.budget_data)
-          md += `  - Budget: ${b}\n`;
+          md += `  - Budget: ${str(b)}\n`;
       }
       if (gcp.undecided_moments?.length) {
         for (const u of gcp.undecided_moments)
-          md += `  - Open decision: ${u}\n`;
+          md += `  - Open decision: ${str(u)}\n`;
       }
     }
 
@@ -449,13 +451,18 @@ async function main() {
     transcripts[episode.url] = transcript;
 
     // Extract intelligence
-    const extraction = await extractIntelligence(
-      ai,
-      l1Prompt,
-      podcast,
-      episode,
-      transcript
-    );
+    let extraction;
+    try {
+      extraction = await extractIntelligence(
+        ai,
+        l1Prompt,
+        podcast,
+        episode,
+        transcript
+      );
+    } catch (err) {
+      warn(`Extraction failed for ${episode.title}: ${err.message}`);
+    }
     if (extraction) {
       // Ensure required fields are present
       extraction.video_id = episode.video_id;
@@ -479,7 +486,12 @@ async function main() {
     log(`Deep dive: ${ep.podcast_name} — "${ep.episode_title}"`);
     const transcript = transcripts[ep.url];
     if (!transcript) continue;
-    const dd = await deepDive(ai, l2Prompt, ep, transcript);
+    let dd;
+    try {
+      dd = await deepDive(ai, l2Prompt, ep, transcript);
+    } catch (err) {
+      warn(`Deep dive failed for ${ep.episode_title}: ${err.message}`);
+    }
     if (dd) {
       deepDives[ep.url] = dd;
       log(`  Segments: ${dd.timestamped_segments?.length || 0}`);
