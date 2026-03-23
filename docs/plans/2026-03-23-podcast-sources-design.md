@@ -261,15 +261,26 @@ Single file: `podcasts-knowledge-base-YYYY-MM-DD.md`
 
 **Purpose:** Extend `/extract-podcasts` to handle podcasts that don't post on YouTube.
 
+**Approach decision (2026-03-23):** Go with free/local options only. No paid services.
+- **mlx-whisper** for transcription (free, local, Apple Silicon optimized)
+- **Acquired.fm scraping** for Acquired specifically (free, has speaker-labeled transcripts)
+- **Gemini for speaker inference** — mlx-whisper produces unlabeled transcripts (no speaker diarization). Rather than bolting on pyannote (complex setup, still only gives generic "Speaker 0/1" labels), pass the raw transcript to the Gemini extraction prompt with an instruction to infer speakers from context. Podcast hosts introduce themselves, have distinct speaking patterns, and reference each other by name. Add to extraction prompt: "The transcript has no speaker labels. Infer speakers from context — podcast hosts typically introduce themselves and guests. Label uncertain attributions as [unconfirmed]."
+
+**Rejected alternatives:**
+- **Deepgram API** ($6-10/mo) — best speaker diarization but ongoing cost. Revisit if Gemini speaker inference proves insufficient.
+- **Podscan.fm** ($100/mo) — overkill for 3-5 podcasts. Better suited for cross-episode research/discovery, not weekly extraction.
+- **Apple Podcasts transcripts** — lowest quality (75-85% accuracy), no speaker labels, relies on reverse-engineered private API that breaks between OS versions.
+
 **Design:**
 
 1. Config entries with `"source": "rss"` get processed through a separate code path
 2. For each enabled RSS podcast:
    a. Fetch RSS feed, find episodes published in last 7 days
    b. Download MP3 from RSS enclosure URL
-   c. Transcribe locally using `mlx-whisper` with `large-v3-turbo` model
-   d. Send transcript to same Gemini extraction prompt as YouTube path
-3. Output merges into the same `podcasts-knowledge-base-YYYY-MM-DD.md` file
+   c. Transcribe locally using `mlx-whisper` with `large-v3-turbo` model (~6-10 min per episode)
+   d. Send transcript to same Gemini extraction prompt as YouTube path (prompt includes speaker inference instruction)
+3. **Special case — Acquired:** Scrape transcript from acquired.fm instead of transcribing. These include real speaker names (Ben:, David:, Guest:) — higher quality than any transcription approach.
+4. Output merges into the same `podcasts-knowledge-base-YYYY-MM-DD.md` file
 
 **Dependencies:**
 - `pip install mlx-whisper` (one-time, optimized for Apple Silicon)
@@ -278,9 +289,10 @@ Single file: `podcasts-knowledge-base-YYYY-MM-DD.md`
 **Performance:**
 - ~6-10 minutes transcription per 1-hour episode on M2/M3, faster on M4
 - For 2-3 audio-only podcasts: ~20-30 minutes additional processing
+- Acquired scraping: near-instant
 
 **Special cases:**
-- **Acquired:** Publishes full transcripts on acquired.fm — scrape website instead of transcribing. Faster and higher quality.
+- **Acquired:** Scrape website transcripts (free, speaker-labeled, highest quality option)
 - **Stratechery:** Paywalled RSS. Requires Stratechery Plus subscription credentials. May not be worth the complexity.
 
 **When to build:** After v1 is running and you've assessed whether the YouTube-only coverage is sufficient. If you're consistently missing signal from Acquired or AI Daily Brief, build this next.
