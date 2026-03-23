@@ -23,7 +23,8 @@ function findKnowledgeBaseFiles() {
   const files = fs.readdirSync(SKILLS_DIR).filter((f) => {
     const match =
       f.startsWith("bookmarks-knowledge-base-") ||
-      f.startsWith("playlist-knowledge-base-");
+      f.startsWith("playlist-knowledge-base-") ||
+      f.startsWith("podcasts-knowledge-base-");
     if (!match) return false;
     const stat = fs.statSync(path.join(SKILLS_DIR, f));
     return stat.mtimeMs >= cutoff;
@@ -43,10 +44,14 @@ function findKnowledgeBaseFiles() {
   const playlist = files.find((f) =>
     f.startsWith("playlist-knowledge-base-")
   );
+  const podcasts = files.find((f) =>
+    f.startsWith("podcasts-knowledge-base-")
+  );
 
   const selected = [];
   if (bookmarks) selected.push(bookmarks);
   if (playlist) selected.push(playlist);
+  if (podcasts) selected.push(podcasts);
   return selected;
 }
 

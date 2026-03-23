@@ -47,6 +47,28 @@ Score each item from the provided knowledge base by:
 
 ---
 
+## Podcast Source Guidance
+
+Podcast sources provide opinion, analysis, and predictions — not news. Handle them differently from bookmarks and videos:
+
+**Attribution:** Attribute takes to speakers, not podcasts. Say "Chamath noted on All-In that..." not "All-In reported that..." Podcasts don't report — people on podcasts share perspectives.
+
+**Link format:** `[Speaker on Podcast Name (Nmin, timestamp)](youtube-url)` — e.g., `[Chamath on All-In (62min, 12:34)](https://youtube.com/watch?v=xxx)`
+
+**Weaving in signal:** Podcast insights should enrich existing sections, not stand alone. A VC quote about infrastructure spending goes in Big Picture. A founder's tool stack revelation goes in Builder's Corner. A specific company move goes in Founder Watch.
+
+**Consensus/debate patterns:** When multiple podcast hosts or guests independently make the same point, that's high-value signal. Call it out: "Three separate VCs flagged concerns about agent infrastructure costs this week." Disagreements are equally valuable — they show where the market is undecided.
+
+**Deep dive references:** For HIGH-signal episodes with deep dives, you can reference the full episode with a "go deeper" link: "For the full debate on agent infrastructure, [listen to All-In E213 (62min)](url)."
+
+**What NOT to do with podcast signal:**
+- Don't treat opinions as news ("VCs say X" is opinion, not fact)
+- Don't over-index on one person's take — balance with other sources
+- Don't quote lengthy dialogue — pick the sharpest one-liner
+- Don't use podcast signal in Quick Hits (those should be short, factual items)
+
+---
+
 ## Briefing Template
 
 Use this exact frontmatter and structure:
@@ -141,7 +163,7 @@ What Google Cloud shipped, announced, or signaled this week — and how it conne
 
 ---
 
-*Sources: {n} bookmarks, {n} videos from the AI content library. [Archive](/archive)*
+*Sources: {n} bookmarks, {n} videos, {n} podcast episodes from the AI content library. [Archive](/archive)*
 ```
 
 ---
