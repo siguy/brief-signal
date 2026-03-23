@@ -11,7 +11,7 @@
  */
 
 const { GoogleGenAI } = require("@google/genai");
-const { execSync } = require("child_process");
+const { execSync, exec } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
@@ -97,13 +97,13 @@ function loadPreviousIds() {
 function getRecentUploads(channelHandle, dateAfter) {
   // YouTube auto-creates an uploads playlist. Channel handle -> uploads playlist.
   // Note: --dateafter doesn't work with --flat-playlist (upload_date is NA in flat mode).
-  // Use --playlist-end 10 to cap results — no podcast posts >10 episodes per week.
+  // Use --playlist-end 5 to cap results — enough to get 2-3 full episodes after duration filter.
   // Deduplication against previous runs handles the rest.
   const safeHandle = validateHandle(channelHandle);
   const url = `https://www.youtube.com/${safeHandle}/videos`;
   try {
     const output = execSync(
-      `yt-dlp --flat-playlist --playlist-end 10 --print "%(id)s|||%(title)s|||%(channel)s|||%(duration)s|||%(upload_date)s|||%(url)s" "${url}"`,
+      `yt-dlp --flat-playlist --playlist-end 5 --print "%(id)s|||%(title)s|||%(channel)s|||%(duration)s|||%(upload_date)s|||%(url)s" "${url}"`,
       { encoding: "utf-8", timeout: 60000 }
     ).trim();
     if (!output) return [];
@@ -137,7 +137,6 @@ function downloadSubtitles(videoId) {
   const safeId = validateVideoId(videoId);
   const outPath = path.join(EXTRACTIONS_DIR, safeId);
   const vttFile = `${outPath}.en.vtt`;
-  // Check if already downloaded
   if (fs.existsSync(vttFile)) return vttFile;
   try {
     execSync(
@@ -148,6 +147,33 @@ function downloadSubtitles(videoId) {
   } catch {
     return null;
   }
+}
+
+function downloadSubtitleAsync(videoId) {
+  return new Promise((resolve) => {
+    const safeId = validateVideoId(videoId);
+    const outPath = path.join(EXTRACTIONS_DIR, safeId);
+    const vttFile = `${outPath}.en.vtt`;
+    if (fs.existsSync(vttFile)) return resolve(vttFile);
+    exec(
+      `yt-dlp --skip-download --write-auto-sub --sub-lang en --sub-format vtt -o "${outPath}" "https://www.youtube.com/watch?v=${safeId}"`,
+      { encoding: "utf-8", timeout: 60000 },
+      () => resolve(fs.existsSync(vttFile) ? vttFile : null)
+    );
+  });
+}
+
+async function downloadAllSubtitles(episodes, concurrency = 4) {
+  const results = new Map();
+  for (let i = 0; i < episodes.length; i += concurrency) {
+    const batch = episodes.slice(i, i + concurrency);
+    const promises = batch.map(async ({ episode }) => {
+      const vttPath = await downloadSubtitleAsync(episode.video_id);
+      results.set(episode.video_id, vttPath);
+    });
+    await Promise.all(promises);
+  }
+  return results;
 }
 
 function parseVtt(vttPath) {
@@ -425,8 +451,6 @@ async function main() {
     for (const ep of newEpisodes) {
       allEpisodes.push({ podcast, episode: ep });
     }
-    // Rate limit between channels
-    await new Promise((r) => setTimeout(r, 1000));
   }
 
   log(`Total new episodes to process: ${allEpisodes.length}`);
@@ -436,14 +460,20 @@ async function main() {
     process.exit(0);
   }
 
-  // Process each episode
+  // Batch download all subtitles in parallel (4 at a time)
+  log(`Downloading subtitles for ${allEpisodes.length} episodes (4 concurrent)...`);
+  const subtitlePaths = await downloadAllSubtitles(allEpisodes);
+  const downloaded = [...subtitlePaths.values()].filter(Boolean).length;
+  log(`Subtitles downloaded: ${downloaded}/${allEpisodes.length}`);
+
+  // Process each episode (Gemini calls are sequential to respect rate limits)
   const extractions = [];
   const transcripts = {}; // url -> transcript (for deep dive reuse)
   for (const { podcast, episode } of allEpisodes) {
     log(`Processing: ${podcast.name} — "${episode.title}"`);
 
-    // Download subtitles
-    const vttPath = downloadSubtitles(episode.video_id);
+    // Get cached subtitle path
+    const vttPath = subtitlePaths.get(episode.video_id);
     if (!vttPath) {
       warn(`  No subtitles available for ${episode.video_id}. Skipping.`);
       continue;
@@ -481,7 +511,7 @@ async function main() {
     }
 
     // Rate limit between Gemini calls
-    await new Promise((r) => setTimeout(r, 2000));
+    await new Promise((r) => setTimeout(r, 1000));
   }
 
   // Deep dives for HIGH episodes (max MAX_DEEP_DIVES)
