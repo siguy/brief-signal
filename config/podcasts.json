@@ -114,34 +114,32 @@
   {
     "name": "Acquired",
     "source": "rss",
-    "rssUrl": null,
+    "rssUrl": "https://feeds.transistor.fm/acquired",
+    "transcriptUrl": "https://www.acquired.fm/episodes/",
     "category": "Deep Dive",
-    "enabled": false,
-    "note": "Has website transcripts on acquired.fm — scrape instead of transcribe"
+    "enabled": true,
+    "note": "Scrape transcript from acquired.fm — speaker-labeled, highest quality"
   },
   {
     "name": "AI Daily Brief",
     "source": "rss",
-    "rssUrl": null,
+    "rssUrl": "https://anchor.fm/s/f7cac464/podcast/rss",
     "category": "AI/News",
-    "enabled": false,
-    "note": "RSS pipeline not yet built — needs mlx-whisper transcription"
+    "enabled": true
   },
   {
     "name": "10/10 GTM",
     "source": "rss",
-    "rssUrl": null,
+    "rssUrl": "https://anchor.fm/s/751173b0/podcast/rss",
     "category": "GTM",
-    "enabled": false,
-    "note": "RSS pipeline not yet built — needs mlx-whisper transcription"
+    "enabled": true
   },
   {
     "name": "Rethinking with Adam Grant",
     "source": "rss",
-    "rssUrl": null,
+    "rssUrl": "https://feeds.acast.com/public/shows/675858676d1777b3683ec351",
     "category": "Leadership",
-    "enabled": false,
-    "note": "RSS pipeline not yet built — needs mlx-whisper transcription"
+    "enabled": true
   },
   {
     "name": "Stratechery",

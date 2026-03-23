@@ -427,7 +427,7 @@ async function main() {
   const { enabled, skipped } = loadConfig();
   log(`Enabled channels: ${enabled.length}`);
   for (const s of skipped) {
-    log(`Skipped ${s.name} — ${s.note || (s.source === "rss" ? "RSS pipeline not yet supported" : "disabled")}`);
+    log(`Skipped ${s.name} — ${s.note || (s.source === "rss" ? "processed by extract-rss-podcasts.py" : "disabled")}`);
   }
 
   // Load prompts
