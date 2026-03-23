@@ -76,10 +76,13 @@ function loadPreviousIds() {
 
 function getRecentUploads(channelHandle, dateAfter) {
   // YouTube auto-creates an uploads playlist. Channel handle -> uploads playlist.
+  // Note: --dateafter doesn't work with --flat-playlist (upload_date is NA in flat mode).
+  // Use --playlist-end 10 to cap results — no podcast posts >10 episodes per week.
+  // Deduplication against previous runs handles the rest.
   const url = `https://www.youtube.com/${channelHandle}/videos`;
   try {
     const output = execSync(
-      `yt-dlp --flat-playlist --dateafter ${dateAfter} --print "%(id)s|||%(title)s|||%(channel)s|||%(duration)s|||%(upload_date)s|||%(url)s" "${url}"`,
+      `yt-dlp --flat-playlist --playlist-end 10 --print "%(id)s|||%(title)s|||%(channel)s|||%(duration)s|||%(upload_date)s|||%(url)s" "${url}"`,
       { encoding: "utf-8", timeout: 60000 }
     ).trim();
     if (!output) return [];
