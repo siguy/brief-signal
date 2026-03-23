@@ -154,26 +154,42 @@ function downloadSubtitleAsync(videoId) {
     const safeId = validateVideoId(videoId);
     const outPath = path.join(EXTRACTIONS_DIR, safeId);
     const vttFile = `${outPath}.en.vtt`;
-    if (fs.existsSync(vttFile)) return resolve(vttFile);
+    const dateFile = `${outPath}.date`;
+    // If both cached, return immediately
+    if (fs.existsSync(vttFile) && fs.existsSync(dateFile)) {
+      const date = fs.readFileSync(dateFile, "utf-8").trim();
+      return resolve({ vttPath: vttFile, uploadDate: date });
+    }
+    // Download subtitles and print upload_date in one call
     exec(
-      `yt-dlp --skip-download --write-auto-sub --sub-lang en --sub-format vtt -o "${outPath}" "https://www.youtube.com/watch?v=${safeId}"`,
+      `yt-dlp --skip-download --write-auto-sub --sub-lang en --sub-format vtt --print "%(upload_date)s" -o "${outPath}" "https://www.youtube.com/watch?v=${safeId}"`,
       { encoding: "utf-8", timeout: 60000 },
-      () => resolve(fs.existsSync(vttFile) ? vttFile : null)
+      (err, stdout) => {
+        const date = (stdout || "").trim().split("\n")[0];
+        // Cache the date for future runs
+        if (date && date !== "NA") {
+          try { fs.writeFileSync(dateFile, date, "utf-8"); } catch {}
+        }
+        const vttPath = fs.existsSync(vttFile) ? vttFile : null;
+        resolve({ vttPath, uploadDate: date && date !== "NA" ? date : null });
+      }
     );
   });
 }
 
 async function downloadAllSubtitles(episodes, concurrency = 4) {
-  const results = new Map();
+  const subtitles = new Map(); // video_id -> vttPath
+  const dates = new Map();     // video_id -> YYYYMMDD
   for (let i = 0; i < episodes.length; i += concurrency) {
     const batch = episodes.slice(i, i + concurrency);
     const promises = batch.map(async ({ episode }) => {
-      const vttPath = await downloadSubtitleAsync(episode.video_id);
-      results.set(episode.video_id, vttPath);
+      const { vttPath, uploadDate } = await downloadSubtitleAsync(episode.video_id);
+      subtitles.set(episode.video_id, vttPath);
+      if (uploadDate) dates.set(episode.video_id, uploadDate);
     });
     await Promise.all(promises);
   }
-  return results;
+  return { subtitles, dates };
 }
 
 function parseVtt(vttPath) {
@@ -460,11 +476,20 @@ async function main() {
     process.exit(0);
   }
 
-  // Batch download all subtitles in parallel (4 at a time)
+  // Batch download all subtitles in parallel (4 at a time) + fetch upload dates
   log(`Downloading subtitles for ${allEpisodes.length} episodes (4 concurrent)...`);
-  const subtitlePaths = await downloadAllSubtitles(allEpisodes);
+  const { subtitles: subtitlePaths, dates: uploadDates } = await downloadAllSubtitles(allEpisodes);
   const downloaded = [...subtitlePaths.values()].filter(Boolean).length;
   log(`Subtitles downloaded: ${downloaded}/${allEpisodes.length}`);
+
+  // Apply real upload dates to episodes
+  for (const { episode } of allEpisodes) {
+    const rawDate = uploadDates.get(episode.video_id);
+    if (rawDate) {
+      // Convert YYYYMMDD to YYYY-MM-DD
+      episode.upload_date = rawDate.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
+    }
+  }
 
   // Process each episode (Gemini calls are sequential to respect rate limits)
   const extractions = [];
@@ -472,7 +497,6 @@ async function main() {
   for (const { podcast, episode } of allEpisodes) {
     log(`Processing: ${podcast.name} — "${episode.title}"`);
 
-    // Get cached subtitle path
     const vttPath = subtitlePaths.get(episode.video_id);
     if (!vttPath) {
       warn(`  No subtitles available for ${episode.video_id}. Skipping.`);
@@ -506,6 +530,10 @@ async function main() {
       extraction.podcast_name = extraction.podcast_name || podcast.name;
       extraction.url = extraction.url || episode.url;
       extraction.duration_min = extraction.duration_min || episode.duration_min;
+      // Override Gemini's date guess with real upload date from YouTube
+      if (episode.upload_date && episode.upload_date !== "NA") {
+        extraction.date = episode.upload_date;
+      }
       extractions.push(extraction);
       log(`  Signal: ${extraction.signal_rating} | Quotes: ${extraction.notable_quotes?.length || 0}`);
     }
