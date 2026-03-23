@@ -23,6 +23,7 @@ const L1_PROMPT_PATH = path.join(__dirname, "podcast-extraction-prompt.md");
 const L2_PROMPT_PATH = path.join(__dirname, "podcast-deep-dive-prompt.md");
 const MAX_DEEP_DIVES = 3;
 const LOOKBACK_DAYS = 7;
+const MIN_DURATION_SEC = 1200; // 20 minutes — filters out clips, shorts, promos, demos
 
 // Input validation — prevent command injection via config or yt-dlp output
 function validateHandle(handle) {
@@ -113,12 +114,18 @@ function getRecentUploads(channelHandle, dateAfter) {
         video_id: id,
         title,
         channel,
-        duration_sec: duration === "NA" ? null : parseInt(duration, 10),
+        duration_sec: duration === "NA" ? null : parseFloat(duration),
         duration_min:
-          duration === "NA" ? null : Math.ceil(parseInt(duration, 10) / 60),
+          duration === "NA" ? null : Math.ceil(parseFloat(duration) / 60),
         upload_date: uploadDate,
         url: videoUrl || `https://www.youtube.com/watch?v=${id}`,
       };
+    }).filter((ep) => {
+      // Skip clips, shorts, promos — only process full episodes (20+ min)
+      if (ep.duration_sec !== null && ep.duration_sec < MIN_DURATION_SEC) {
+        return false;
+      }
+      return true;
     });
   } catch (err) {
     warn(`Failed to get uploads for ${channelHandle}: ${err.message}`);
