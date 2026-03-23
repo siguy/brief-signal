@@ -491,66 +491,65 @@ async function main() {
     }
   }
 
-  // Process each episode (Gemini calls are sequential to respect rate limits)
-  const extractions = [];
+  // Parse all VTT files and prepare episodes for extraction
+  const prepared = []; // { podcast, episode, transcript }
   const transcripts = {}; // url -> transcript (for deep dive reuse)
   for (const { podcast, episode } of allEpisodes) {
-    log(`Processing: ${podcast.name} — "${episode.title}"`);
-
     const vttPath = subtitlePaths.get(episode.video_id);
     if (!vttPath) {
-      warn(`  No subtitles available for ${episode.video_id}. Skipping.`);
+      warn(`No subtitles for ${podcast.name} — "${episode.title}". Skipping.`);
       continue;
     }
-
-    // Parse VTT
     const transcript = parseVtt(vttPath);
     if (!transcript || transcript.length < 100) {
-      warn(`  Transcript too short for ${episode.video_id}. Skipping.`);
+      warn(`Transcript too short for ${podcast.name} — "${episode.title}". Skipping.`);
       continue;
     }
     transcripts[episode.url] = transcript;
+    prepared.push({ podcast, episode, transcript });
+  }
+  log(`Episodes with valid transcripts: ${prepared.length}`);
 
-    // Extract intelligence
+  // Extract intelligence in parallel batches (3 concurrent Gemini calls)
+  const GEMINI_CONCURRENCY = 3;
+  const extractions = [];
+
+  async function processEpisode({ podcast, episode, transcript }) {
+    log(`Processing: ${podcast.name} — "${episode.title}"`);
     let extraction;
     try {
-      extraction = await extractIntelligence(
-        ai,
-        l1Prompt,
-        podcast,
-        episode,
-        transcript
-      );
+      extraction = await extractIntelligence(ai, l1Prompt, podcast, episode, transcript);
     } catch (err) {
       warn(`Extraction failed for ${episode.title}: ${err.message}`);
     }
     if (extraction) {
-      // Ensure required fields are present
       extraction.video_id = episode.video_id;
       extraction.podcast_name = extraction.podcast_name || podcast.name;
       extraction.url = extraction.url || episode.url;
       extraction.duration_min = extraction.duration_min || episode.duration_min;
-      // Override Gemini's date guess with real upload date from YouTube
       if (episode.upload_date && episode.upload_date !== "NA") {
         extraction.date = episode.upload_date;
       }
       extractions.push(extraction);
       log(`  Signal: ${extraction.signal_rating} | Quotes: ${extraction.notable_quotes?.length || 0}`);
     }
-
-    // Rate limit between Gemini calls
-    await new Promise((r) => setTimeout(r, 1000));
   }
 
-  // Deep dives for HIGH episodes (max MAX_DEEP_DIVES)
+  for (let i = 0; i < prepared.length; i += GEMINI_CONCURRENCY) {
+    const batch = prepared.slice(i, i + GEMINI_CONCURRENCY);
+    await Promise.all(batch.map(processEpisode));
+  }
+
+  // Deep dives for HIGH episodes (max MAX_DEEP_DIVES) — run in parallel
   const highEpisodes = extractions
     .filter((e) => e.signal_rating === "HIGH")
     .slice(0, MAX_DEEP_DIVES);
   const deepDives = {};
-  for (const ep of highEpisodes) {
+  log(`Running ${highEpisodes.length} deep dives in parallel...`);
+  await Promise.all(highEpisodes.map(async (ep) => {
     log(`Deep dive: ${ep.podcast_name} — "${ep.episode_title}"`);
     const transcript = transcripts[ep.url];
-    if (!transcript) continue;
+    if (!transcript) return;
     let dd;
     try {
       dd = await deepDive(ai, l2Prompt, ep, transcript);
@@ -561,8 +560,7 @@ async function main() {
       deepDives[ep.url] = dd;
       log(`  Segments: ${dd.timestamped_segments?.length || 0}`);
     }
-    await new Promise((r) => setTimeout(r, 2000));
-  }
+  }));
 
   // Write output files
   // 1. Raw JSON
