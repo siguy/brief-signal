@@ -3,14 +3,29 @@
 ## Unreleased
 
 ### Added
+- **Podcast intelligence extraction** — New third source type: 16 YouTube-hosted podcasts scanned weekly for founder/VC signal. Two-level extraction: L1 (quotes, consensus, debate, intent signals, GCP competitive intel) for all episodes, L2 deep dive with timestamped segments for HIGH-rated episodes (max 3/week). Config-driven via `config/podcasts.json`.
+- **`/extract-podcasts` skill** — Claude Code skill at `~/.claude/skills/extract-podcasts/SKILL.md`
+- **Podcast extraction prompts** — `scripts/podcast-extraction-prompt.md` (L1) and `scripts/podcast-deep-dive-prompt.md` (L2) tuned for GCP sales intelligence
+- **Podcast source guidance in briefing prompt** — `scripts/briefing-prompt.md` now instructs Gemini to attribute podcast takes to speakers (not shows), weave signal into existing sections, and highlight cross-podcast consensus/debate patterns
+- **Twikit bookmark fetcher** — `scripts/fetch-bookmarks.py` replaces browser-based bookmark scrolling (~30 sec vs 15-30 min). Uses X's GraphQL API via cookie auth. Includes monkey patch for twikit 2.3.3 KEY_BYTE indices bug.
+- **Cookie refresh docs** — `docs/cookie-refresh.md` step-by-step guide for refreshing X cookies
+- **FOR_SIMON.md** — Learning document explaining the podcast pipeline in plain English
 - **Edition #3 briefing** — `content/briefings/2026-03-08.md` with 5 new images
 - **Featured topics dedup system** — `featured_topics` YAML frontmatter in each briefing tracks what stories have been told; `scripts/get-featured-topics.js` (`npm run featured`) scans all editions and outputs the full list for repeat prevention
 - **Repeat prevention in generation prompts** — `scripts/briefing-prompt.md` and `.claude/commands/generate-briefing.md` now require checking previously featured topics before drafting; same person + same narrative = skip even if different source URL
 
 ### Changed
+- **Weekly pipeline runs 3 sources in parallel** — `generate-weekly.sh` now runs bookmarks, playlist, and podcast extraction as independent parallel stages (Stages 1-3), with briefing generation in Stage 4
+- **Briefing generator consumes 3 sources** — `generate-briefing.js` finds `podcasts-knowledge-base-*` alongside bookmarks and playlists
+- **Extract-bookmarks skill uses twikit as primary** — Browser-based scrolling preserved as fallback
 - **Briefing frontmatter** — All editions now include `featured_topics` array (backfilled for #1 and #2)
 - **Email triggers on audio, not briefing** — `deploy.yml` now sends subscriber email when a new `.mp3` is added (audio PR merge), not when a briefing `.md` is added; ensures audio is ready before email goes out
 - **Weekly pipeline docs** — `generate-weekly.sh` header documents the two-PR flow: briefing PR first, then audio PR after review
+
+### Fixed
+- **Latent Space YouTube handle** — Corrected from `@LatentSpaceTV` to `@LatentSpacePod` (wrong channel)
+- **Podcast clip filtering** — Episodes under 20 minutes are skipped (removes clips, shorts, promos)
+- **VTT parser rewritten in pure JS** — No longer depends on Python for subtitle parsing
 
 ---
 
