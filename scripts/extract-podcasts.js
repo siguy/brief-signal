@@ -160,18 +160,30 @@ function downloadSubtitleAsync(videoId) {
       const date = fs.readFileSync(dateFile, "utf-8").trim();
       return resolve({ vttPath: vttFile, uploadDate: date });
     }
-    // Download subtitles and print upload_date in one call
+    const url = `https://www.youtube.com/watch?v=${safeId}`;
+    // Download subtitles — must NOT use --print, which disables file writes in yt-dlp
     exec(
-      `yt-dlp --skip-download --write-auto-sub --sub-lang en --sub-format vtt --print "%(upload_date)s" -o "${outPath}" "https://www.youtube.com/watch?v=${safeId}"`,
+      `yt-dlp --skip-download --write-auto-sub --sub-lang en --sub-format vtt -o "${outPath}" "${url}"`,
       { encoding: "utf-8", timeout: 60000 },
-      (err, stdout) => {
-        const date = (stdout || "").trim().split("\n")[0];
-        // Cache the date for future runs
-        if (date && date !== "NA") {
-          try { fs.writeFileSync(dateFile, date, "utf-8"); } catch {}
-        }
+      (subErr) => {
         const vttPath = fs.existsSync(vttFile) ? vttFile : null;
-        resolve({ vttPath, uploadDate: date && date !== "NA" ? date : null });
+        // Fetch upload date separately (--print is safe when no file writes needed)
+        if (!fs.existsSync(dateFile)) {
+          exec(
+            `yt-dlp --skip-download --print "%(upload_date)s" "${url}"`,
+            { encoding: "utf-8", timeout: 30000 },
+            (dateErr, stdout) => {
+              const date = (stdout || "").trim().split("\n")[0];
+              if (date && date !== "NA") {
+                try { fs.writeFileSync(dateFile, date, "utf-8"); } catch {}
+              }
+              resolve({ vttPath, uploadDate: date && date !== "NA" ? date : null });
+            }
+          );
+        } else {
+          const date = fs.readFileSync(dateFile, "utf-8").trim();
+          resolve({ vttPath, uploadDate: date || null });
+        }
       }
     );
   });
@@ -476,7 +488,7 @@ async function main() {
     process.exit(0);
   }
 
-  // Batch download all subtitles in parallel (4 at a time) + fetch upload dates
+  // Download subtitles in parallel (4 at a time) + fetch upload dates
   log(`Downloading subtitles for ${allEpisodes.length} episodes (4 concurrent)...`);
   const { subtitles: subtitlePaths, dates: uploadDates } = await downloadAllSubtitles(allEpisodes);
   const downloaded = [...subtitlePaths.values()].filter(Boolean).length;
