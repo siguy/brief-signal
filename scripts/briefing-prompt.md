@@ -246,12 +246,16 @@ This is the dedicated space for Google Cloud in each briefing. Everything else i
 | Category | Products | Good trigger |
 |----------|----------|--------------|
 | AI Platform | Vertex AI, Model Garden (200+ models) | AI infrastructure themes |
-| Models | Gemini family (3.1 Pro, 3 Flash) | Model comparison discussions |
-| Agents | Agent Builder, Agent Engine, ADK | Agentic AI patterns |
+| Models | Gemini family (2.5 Pro, 2.5 Flash) | Model comparison discussions |
+| Code | Gemini Code Assist | Developer productivity themes |
+| Agents | Agent Builder, Agent Development Kit (ADK), A2A protocol | Agentic AI patterns |
+| Security | Security Command Center, Mandiant threat intelligence | Security/defense themes |
 | Compute | Cloud Run, GKE, TPUs | Deployment/scaling themes |
 | Data | BigQuery, AlloyDB | Data pipeline themes |
 | App Platform | Firebase, Cloud Functions | Mobile/web/serverless themes |
 | Program | Google for Startups Cloud ($200K-$350K credits) | Cost/getting-started themes |
+
+**NEVER use these deprecated names:** Duet AI, Duet AI for Developers, Bard, PaLM. These products have been renamed or retired. Use the current names above.
 
 **Key stats (use only when fresh context warrants it):**
 - 60%+ of gen AI startups build on Google Cloud
