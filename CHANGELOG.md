@@ -3,6 +3,17 @@
 ## Unreleased
 
 ### Added
+- **Edition #7 briefing + audio** — "AI's Infrastructure Paradox, Autonomous Defense, & Generative UI Takes Hold" — 42 podcast episodes, 10 bookmarks, playlist data
+
+### Fixed
+- **Podcast subtitle downloads broken by `--print` flag** — yt-dlp's `--print` silently disables all file writes including subtitle downloads. Split `downloadSubtitleAsync` into separate subtitle download and date fetch calls. 43/44 subtitles now download vs 1/45 before.
+- **Stale GCP product names in briefing prompt** — Replaced "Duet AI for Developers" with Gemini Code Assist. Added deprecated product blocklist to `scripts/briefing-prompt.md`.
+
+---
+
+## Previous
+
+### Added
 - **Podcast intelligence extraction** — New third source type: 16 YouTube-hosted podcasts scanned weekly for founder/VC signal. Two-level extraction: L1 (quotes, consensus, debate, intent signals, GCP competitive intel) for all episodes, L2 deep dive with timestamped segments for HIGH-rated episodes (max 3/week). Config-driven via `config/podcasts.json`.
 - **`/extract-podcasts` skill** — Claude Code skill at `~/.claude/skills/extract-podcasts/SKILL.md`
 - **Podcast extraction prompts** — `scripts/podcast-extraction-prompt.md` (L1) and `scripts/podcast-deep-dive-prompt.md` (L2) tuned for GCP sales intelligence
