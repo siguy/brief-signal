@@ -11,6 +11,21 @@ set -euo pipefail
 #   npm run audio:generate → generates MP3 from reviewed script
 # Subscriber email is sent when the audio PR is merged (triggers on new .mp3).
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+ENV_FILE="$REPO_ROOT/.env"
+if [ -f "$ENV_FILE" ]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+fi
+
+if [ -z "${GOOGLE_API_KEY:-}" ]; then
+  echo "ERROR: GOOGLE_API_KEY not set (checked $ENV_FILE and environment)." >&2
+  exit 1
+fi
+
 LOG_DIR="$(dirname "$0")/logs"
 mkdir -p "$LOG_DIR"
 LOG_FILE="${LOG_DIR}/generate-$(date +%Y-%m-%d).log"
