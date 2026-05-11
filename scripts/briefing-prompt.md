@@ -317,6 +317,17 @@ When discussing Google Cloud's Anthropic deal or the multi-model story, frame it
 
 The reality being framed: Google made a strategic decision to host the strongest models (theirs and Anthropic's) on one platform. That expands the customer's choice — that's the story.
 
+**Capacity framing rule (strict):**
+GCP is supply-constrained too. Anthropic's $200B 5-year commitment is consuming Google's capacity for years. Do not write angles or "Our Play" lines that imply GCP has spare capacity competitors don't:
+- ❌ "Come to GCP — we have the GPUs AWS doesn't" (false)
+- ❌ "New compute commitments from customers feeling the AWS/Azure squeeze" (implies GCP has the capacity to absorb)
+- ❌ "Tell founders GCP can handle what AWS can't" (over-claim)
+- ✅ "AWS-Bedrock-to-GEAP migrations" — workload redistribution (same model, different vendor; doesn't require net new GCP capacity)
+- ✅ "Provisioned throughput contracts on Gemini" — these reserve capacity that's already allocated; predictable cost is the value, not abundance
+- ✅ "Long-dated committed-capacity deals" — frame as "which vendor gets the commitment", not "which vendor has more compute"
+
+When in doubt: every hyperscaler is squeezed. The GCP story is about *workload mix, model optionality, and commitment terms* — not raw capacity.
+
 **Key stats (use only when fresh context warrants it):**
 - 60%+ of gen AI startups build on Google Cloud
 - 97% retention after credits expire
