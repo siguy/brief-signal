@@ -220,13 +220,26 @@ A genuine question born from curiosity, not a setup for a pitch. You're asking b
 Connect the technology to their actual world — hiring, shipping speed, burn rate, competitive advantage. One sentence.
 
 ### "Our Play" (dedicated section)
-The dedicated home for **Google Cloud product names** (GEAP, TPUs, Antigravity, BigQuery, etc.) — these only appear here. Connects the week's market themes to what Google shipped, announced, or signaled. Honest, specific, sourced.
+The dedicated home for **product positioning** — connecting the week's market themes to what Google shipped, announced, or signaled, with a clear "here's the angle for founders" frame.
 
-**Note: GCP as a market entity is allowed anywhere.** A line like "GCP grew 63% YoY, fastest of the hyperscalers" is a market datapoint, not a product pitch — fine in Big Picture or TLDR. The rule is about *product positioning*, not about pretending Google Cloud doesn't exist as a company. Distinguish:
-- ✅ Big Picture: "GCP grew 63% YoY, ahead of Azure (39%) and AWS (28%)" — market signal
-- ✅ Title: "...GCP Pulls Ahead" — same; reads as competitive datapoint
-- ❌ Big Picture: "GCP's BigQuery is the right tool for X" — product pitch
-- ❌ Founder Watch angle: "Have you tried Gemini Code Assist?" — product pitch
+**What stays in Our Play (positioning):**
+- "GEAP is the structural answer to X" — positioning
+- "Use TPU Ironwood economics in the GPU-cost conversation" — angle suggestion
+- "Try Gemini Code Assist with your team" — direct pitch
+
+**What's allowed anywhere (news, market signal, builder coverage):**
+- "TPU Ironwood was unveiled this week with 9216 chips/pod" — news about a Google release
+- "Antigravity is winning Google-stack-native builders" — market adoption signal
+- "Gemini Embedding 2 ships natively multimodal" — release news
+- "GCP grew 63% YoY, ahead of Azure and AWS" — competitive datapoint
+- Builder's Corner can absolutely cover Google releases when those releases are the builder story of the week
+
+**The distinguishing question:** "Is this *reporting what happened* or *suggesting the reader use it*?" The first is news (any section); the second is positioning (Our Play). When in doubt: if the line could equally well appear in a TechCrunch article without sounding like sales copy, it's news.
+
+❌ Examples to avoid outside Our Play:
+- "Have you tried Gemini Code Assist?" — pitch in disguise
+- "Your customers should be on GEAP" — direct positioning
+- "This is what GCP does better than AWS" — comparative pitch
 
 ### "Try This Week"
 One specific thing the team can do before next Monday. Forward an article, ask a specific question, try a demo. Not vague ("think about agents") but concrete ("forward this video to the founder who's spending $40K on their marketing site").
@@ -340,7 +353,7 @@ Before finalizing, verify:
 - [ ] **Top two Big Picture stories come from different shows/channels**
 - [ ] Quick Hits are 1-3 items from the most recent week only
 - [ ] No repeated content from previous edition
-- [ ] **Google Cloud PRODUCT names (GEAP, TPUs, Antigravity, BigQuery, etc.) only appear in "Our Play". GCP as a market entity ("GCP grew 63%") is fine anywhere.**
+- [ ] **Google Cloud product *positioning* (pitches, angle suggestions, "use this") only appears in "Our Play". *News* about Google releases (TPU Ironwood unveiled, Antigravity adoption, Gemini Embedding 2 shipped) is fine wherever it fits the story. Test: would this line read as sales copy in TechCrunch? If yes, move to Our Play.**
 - [ ] **"Our Play" has fresh content from this week's Google Cloud sources (not generic filler)**
 - [ ] **No use of "Vertex AI" alone — must be "Gemini Enterprise Agent Platform (FKA Vertex AI)" on first mention, "GEAP" after**
 - [ ] **No deprecated names: Duet AI, Bard, PaLM**
