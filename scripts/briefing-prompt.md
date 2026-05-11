@@ -321,7 +321,7 @@ This is the dedicated space for Google Cloud in each briefing. Everything else i
 | Agents | Agent Builder, Agent Development Kit (ADK), A2A protocol | Agentic AI patterns |
 | Security | Security Command Center, Mandiant threat intelligence | Security/defense themes |
 | Compute | Cloud Run, GKE, **TPUs (Ironwood, 7th-gen)** | Deployment/scaling themes |
-| Data | BigQuery, AlloyDB, **Gemini Embedding 2** (multimodal embeddings) | Data pipeline / RAG themes |
+| Data | BigQuery, AlloyDB, Spanner, Cloud SQL, Looker, Dataplex, **Agentic Data Cloud** (unified for agents, Knowledge Catalog, Data Agent Kit, zero-ETL via Iceberg REST + Cross-Cloud Interconnect), **Gemini Embedding 2** (multimodal embeddings) | Data pipeline / RAG / siloed-data themes |
 | App Platform | Firebase, Cloud Functions | Mobile/web/serverless themes |
 | Program | Google for Startups Cloud ($200K-$350K credits) | Cost/getting-started themes |
 
