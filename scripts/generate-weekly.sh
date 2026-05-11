@@ -134,10 +134,12 @@ fi
 
 # Snapshot the first draft before any human or critique-driven edits.
 # This preserves the "before" half of every before/after pair so we can
-# learn from corrections across editions (git diff drafts/X briefings/X).
+# learn from corrections across editions. Use versioned naming so
+# subsequent iterations (manual rewrites, post-feedback fixes) can each
+# be snapshotted via scripts/snapshot-briefing.sh without overwriting.
 TODAY=$(node -e "console.log(new Date().toISOString().split('T')[0])")
 BRIEFING_FILE="content/briefings/${TODAY}.md"
-DRAFT_FILE="content/briefings/drafts/${TODAY}.md"
+DRAFT_FILE="content/briefings/drafts/${TODAY}-v0-stage4.md"
 if [ -f "$BRIEFING_FILE" ]; then
   mkdir -p content/briefings/drafts
   cp "$BRIEFING_FILE" "$DRAFT_FILE"
