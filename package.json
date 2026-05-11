@@ -11,7 +11,8 @@
     "audio:generate": "node scripts/generate-audio.js",
     "preview": "npm run build && open dist/index.html",
     "notify": "node scripts/send-email.js",
-    "featured": "node scripts/get-featured-topics.js"
+    "featured": "node scripts/get-featured-topics.js",
+    "snapshot": "./scripts/snapshot-briefing.sh"
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^6.4.0",

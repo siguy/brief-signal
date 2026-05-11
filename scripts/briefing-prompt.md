@@ -45,6 +45,12 @@ Score each item from the provided knowledge base by:
 - **Quick Hits** = 1-3 items that didn't fit above but are worth a mention. Must be from the MOST RECENT week's sources only.
 - If a source could fit multiple sections, pick the ONE where it adds the most unique value. If a founder/company is used as a supporting example in Big Picture, they do NOT get their own Founder Watch entry.
 
+**Source diversity (hard rules — do not violate):**
+- **A source URL may appear in more than one section ONLY if BOTH of these hold:** (a) the citations are at least 30 minutes apart in the episode (or are clearly from different segments of an article), AND (b) the citations capture different speakers or different topics. The intent: a 90-minute podcast can legitimately anchor two distinct stories (e.g., a hyperscaler debate at 0:14 and a founder-strategy take at 1:05), but lazy duplication of the same point — same speaker, adjacent timestamps — is forbidden. When unsure, pick one section and find a different source for the other.
+- **No person or company appears as the headline subject of more than one section.** Amjad Masad cannot be the centerpiece of Big Picture *and* get a Founder Watch entry. Pick one. (Being mentioned in passing in another section is fine; being the headline subject is not.)
+- **No statistic, quote, or dollar figure is repeated within the same briefing.** If Anthropic's $44B ARR appears in Big Picture, don't restate it in Our Play. Pick the spot it lands hardest.
+- **The top two Big Picture stories must come from different shows/channels.** Two stories from the same podcast = one story too many; find a second source from a different show.
+
 ---
 
 ## Podcast Source Guidance
@@ -83,7 +89,11 @@ edition: {n}
 
 ## TLDR
 
-Three sentences max. The one thing to know this week. No Google Cloud product mentions here.
+**4-5 bullets, each with a bold hook.** Never prose. Each bullet leads with the punchiest framing in bold, followed by one short clause expanding it. No Google Cloud product mentions here.
+
+Example format:
+- **EWS is born.** Elon is leasing Colossus capacity to Anthropic.
+- **Demand isn't the bottleneck — power is.** Anthropic's revenue is supply-gated.
 
 ## The Big Picture
 
@@ -194,23 +204,83 @@ What Google Cloud shipped, announced, or signaled this week — and how it conne
 
 ## Section Voice Guide
 
-### "Your angle with founders:"
-Something you'd actually say in a 1:1. Not a slide deck line. Test: could you say this at a coffee meeting without the founder rolling their eyes?
+### "Your angle with founders:" (Big Picture + Builder's Corner)
 
-**Yes:** "Are you stitching together 30 SaaS tools, or have you looked at what one well-built agent can replace?"
-**No:** "Google Cloud's Agent Builder enables enterprises to streamline their operations."
+A discovery sequence, not a one-line question. Sales reps need a *flow* they can run in a real conversation: surface the pain → test how the customer is responding → land on a specific opportunity. Structure each "Your angle" as 2-3 numbered questions in escalating specificity, then a "Where the GCP opportunity is" block naming concrete deal motions.
 
-### "Conversation starter:"
-A genuine question born from curiosity, not a setup for a pitch. You're asking because you actually want to know.
+**Yes (multi-step discovery):**
+> 1. **Where it hurts:** "How many GPUs short are you for next quarter?"
+> 2. **How they're hedging:** "What does your 24-month compute hedge look like — single-vendor today, or actively diversifying?"
+> 3. **Where critical workloads land:** "Have you priced provisioned throughput for Gemini? Looked at Anthropic on GEAP as the multi-model hedge?"
+>
+> **Where the GCP opportunity is:** AWS-Bedrock-to-GEAP migrations (same models, lower switching cost) | Provisioned throughput contracts | New compute commitments when AWS/Azure squeezes.
 
-**Yes:** "A cardiologist just beat 13,000 devs at a hackathon. Are non-engineers on your team building with AI yet?"
-**No:** "Have you explored how our platform could accelerate your development?"
+**No (lazy single question):**
+> "Where are you on TPU vs. GPU economics?"
+
+The discovery sequence forces the rep to listen first; the "Where the opportunity is" block tells them what to *do* with what they hear. Single-question angles fail both tests.
+
+### Sales-grade concreteness (applies to every question and angle line)
+
+Every conversation-starter, follow-up question, and "Your angle" bullet must use language a sales rep can read out loud in a real meeting. Banned phrases include any vague figurative language that doesn't survive the "what does that actually mean?" test:
+
+❌ Banned (too fuzzy to use in a meeting):
+- "have your back on supply" — what does that mean operationally?
+- "co-design conversations" — corporate fog
+- "strategic partnership" — meaningless without specifics
+- "deep alignment" — fluff
+- "thinking about the future of X" — no it isn't
+- "are you on a journey with X" — meeting kryptonite
+
+✅ Sales-grade (concrete, answerable, vendor-specific):
+- "Is your allocation *contracted* in writing, or are you on best-effort?"
+- "Multi-year capacity commitment deals"
+- "If GPUs get scarce in 2027, who gets de-prioritized — you or their bigger customers?"
+- "Have you priced provisioned throughput?"
+- "Which workload would hurt most to lose?"
+
+The test for every question line: could a sales rep say this verbatim in a customer meeting and the customer would answer with a concrete fact? If the customer would have to ask "what do you mean?", the question is fuzzy — rewrite it.
+
+### "Conversation starter:" (Founder Watch)
+
+Anchor to a *specific* recent founder behavior, then ask 2 sharp follow-up questions that test the customer's awareness or position. Optionally include a "Where the GCP opportunity is" block when there's a concrete deal motion (especially for AWS/Azure displacement plays).
+
+**Yes (anchored + multi-part):**
+> "Dario is hedging compute across Google, Broadcom, and Colossus simultaneously. Your Anthropic spend is presumably on AWS Bedrock — what would it take to put a chunk of that on GEAP instead? Same models, lower single-vendor exposure.
+> 
+> **Followups:**
+> - 'If your Anthropic spend doubled next year, would you rather negotiate with AWS Bedrock alone or have a real alternate path?'
+> - 'Which workload are you LEAST willing to multi-cloud — and does that workload's vendor have your back on supply?'"
+
+**No (generic curiosity question):**
+> "A cardiologist just beat 13,000 devs at a hackathon. Are non-engineers on your team building with AI yet?"
+
+The first version has a sales rep walking out of the meeting with named action items. The second leaves them with a fun fact.
 
 ### "Why founders care:"
 Connect the technology to their actual world — hiring, shipping speed, burn rate, competitive advantage. One sentence.
 
 ### "Our Play" (dedicated section)
-The ONLY place Google Cloud products appear. Connects the week's market themes to what Google shipped, announced, or signaled. Honest, specific, sourced.
+The dedicated home for **product positioning** — connecting the week's market themes to what Google shipped, announced, or signaled, with a clear "here's the angle for founders" frame.
+
+**What stays in Our Play (positioning):**
+- "GEAP is the structural answer to X" — positioning
+- "Use TPU Ironwood economics in the GPU-cost conversation" — angle suggestion
+- "Try Gemini Code Assist with your team" — direct pitch
+
+**What's allowed anywhere (news, market signal, builder coverage):**
+- "TPU Ironwood was unveiled this week with 9216 chips/pod" — news about a Google release
+- "Antigravity is winning Google-stack-native builders" — market adoption signal
+- "Gemini Embedding 2 ships natively multimodal" — release news
+- "GCP grew 63% YoY, ahead of Azure and AWS" — competitive datapoint
+- Builder's Corner can absolutely cover Google releases when those releases are the builder story of the week
+
+**The distinguishing question:** "Is this *reporting what happened* or *suggesting the reader use it*?" The first is news (any section); the second is positioning (Our Play). When in doubt: if the line could equally well appear in a TechCrunch article without sounding like sales copy, it's news.
+
+❌ Examples to avoid outside Our Play:
+- "Have you tried Gemini Code Assist?" — pitch in disguise
+- "Your customers should be on GEAP" — direct positioning
+- "This is what GCP does better than AWS" — comparative pitch
 
 ### "Try This Week"
 One specific thing the team can do before next Monday. Forward an article, ask a specific question, try a demo. Not vague ("think about agents") but concrete ("forward this video to the founder who's spending $40K on their marketing site").
@@ -245,17 +315,39 @@ This is the dedicated space for Google Cloud in each briefing. Everything else i
 
 | Category | Products | Good trigger |
 |----------|----------|--------------|
-| AI Platform | Vertex AI, Model Garden (200+ models) | AI infrastructure themes |
-| Models | Gemini family (2.5 Pro, 2.5 Flash) | Model comparison discussions |
-| Code | Gemini Code Assist | Developer productivity themes |
+| AI Platform | **Gemini Enterprise Agent Platform (GEAP, FKA Vertex AI)**, Model Garden (200+ models) | AI infrastructure themes |
+| Models | Gemini family (2.5 Pro, 2.5 Flash), Anthropic Claude (available on GEAP) | Model comparison discussions |
+| Code | Gemini Code Assist, **Antigravity** (agentic IDE), Gemini CLI + Agent Skills | Developer productivity themes |
 | Agents | Agent Builder, Agent Development Kit (ADK), A2A protocol | Agentic AI patterns |
 | Security | Security Command Center, Mandiant threat intelligence | Security/defense themes |
-| Compute | Cloud Run, GKE, TPUs | Deployment/scaling themes |
-| Data | BigQuery, AlloyDB | Data pipeline themes |
+| Compute | Cloud Run, GKE, **TPUs (Ironwood, 7th-gen)** | Deployment/scaling themes |
+| Data | BigQuery, AlloyDB, Spanner, Cloud SQL, Looker, Dataplex, **Agentic Data Cloud** (unified for agents, Knowledge Catalog, Data Agent Kit, zero-ETL via Iceberg REST + Cross-Cloud Interconnect), **Gemini Embedding 2** (multimodal embeddings) | Data pipeline / RAG / siloed-data themes |
 | App Platform | Firebase, Cloud Functions | Mobile/web/serverless themes |
 | Program | Google for Startups Cloud ($200K-$350K credits) | Cost/getting-started themes |
 
-**NEVER use these deprecated names:** Duet AI, Duet AI for Developers, Bard, PaLM. These products have been renamed or retired. Use the current names above.
+**Naming rules (strict):**
+- **Use "Gemini Enterprise Agent Platform (FKA Vertex AI)" on first mention**, "GEAP" thereafter. Never use bare "Vertex AI" — it's been renamed.
+- **NEVER use these deprecated names:** Duet AI, Duet AI for Developers, Bard, PaLM. Use the current names above.
+
+**Partnership framing rule (strict):**
+When discussing Google Cloud's Anthropic deal or the multi-model story, frame it as **founder optionality, not concession**:
+- ✅ "Gemini and Anthropic both on GEAP = optionality without leaving the platform"
+- ✅ "Founders can A/B Anthropic and Gemini, switch as model leadership shifts, run on the same compute and governance layer either way"
+- ❌ "Google had to add Anthropic because Gemini wasn't enough"
+- ❌ Anything that reads as Google ceding ground or losing independence
+
+The reality being framed: Google made a strategic decision to host the strongest models (theirs and Anthropic's) on one platform. That expands the customer's choice — that's the story.
+
+**Capacity framing rule (strict):**
+GCP is supply-constrained too. Anthropic's $200B 5-year commitment is consuming Google's capacity for years. Do not write angles or "Our Play" lines that imply GCP has spare capacity competitors don't:
+- ❌ "Come to GCP — we have the GPUs AWS doesn't" (false)
+- ❌ "New compute commitments from customers feeling the AWS/Azure squeeze" (implies GCP has the capacity to absorb)
+- ❌ "Tell founders GCP can handle what AWS can't" (over-claim)
+- ✅ "AWS-Bedrock-to-GEAP migrations" — workload redistribution (same model, different vendor; doesn't require net new GCP capacity)
+- ✅ "Provisioned throughput contracts on Gemini" — these reserve capacity that's already allocated; predictable cost is the value, not abundance
+- ✅ "Long-dated committed-capacity deals" — frame as "which vendor gets the commitment", not "which vendor has more compute"
+
+When in doubt: every hyperscaler is squeezed. The GCP story is about *workload mix, model optionality, and commitment terms* — not raw capacity.
 
 **Key stats (use only when fresh context warrants it):**
 - 60%+ of gen AI startups build on Google Cloud
@@ -299,16 +391,22 @@ Do NOT write 3-4 sentence summaries before the angle. Readers are sales reps sca
 
 Before finalizing, verify:
 - [ ] Headline is catchy and specific (not generic)
-- [ ] TLDR is 3 sentences or fewer
+- [ ] **TLDR is 4-5 bullets with bold hooks, never prose**
 - [ ] Every claim links to its source
 - [ ] Every source link includes a time label (N min read/watch) when data is available
 - [ ] Images present for Big Picture + Builder's Corner sections
 - [ ] Every "Your angle" / "Conversation starter" is actually usable (curiosity, not pitch)
 - [ ] Quick Hits are one sentence each, all linked
 - [ ] Try This Week is specific and actionable
-- [ ] Total length is ~800-1000 words
-- [ ] No source appears in more than one section
+- [ ] Total length is ~800-1000 words (briefings frequently land 1500-2000; that's acceptable if every sentence earns its place)
+- [ ] **No source URL appears in multiple sections UNLESS timestamps are 30+ minutes apart AND citations cover different speakers/topics**
+- [ ] **No person or company is the headline subject of more than one section**
+- [ ] **No statistic, quote, or dollar figure is repeated within the briefing**
+- [ ] **Top two Big Picture stories come from different shows/channels**
 - [ ] Quick Hits are 1-3 items from the most recent week only
 - [ ] No repeated content from previous edition
-- [ ] **GCP mentions ONLY appear in "Our Play" section**
+- [ ] **Google Cloud product *positioning* (pitches, angle suggestions, "use this") only appears in "Our Play". *News* about Google releases (TPU Ironwood unveiled, Antigravity adoption, Gemini Embedding 2 shipped) is fine wherever it fits the story. Test: would this line read as sales copy in TechCrunch? If yes, move to Our Play.**
 - [ ] **"Our Play" has fresh content from this week's Google Cloud sources (not generic filler)**
+- [ ] **No use of "Vertex AI" alone — must be "Gemini Enterprise Agent Platform (FKA Vertex AI)" on first mention, "GEAP" after**
+- [ ] **No deprecated names: Duet AI, Bard, PaLM**
+- [ ] **Anthropic-on-GEAP framed as founder optionality, never as Google ceding ground**
