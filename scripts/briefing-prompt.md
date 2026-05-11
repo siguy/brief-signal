@@ -220,6 +220,27 @@ A discovery sequence, not a one-line question. Sales reps need a *flow* they can
 
 The discovery sequence forces the rep to listen first; the "Where the opportunity is" block tells them what to *do* with what they hear. Single-question angles fail both tests.
 
+### Sales-grade concreteness (applies to every question and angle line)
+
+Every conversation-starter, follow-up question, and "Your angle" bullet must use language a sales rep can read out loud in a real meeting. Banned phrases include any vague figurative language that doesn't survive the "what does that actually mean?" test:
+
+❌ Banned (too fuzzy to use in a meeting):
+- "have your back on supply" — what does that mean operationally?
+- "co-design conversations" — corporate fog
+- "strategic partnership" — meaningless without specifics
+- "deep alignment" — fluff
+- "thinking about the future of X" — no it isn't
+- "are you on a journey with X" — meeting kryptonite
+
+✅ Sales-grade (concrete, answerable, vendor-specific):
+- "Is your allocation *contracted* in writing, or are you on best-effort?"
+- "Multi-year capacity commitment deals"
+- "If GPUs get scarce in 2027, who gets de-prioritized — you or their bigger customers?"
+- "Have you priced provisioned throughput?"
+- "Which workload would hurt most to lose?"
+
+The test for every question line: could a sales rep say this verbatim in a customer meeting and the customer would answer with a concrete fact? If the customer would have to ask "what do you mean?", the question is fuzzy — rewrite it.
+
 ### "Conversation starter:" (Founder Watch)
 
 Anchor to a *specific* recent founder behavior, then ask 2 sharp follow-up questions that test the customer's awareness or position. Optionally include a "Where the GCP opportunity is" block when there's a concrete deal motion (especially for AWS/Azure displacement plays).
