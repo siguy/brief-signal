@@ -204,17 +204,37 @@ What Google Cloud shipped, announced, or signaled this week — and how it conne
 
 ## Section Voice Guide
 
-### "Your angle with founders:"
-Something you'd actually say in a 1:1. Not a slide deck line. Test: could you say this at a coffee meeting without the founder rolling their eyes?
+### "Your angle with founders:" (Big Picture + Builder's Corner)
 
-**Yes:** "Are you stitching together 30 SaaS tools, or have you looked at what one well-built agent can replace?"
-**No:** "Google Cloud's Agent Builder enables enterprises to streamline their operations."
+A discovery sequence, not a one-line question. Sales reps need a *flow* they can run in a real conversation: surface the pain → test how the customer is responding → land on a specific opportunity. Structure each "Your angle" as 2-3 numbered questions in escalating specificity, then a "Where the GCP opportunity is" block naming concrete deal motions.
 
-### "Conversation starter:"
-A genuine question born from curiosity, not a setup for a pitch. You're asking because you actually want to know.
+**Yes (multi-step discovery):**
+> 1. **Where it hurts:** "How many GPUs short are you for next quarter?"
+> 2. **How they're hedging:** "What does your 24-month compute hedge look like — single-vendor today, or actively diversifying?"
+> 3. **Where critical workloads land:** "Have you priced provisioned throughput for Gemini? Looked at Anthropic on GEAP as the multi-model hedge?"
+>
+> **Where the GCP opportunity is:** AWS-Bedrock-to-GEAP migrations (same models, lower switching cost) | Provisioned throughput contracts | New compute commitments when AWS/Azure squeezes.
 
-**Yes:** "A cardiologist just beat 13,000 devs at a hackathon. Are non-engineers on your team building with AI yet?"
-**No:** "Have you explored how our platform could accelerate your development?"
+**No (lazy single question):**
+> "Where are you on TPU vs. GPU economics?"
+
+The discovery sequence forces the rep to listen first; the "Where the opportunity is" block tells them what to *do* with what they hear. Single-question angles fail both tests.
+
+### "Conversation starter:" (Founder Watch)
+
+Anchor to a *specific* recent founder behavior, then ask 2 sharp follow-up questions that test the customer's awareness or position. Optionally include a "Where the GCP opportunity is" block when there's a concrete deal motion (especially for AWS/Azure displacement plays).
+
+**Yes (anchored + multi-part):**
+> "Dario is hedging compute across Google, Broadcom, and Colossus simultaneously. Your Anthropic spend is presumably on AWS Bedrock — what would it take to put a chunk of that on GEAP instead? Same models, lower single-vendor exposure.
+> 
+> **Followups:**
+> - 'If your Anthropic spend doubled next year, would you rather negotiate with AWS Bedrock alone or have a real alternate path?'
+> - 'Which workload are you LEAST willing to multi-cloud — and does that workload's vendor have your back on supply?'"
+
+**No (generic curiosity question):**
+> "A cardiologist just beat 13,000 devs at a hackathon. Are non-engineers on your team building with AI yet?"
+
+The first version has a sales rep walking out of the meeting with named action items. The second leaves them with a fun fact.
 
 ### "Why founders care:"
 Connect the technology to their actual world — hiring, shipping speed, burn rate, competitive advantage. One sentence.
