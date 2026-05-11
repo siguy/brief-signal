@@ -62,7 +62,7 @@ log "--- Starting parallel extractions ---"
 (
   log "Stage 1: Extracting X bookmarks..."
   cd "$INFO_AGG_DIR"
-  if claude -p --dangerously-skip-permissions "Run /extract-bookmarks" >> "$LOG_FILE" 2>&1; then
+  if claude -p --dangerously-skip-permissions --no-session-persistence "Run /extract-bookmarks" >> "$LOG_FILE" 2>&1; then
     log "Stage 1 complete: bookmarks extracted."
   else
     log "WARN: Stage 1 failed (bookmark extraction). Continuing..."
@@ -74,7 +74,7 @@ PID_BOOKMARKS=$!
 (
   log "Stage 2: Extracting YouTube playlist..."
   cd "$INFO_AGG_DIR"
-  if claude -p --dangerously-skip-permissions "Run /extract-playlist $PLAYLIST_URL" >> "$LOG_FILE" 2>&1; then
+  if claude -p --dangerously-skip-permissions --no-session-persistence "Run /extract-playlist $PLAYLIST_URL" >> "$LOG_FILE" 2>&1; then
     log "Stage 2 complete: playlist extracted."
   else
     log "WARN: Stage 2 failed (playlist extraction). Continuing..."
