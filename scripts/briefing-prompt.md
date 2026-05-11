@@ -89,11 +89,15 @@ edition: {n}
 
 ## TLDR
 
-**4-5 bullets, each with a bold hook.** Never prose. Each bullet leads with the punchiest framing in bold, followed by one short clause expanding it. No Google Cloud product mentions here.
+**5-6 bullets, each with a bold hook.** Never prose. Each bullet leads with the punchiest framing in bold, followed by one short clause expanding it.
+
+**The final bullet must summarize the GCP opportunities surfaced in the briefing** — the concrete deal motions a sales rep should walk away knowing about (AWS-Bedrock-to-GEAP migrations, provisioned throughput, Agentic Data Cloud, etc.). This is the rep's 30-second scan of "what plays I have this week." Other TLDR bullets are GCP-product-free; this final one is allowed to name products because it's a deliberate summary of plays.
 
 Example format:
 - **EWS is born.** Elon is leasing Colossus capacity to Anthropic.
 - **Demand isn't the bottleneck — power is.** Anthropic's revenue is supply-gated.
+- (3 more market-signal bullets)
+- **GCP plays this week:** AWS-Bedrock-to-GEAP migrations, provisioned throughput contracts on Gemini, Agentic Data Cloud for siloed-data conversations, Embedding 2's multimodal advantage.
 
 ## The Big Picture
 
