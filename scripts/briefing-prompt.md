@@ -45,6 +45,12 @@ Score each item from the provided knowledge base by:
 - **Quick Hits** = 1-3 items that didn't fit above but are worth a mention. Must be from the MOST RECENT week's sources only.
 - If a source could fit multiple sections, pick the ONE where it adds the most unique value. If a founder/company is used as a supporting example in Big Picture, they do NOT get their own Founder Watch entry.
 
+**Source diversity (hard rules — do not violate):**
+- **No source URL appears in more than one section.** If a podcast episode is the basis for a Big Picture story, it cannot also appear in Founder Watch, Builder's Corner, or Quick Hits — even as a supporting citation. Pick the strongest section and let that be the only home.
+- **No person or company appears as the headline subject of more than one section.** Amjad Masad cannot be the centerpiece of Big Picture *and* get a Founder Watch entry. Pick one.
+- **No statistic, quote, or dollar figure is repeated within the same briefing.** If Anthropic's $44B ARR appears in Big Picture, don't restate it in Our Play. Pick the spot it lands hardest.
+- **The top two Big Picture stories must come from different shows/channels.** Two stories from the same podcast = one story too many; find a second source from a different show.
+
 ---
 
 ## Podcast Source Guidance
@@ -83,7 +89,11 @@ edition: {n}
 
 ## TLDR
 
-Three sentences max. The one thing to know this week. No Google Cloud product mentions here.
+**4-5 bullets, each with a bold hook.** Never prose. Each bullet leads with the punchiest framing in bold, followed by one short clause expanding it. No Google Cloud product mentions here.
+
+Example format:
+- **EWS is born.** Elon is leasing Colossus capacity to Anthropic.
+- **Demand isn't the bottleneck — power is.** Anthropic's revenue is supply-gated.
 
 ## The Big Picture
 
@@ -245,17 +255,28 @@ This is the dedicated space for Google Cloud in each briefing. Everything else i
 
 | Category | Products | Good trigger |
 |----------|----------|--------------|
-| AI Platform | Vertex AI, Model Garden (200+ models) | AI infrastructure themes |
-| Models | Gemini family (2.5 Pro, 2.5 Flash) | Model comparison discussions |
-| Code | Gemini Code Assist | Developer productivity themes |
+| AI Platform | **Gemini Enterprise Agent Platform (GEAP, FKA Vertex AI)**, Model Garden (200+ models) | AI infrastructure themes |
+| Models | Gemini family (2.5 Pro, 2.5 Flash), Anthropic Claude (available on GEAP) | Model comparison discussions |
+| Code | Gemini Code Assist, **Antigravity** (agentic IDE), Gemini CLI + Agent Skills | Developer productivity themes |
 | Agents | Agent Builder, Agent Development Kit (ADK), A2A protocol | Agentic AI patterns |
 | Security | Security Command Center, Mandiant threat intelligence | Security/defense themes |
-| Compute | Cloud Run, GKE, TPUs | Deployment/scaling themes |
-| Data | BigQuery, AlloyDB | Data pipeline themes |
+| Compute | Cloud Run, GKE, **TPUs (Ironwood, 7th-gen)** | Deployment/scaling themes |
+| Data | BigQuery, AlloyDB, **Gemini Embedding 2** (multimodal embeddings) | Data pipeline / RAG themes |
 | App Platform | Firebase, Cloud Functions | Mobile/web/serverless themes |
 | Program | Google for Startups Cloud ($200K-$350K credits) | Cost/getting-started themes |
 
-**NEVER use these deprecated names:** Duet AI, Duet AI for Developers, Bard, PaLM. These products have been renamed or retired. Use the current names above.
+**Naming rules (strict):**
+- **Use "Gemini Enterprise Agent Platform (FKA Vertex AI)" on first mention**, "GEAP" thereafter. Never use bare "Vertex AI" — it's been renamed.
+- **NEVER use these deprecated names:** Duet AI, Duet AI for Developers, Bard, PaLM. Use the current names above.
+
+**Partnership framing rule (strict):**
+When discussing Google Cloud's Anthropic deal or the multi-model story, frame it as **founder optionality, not concession**:
+- ✅ "Gemini and Anthropic both on GEAP = optionality without leaving the platform"
+- ✅ "Founders can A/B Anthropic and Gemini, switch as model leadership shifts, run on the same compute and governance layer either way"
+- ❌ "Google had to add Anthropic because Gemini wasn't enough"
+- ❌ Anything that reads as Google ceding ground or losing independence
+
+The reality being framed: Google made a strategic decision to host the strongest models (theirs and Anthropic's) on one platform. That expands the customer's choice — that's the story.
 
 **Key stats (use only when fresh context warrants it):**
 - 60%+ of gen AI startups build on Google Cloud
@@ -299,16 +320,22 @@ Do NOT write 3-4 sentence summaries before the angle. Readers are sales reps sca
 
 Before finalizing, verify:
 - [ ] Headline is catchy and specific (not generic)
-- [ ] TLDR is 3 sentences or fewer
+- [ ] **TLDR is 4-5 bullets with bold hooks, never prose**
 - [ ] Every claim links to its source
 - [ ] Every source link includes a time label (N min read/watch) when data is available
 - [ ] Images present for Big Picture + Builder's Corner sections
 - [ ] Every "Your angle" / "Conversation starter" is actually usable (curiosity, not pitch)
 - [ ] Quick Hits are one sentence each, all linked
 - [ ] Try This Week is specific and actionable
-- [ ] Total length is ~800-1000 words
-- [ ] No source appears in more than one section
+- [ ] Total length is ~800-1000 words (briefings frequently land 1500-2000; that's acceptable if every sentence earns its place)
+- [ ] **No source URL appears in more than one section**
+- [ ] **No person or company is the headline subject of more than one section**
+- [ ] **No statistic, quote, or dollar figure is repeated within the briefing**
+- [ ] **Top two Big Picture stories come from different shows/channels**
 - [ ] Quick Hits are 1-3 items from the most recent week only
 - [ ] No repeated content from previous edition
 - [ ] **GCP mentions ONLY appear in "Our Play" section**
 - [ ] **"Our Play" has fresh content from this week's Google Cloud sources (not generic filler)**
+- [ ] **No use of "Vertex AI" alone — must be "Gemini Enterprise Agent Platform (FKA Vertex AI)" on first mention, "GEAP" after**
+- [ ] **No deprecated names: Duet AI, Bard, PaLM**
+- [ ] **Anthropic-on-GEAP framed as founder optionality, never as Google ceding ground**
