@@ -46,8 +46,8 @@ Score each item from the provided knowledge base by:
 - If a source could fit multiple sections, pick the ONE where it adds the most unique value. If a founder/company is used as a supporting example in Big Picture, they do NOT get their own Founder Watch entry.
 
 **Source diversity (hard rules — do not violate):**
-- **No source URL appears in more than one section.** If a podcast episode is the basis for a Big Picture story, it cannot also appear in Founder Watch, Builder's Corner, or Quick Hits — even as a supporting citation. Pick the strongest section and let that be the only home.
-- **No person or company appears as the headline subject of more than one section.** Amjad Masad cannot be the centerpiece of Big Picture *and* get a Founder Watch entry. Pick one.
+- **A source URL may appear in more than one section ONLY if BOTH of these hold:** (a) the citations are at least 30 minutes apart in the episode (or are clearly from different segments of an article), AND (b) the citations capture different speakers or different topics. The intent: a 90-minute podcast can legitimately anchor two distinct stories (e.g., a hyperscaler debate at 0:14 and a founder-strategy take at 1:05), but lazy duplication of the same point — same speaker, adjacent timestamps — is forbidden. When unsure, pick one section and find a different source for the other.
+- **No person or company appears as the headline subject of more than one section.** Amjad Masad cannot be the centerpiece of Big Picture *and* get a Founder Watch entry. Pick one. (Being mentioned in passing in another section is fine; being the headline subject is not.)
 - **No statistic, quote, or dollar figure is repeated within the same briefing.** If Anthropic's $44B ARR appears in Big Picture, don't restate it in Our Play. Pick the spot it lands hardest.
 - **The top two Big Picture stories must come from different shows/channels.** Two stories from the same podcast = one story too many; find a second source from a different show.
 
@@ -220,7 +220,13 @@ A genuine question born from curiosity, not a setup for a pitch. You're asking b
 Connect the technology to their actual world — hiring, shipping speed, burn rate, competitive advantage. One sentence.
 
 ### "Our Play" (dedicated section)
-The ONLY place Google Cloud products appear. Connects the week's market themes to what Google shipped, announced, or signaled. Honest, specific, sourced.
+The dedicated home for **Google Cloud product names** (GEAP, TPUs, Antigravity, BigQuery, etc.) — these only appear here. Connects the week's market themes to what Google shipped, announced, or signaled. Honest, specific, sourced.
+
+**Note: GCP as a market entity is allowed anywhere.** A line like "GCP grew 63% YoY, fastest of the hyperscalers" is a market datapoint, not a product pitch — fine in Big Picture or TLDR. The rule is about *product positioning*, not about pretending Google Cloud doesn't exist as a company. Distinguish:
+- ✅ Big Picture: "GCP grew 63% YoY, ahead of Azure (39%) and AWS (28%)" — market signal
+- ✅ Title: "...GCP Pulls Ahead" — same; reads as competitive datapoint
+- ❌ Big Picture: "GCP's BigQuery is the right tool for X" — product pitch
+- ❌ Founder Watch angle: "Have you tried Gemini Code Assist?" — product pitch
 
 ### "Try This Week"
 One specific thing the team can do before next Monday. Forward an article, ask a specific question, try a demo. Not vague ("think about agents") but concrete ("forward this video to the founder who's spending $40K on their marketing site").
@@ -328,13 +334,13 @@ Before finalizing, verify:
 - [ ] Quick Hits are one sentence each, all linked
 - [ ] Try This Week is specific and actionable
 - [ ] Total length is ~800-1000 words (briefings frequently land 1500-2000; that's acceptable if every sentence earns its place)
-- [ ] **No source URL appears in more than one section**
+- [ ] **No source URL appears in multiple sections UNLESS timestamps are 30+ minutes apart AND citations cover different speakers/topics**
 - [ ] **No person or company is the headline subject of more than one section**
 - [ ] **No statistic, quote, or dollar figure is repeated within the briefing**
 - [ ] **Top two Big Picture stories come from different shows/channels**
 - [ ] Quick Hits are 1-3 items from the most recent week only
 - [ ] No repeated content from previous edition
-- [ ] **GCP mentions ONLY appear in "Our Play" section**
+- [ ] **Google Cloud PRODUCT names (GEAP, TPUs, Antigravity, BigQuery, etc.) only appear in "Our Play". GCP as a market entity ("GCP grew 63%") is fine anywhere.**
 - [ ] **"Our Play" has fresh content from this week's Google Cloud sources (not generic filler)**
 - [ ] **No use of "Vertex AI" alone — must be "Gemini Enterprise Agent Platform (FKA Vertex AI)" on first mention, "GEAP" after**
 - [ ] **No deprecated names: Duet AI, Bard, PaLM**
