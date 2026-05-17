@@ -148,5 +148,102 @@
     "category": "Strategy",
     "enabled": false,
     "note": "Paywalled — requires Stratechery Plus subscription for RSS access"
+  },
+
+  {
+    "name": "Dwarkesh Podcast",
+    "source": "youtube",
+    "channelHandle": "@DwarkeshPatel",
+    "category": "AI/Research",
+    "enabled": true,
+    "note": "Dwarkesh Patel. Long-form (90-300 min) interviews with frontier researchers at OpenAI, Anthropic, DeepMind. Surfaces scaling/compute/RL debates weeks ahead of mainstream coverage. Clean podcast channel — no filtering caveats."
+  },
+  {
+    "name": "Training Data (Sequoia)",
+    "source": "youtube",
+    "channelHandle": "@SequoiaCapital",
+    "category": "VC/Builder",
+    "enabled": true,
+    "note": "Sonya Huang + Pat Grady. Sequoia's AI partner show. Channel also hosts non-podcast Sequoia content (founder talks, demos) — the >20min duration filter plus podcast-format episodes (45-75 min) should isolate Training Data episodes. Monitor first run for noise."
+  },
+  {
+    "name": "Google DeepMind: The Podcast",
+    "source": "youtube",
+    "channelHandle": "@GoogleDeepMind",
+    "category": "AI/First-party Lab",
+    "enabled": true,
+    "note": "Hannah Fry. Seasonal (8-10 eps/season, 30-50 min). First-party DeepMind context (Gemini training, AlphaFold, robotics). Channel mixes the podcast with research demos and product clips. Watch first run — duration filter may not catch all non-podcast content (some research talks exceed 20 min)."
+  },
+  {
+    "name": "ChinaTalk",
+    "source": "youtube",
+    "channelHandle": "@ChinaTalkMedia",
+    "category": "Geopolitics/AI Supply Chain",
+    "enabled": true,
+    "note": "Jordan Schneider. Export controls, chip flows, DeepSeek/Qwen context — closes the Asia-AI gap. Substack RSS exists at https://www.chinatalk.media/feed but doesn't expose audio enclosures; YouTube is the reliable ingestion path."
+  },
+  {
+    "name": "Big Technology Podcast",
+    "source": "youtube",
+    "channelHandle": "@BigTechnologyPodcast",
+    "category": "News/Tech",
+    "enabled": true,
+    "note": "Alex Kantrowitz. Lands CEO interviews (Altman, Nadella, Pichai, Zuckerberg). Sharper enterprise-AI lens than Hard Fork (cultural) or Pivot (market). Clean podcast channel."
+  },
+  {
+    "name": "Machine Learning Street Talk",
+    "source": "youtube",
+    "channelHandle": "@MachineLearningStreetTalk",
+    "category": "AI/Research",
+    "enabled": true,
+    "note": "Tim Scarfe + Keith Duggar. Most technically rigorous English-language AI podcast. Episodes 60-180 min. Covers interpretability, alignment, RL methods — where founders' future technical objections show up first."
+  },
+  {
+    "name": "The MAD Podcast (Matt Turck)",
+    "source": "youtube",
+    "channelHandle": "@DataDrivenNYC",
+    "category": "AI/Data Infrastructure",
+    "enabled": true,
+    "note": "Matt Turck (FirstMark), author of the annual MAD Landscape. Deep on vector DBs, eval tools, agentic frameworks, observability — directly relevant to GCP workload-mix conversations. Weekly, ~70 min."
+  },
+  {
+    "name": "Practical AI",
+    "source": "rss",
+    "rssUrl": "https://changelog.com/practicalai/feed",
+    "category": "MLOps/Production AI",
+    "enabled": true,
+    "note": "Daniel Whitenack + Chris Benson (Changelog network). Direct hit on the MLOps gap — eval, deployment, fine-tuning logistics, infra cost. RSS feed verified working."
+  },
+  {
+    "name": "Interconnects (Nathan Lambert)",
+    "source": "youtube",
+    "channelHandle": "@natolambert",
+    "category": "AI/Open Source",
+    "enabled": true,
+    "note": "Nathan Lambert (AI2). Covers the open-model ecosystem (Llama, Mistral, Qwen, OLMo, DeepSeek) — a category the current list under-covers. Channel mixes podcast interviews with RLHF course lectures; duration filter (>20min) keeps both. Companion Substack RSS at https://www.interconnects.ai/feed mixes essays + podcast — YouTube is cleaner."
+  },
+  {
+    "name": "The OpenAI Podcast",
+    "source": "youtube",
+    "channelHandle": "@OpenAI",
+    "category": "AI/First-party Lab",
+    "enabled": true,
+    "note": "Official OpenAI podcast with researchers and product leads. WARNING: channel mixes the podcast with product demos, Dev Day talks, and ads. Duration filter catches short demos but long marketing content (Dev Day keynotes, etc.) will pass through. Watch first run closely; if noisy, consider disabling and ingesting via dedicated podcast RSS if it becomes available."
+  },
+  {
+    "name": "Unsupervised Learning (Redpoint)",
+    "source": "youtube",
+    "channelHandle": "@RedpointAI",
+    "category": "VC/AI Builder",
+    "enabled": true,
+    "note": "Redpoint's AI-focused show (distinct from Logan Bartlett). Tight focus on founder product/infra decisions mid-build. Weekly, 30-50 min."
+  },
+  {
+    "name": "Cheeky Pint (Stripe)",
+    "source": "youtube",
+    "channelHandle": "@stripe",
+    "category": "Founder/Builder",
+    "enabled": true,
+    "note": "John Collison's interview series, posted on Stripe's main YouTube channel alongside Stripe Sessions talks and product clips. Guest list is signal-rich (Altman, Brockman, Pichai, Friedman, Spiegel). Verified that most non-podcast content is <20 min (filtered out), but Stripe Sessions keynotes (often 30-90 min) may slip through. Acceptable noise tradeoff given guest quality."
   }
 ]
