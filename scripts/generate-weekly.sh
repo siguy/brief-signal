@@ -53,34 +53,19 @@ if [ -n "$EXISTING_PR" ]; then
 fi
 
 # ---------------------------------------------------------------------------
-# Stages 1-3: Extract all sources in parallel (~30-45 min total)
-# Each extraction is independent and fault-tolerant.
+# Stages 1-3: Extract all sources.
+# Stages 3a/3b run in parallel in background (node + python — no conflict).
+# Stages 1/2 run SERIALLY in foreground after launching 3a/3b — when two
+# `claude -p` subagents run as parallel bash subshells in the same parent
+# script, they silently exit without producing output (cause unclear,
+# possibly file-lock contention on ~/.claude/projects/ or settings.
+# Verified empirically: serial works, parallel doesn't.) Serial cost is
+# negligible because the slower 3a/3b run in parallel underneath.
 # ---------------------------------------------------------------------------
-log "--- Starting parallel extractions ---"
+log "--- Starting extractions ---"
 
-# Stage 1: Extract X bookmarks (background)
-(
-  log "Stage 1: Extracting X bookmarks..."
-  cd "$INFO_AGG_DIR"
-  if claude -p --dangerously-skip-permissions --no-session-persistence "Run /extract-bookmarks" >> "$LOG_FILE" 2>&1; then
-    log "Stage 1 complete: bookmarks extracted."
-  else
-    log "WARN: Stage 1 failed (bookmark extraction). Continuing..."
-  fi
-) &
-PID_BOOKMARKS=$!
-
-# Stage 2: Extract YouTube playlist (background)
-(
-  log "Stage 2: Extracting YouTube playlist..."
-  cd "$INFO_AGG_DIR"
-  if claude -p --dangerously-skip-permissions --no-session-persistence "Run /extract-playlist $PLAYLIST_URL" >> "$LOG_FILE" 2>&1; then
-    log "Stage 2 complete: playlist extracted."
-  else
-    log "WARN: Stage 2 failed (playlist extraction). Continuing..."
-  fi
-) &
-PID_PLAYLIST=$!
+# Record pipeline start (used by freshness check below)
+PIPELINE_START_EPOCH=$(date +%s)
 
 # Stage 3a: Extract YouTube podcasts (background)
 (
@@ -106,13 +91,64 @@ PID_PODCASTS_YT=$!
 ) &
 PID_PODCASTS_RSS=$!
 
-# Wait for all extractions to finish
-log "Waiting for all extractions to complete..."
-wait $PID_BOOKMARKS || true
-wait $PID_PLAYLIST || true
+# Stage 1: Extract X bookmarks (SERIAL — foreground, do not background)
+log "Stage 1: Extracting X bookmarks (foreground, serial)..."
+(
+  cd "$INFO_AGG_DIR"
+  claude -p --dangerously-skip-permissions --no-session-persistence "Run /extract-bookmarks"
+) >> "$LOG_FILE" 2>&1 && log "Stage 1 complete: bookmarks extracted." \
+                    || log "WARN: Stage 1 failed (bookmark extraction). Continuing..."
+
+# Stage 2: Extract YouTube playlist (SERIAL — foreground, do not background)
+log "Stage 2: Extracting YouTube playlist (foreground, serial)..."
+(
+  cd "$INFO_AGG_DIR"
+  claude -p --dangerously-skip-permissions --no-session-persistence "Run /extract-playlist $PLAYLIST_URL"
+) >> "$LOG_FILE" 2>&1 && log "Stage 2 complete: playlist extracted." \
+                    || log "WARN: Stage 2 failed (playlist extraction). Continuing..."
+
+# Wait for background extractions to finish
+log "Waiting for background extractions (Stages 3a/3b) to complete..."
 wait $PID_PODCASTS_YT || true
 wait $PID_PODCASTS_RSS || true
 log "--- All extractions complete ---"
+
+# ---------------------------------------------------------------------------
+# Freshness check: refuse to generate a briefing with stale KB files.
+# Each KB file must have been written AFTER the pipeline started. If not,
+# the corresponding extraction stage silently failed and Stage 4 would
+# otherwise produce a partly-stale briefing (last week's data) without
+# warning. Fail loudly instead.
+# ---------------------------------------------------------------------------
+check_kb_fresh() {
+  local pattern="$1"
+  local latest
+  latest=$(ls -t "$HOME/skills/${pattern}"-*.md 2>/dev/null | head -1)
+  if [ -z "$latest" ]; then
+    log "FRESHNESS FAIL: No ${pattern}-*.md file found in ~/skills/."
+    return 1
+  fi
+  local mtime
+  mtime=$(stat -f %m "$latest")
+  if [ "$mtime" -lt "$PIPELINE_START_EPOCH" ]; then
+    log "FRESHNESS FAIL: $(basename "$latest") is older than pipeline start — extraction stage didn't produce fresh data."
+    return 1
+  fi
+  log "Freshness OK: $(basename "$latest")"
+  return 0
+}
+
+STALE_KBS=""
+check_kb_fresh "bookmarks-knowledge-base" || STALE_KBS="${STALE_KBS} bookmarks"
+check_kb_fresh "playlist-knowledge-base"  || STALE_KBS="${STALE_KBS} playlist"
+check_kb_fresh "podcasts-knowledge-base"  || STALE_KBS="${STALE_KBS} podcasts"
+
+if [ -n "$STALE_KBS" ]; then
+  log "ERROR: Refusing to generate briefing with stale KB(s):${STALE_KBS}"
+  log "       Manually re-run the failed extraction(s) (e.g. via /extract-bookmarks or /extract-playlist) and re-run this script."
+  log "       See feedback_briefing_kb_freshness_check.md and feedback_parallel_claude_p_race.md in project memory."
+  exit 1
+fi
 
 # ---------------------------------------------------------------------------
 # Stage 4: Generate briefing (~5-10 min)
@@ -137,23 +173,32 @@ fi
 # learn from corrections across editions. Use versioned naming so
 # subsequent iterations (manual rewrites, post-feedback fixes) can each
 # be snapshotted via scripts/snapshot-briefing.sh without overwriting.
-TODAY=$(node -e "console.log(new Date().toISOString().split('T')[0])")
-BRIEFING_FILE="content/briefings/${TODAY}.md"
-DRAFT_FILE="content/briefings/drafts/${TODAY}-v0-stage4.md"
-if [ -f "$BRIEFING_FILE" ]; then
+#
+# Find the briefing by mtime — NOT by re-computing today's date.
+# generate-briefing.js uses Node's UTC date when naming the file; if this
+# bash code re-computes the date moments later and UTC has crossed midnight,
+# the two disagree and the snapshot looks for a nonexistent path. Reading
+# the most-recently-modified .md file is robust to that race.
+BRIEFING_FILE=$(ls -t content/briefings/*.md 2>/dev/null | grep -v '/drafts/' | head -1)
+if [ -n "$BRIEFING_FILE" ] && [ -f "$BRIEFING_FILE" ]; then
+  TODAY=$(basename "$BRIEFING_FILE" .md)
+  DRAFT_FILE="content/briefings/drafts/${TODAY}-v0-stage4.md"
   mkdir -p content/briefings/drafts
   cp "$BRIEFING_FILE" "$DRAFT_FILE"
   log "Stage 4 draft snapshot: $DRAFT_FILE"
 else
-  log "WARN: Expected briefing at $BRIEFING_FILE not found — skipping draft snapshot."
+  log "WARN: No briefing file found in content/briefings/ after Stage 4 — skipping draft snapshot."
 fi
 
 # Critique pass: ask Gemini to score the draft against the prompt's quality
 # rules. Exit 2 = hard rule failures (we still ship, but surface them in the
 # PR body so review starts where it should). Exit 1 = critique itself errored.
-CRITIQUE_MD="scripts/logs/critique-${TODAY}.md"
+# Critique-briefing.js defaults to the latest briefing if no date arg given,
+# which is what we want — avoids the UTC-midnight date-race that broke this
+# in a previous run.
+CRITIQUE_MD="scripts/logs/critique-${TODAY:-latest}.md"
 CRITIQUE_STATUS="unknown"
-if node scripts/critique-briefing.js "$TODAY" >> "$LOG_FILE" 2>&1; then
+if node scripts/critique-briefing.js >> "$LOG_FILE" 2>&1; then
   CRITIQUE_STATUS="pass"
   log "Stage 4b critique: no hard failures."
 else
