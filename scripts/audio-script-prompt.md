@@ -66,6 +66,9 @@ Transform the briefing into a natural spoken flow. Do NOT mirror the written str
 - Write abbreviations as they'd be spoken ("GCP" as "G-C-P", "AI" as "A-I", "MCP" as "M-C-P")
 - Spell out "percent" instead of using %
 
+**Pronunciation overrides (always apply):**
+- **GEAP → write as "Jeep"** so TTS reads it as one word (rhymes with "deep"), not letter-by-letter. This is how the product name is actually pronounced internally at Google Cloud. Same for any reference to "Gemini Enterprise Agent Platform (GEAP, FKA Vertex AI)" — strip the parenthetical acronym and use "Jeep" thereafter. First mention can be: "the Gemini Enterprise Agent Platform — Jeep, internally."
+
 ---
 
 ## Length Target
