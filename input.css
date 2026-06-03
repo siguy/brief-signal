@@ -138,6 +138,25 @@ body {
   .our-play-section h3 {
     @apply text-brand-bg mt-8;
   }
+  /* The card has a light (ivory) background, so the global ivory-on-dark
+     bold/em/link colors are unreadable here. Re-color emphasized text and
+     links to the dark obsidian tone (and a darker gold for links). */
+  .our-play-section strong {
+    color: var(--color-brand-bg);
+    opacity: 1;
+  }
+  .our-play-section em {
+    color: var(--color-brand-bg);
+    opacity: 0.85;
+  }
+  .our-play-section a {
+    color: #6b5410;
+    text-decoration-color: rgba(107, 84, 16, 0.4);
+  }
+  .our-play-section a:hover {
+    color: var(--color-brand-bg);
+    text-decoration-color: var(--color-brand-bg);
+  }
 
   /* Feedback CTA Section */
   .feedback-cta {
