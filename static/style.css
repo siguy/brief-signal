@@ -807,38 +807,38 @@ html, body {
   article li::marker {
     color: var(--color-brand-accent);
   }
+  article {
+    --em-strong: var(--color-brand-primary);
+    --em-italic: var(--color-brand-accent);
+    --em-link: var(--color-brand-accent);
+    --em-link-hover: var(--color-brand-primary);
+  }
   article strong {
     --tw-font-weight: var(--font-weight-bold);
     font-weight: var(--font-weight-bold);
-    color: var(--color-brand-primary);
+    color: var(--em-strong);
   }
   article em {
-    color: var(--color-brand-accent);
     font-style: italic;
     opacity: 90%;
     font-family: var(--font-serif);
+    color: var(--em-italic);
   }
   article a {
-    color: var(--color-brand-accent);
     text-decoration-line: underline;
-    text-decoration-color: color-mix(in srgb, #C9A84C 30%, transparent);
-    @supports (color: color-mix(in lab, red, red)) {
-      text-decoration-color: color-mix(in oklab, var(--color-brand-accent) 30%, transparent);
-    }
     text-underline-offset: 4px;
     transition-property: color, background-color, border-color, outline-color, text-decoration-color, fill, stroke, --tw-gradient-from, --tw-gradient-via, --tw-gradient-to;
     transition-timing-function: var(--tw-ease, var(--default-transition-timing-function));
     transition-duration: var(--tw-duration, var(--default-transition-duration));
-    &:hover {
-      @media (hover: hover) {
-        color: var(--color-brand-primary);
-      }
+    color: var(--em-link);
+    text-decoration-color: var(--em-link);
+    @supports (color: color-mix(in lab, red, red)) {
+      text-decoration-color: color-mix(in srgb, var(--em-link) 30%, transparent);
     }
-    &:hover {
-      @media (hover: hover) {
-        text-decoration-color: var(--color-brand-primary);
-      }
-    }
+  }
+  article a:hover {
+    color: var(--em-link-hover);
+    text-decoration-color: var(--em-link-hover);
   }
   article h2 {
     margin-top: calc(var(--spacing) * 16);
@@ -1044,6 +1044,10 @@ html, body {
       padding: calc(var(--spacing) * 12);
     }
     color: var(--color-brand-bg);
+    --em-strong: var(--color-brand-bg);
+    --em-italic: var(--color-brand-bg);
+    --em-link: #6b5410;
+    --em-link-hover: var(--color-brand-bg);
   }
   .our-play-section p, .our-play-section ul {
     color: var(--color-brand-bg);
@@ -1087,22 +1091,6 @@ html, body {
   .our-play-section h3 {
     margin-top: calc(var(--spacing) * 8);
     color: var(--color-brand-bg);
-  }
-  .our-play-section strong {
-    color: var(--color-brand-bg);
-    opacity: 1;
-  }
-  .our-play-section em {
-    color: var(--color-brand-bg);
-    opacity: 0.85;
-  }
-  .our-play-section a {
-    color: #6b5410;
-    text-decoration-color: rgba(107, 84, 16, 0.4);
-  }
-  .our-play-section a:hover {
-    color: var(--color-brand-bg);
-    text-decoration-color: var(--color-brand-bg);
   }
   .feedback-cta {
     position: relative;

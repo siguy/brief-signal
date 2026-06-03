@@ -40,15 +40,32 @@ body {
   article li::marker {
     @apply text-brand-accent;
   }
+  /* Emphasis colors are driven by variables so an inverted (light-background)
+     surface can re-theme bold/italic/link text by overriding these four tokens
+     once, instead of re-coloring each element. Defaults target the dark page. */
+  article {
+    --em-strong: var(--color-brand-primary);
+    --em-italic: var(--color-brand-accent);
+    --em-link: var(--color-brand-accent);
+    --em-link-hover: var(--color-brand-primary);
+  }
   article strong {
-    @apply font-bold text-brand-primary;
+    @apply font-bold;
+    color: var(--em-strong);
   }
   article em {
-    @apply italic text-brand-accent opacity-90;
+    @apply italic opacity-90;
     font-family: var(--font-serif);
+    color: var(--em-italic);
   }
   article a {
-    @apply text-brand-accent hover:text-brand-primary transition-colors underline decoration-brand-accent/30 underline-offset-4 hover:decoration-brand-primary;
+    @apply transition-colors underline underline-offset-4;
+    color: var(--em-link);
+    text-decoration-color: color-mix(in srgb, var(--em-link) 30%, transparent);
+  }
+  article a:hover {
+    color: var(--em-link-hover);
+    text-decoration-color: var(--em-link-hover);
   }
   article h2 {
     @apply text-3xl md:text-4xl font-serif text-brand-primary mt-16 mb-6 pt-8 border-t border-brand-border italic font-normal tracking-wide;
@@ -122,6 +139,12 @@ body {
   .our-play-section {
     @apply mt-16 p-8 md:p-12 rounded-[2rem] relative overflow-hidden bg-brand-primary border border-brand-border shadow-2xl;
     color: var(--color-brand-bg);
+    /* Inverted (light) surface: flip the emphasis tokens so bold/italic/links
+       stay readable. Any future light card should do the same one-line flip. */
+    --em-strong: var(--color-brand-bg);
+    --em-italic: var(--color-brand-bg);
+    --em-link: #6b5410;
+    --em-link-hover: var(--color-brand-bg);
   }
   .our-play-section p, .our-play-section ul {
     color: var(--color-brand-bg);
@@ -137,25 +160,6 @@ body {
   /* Our play internal styling overrides */
   .our-play-section h3 {
     @apply text-brand-bg mt-8;
-  }
-  /* The card has a light (ivory) background, so the global ivory-on-dark
-     bold/em/link colors are unreadable here. Re-color emphasized text and
-     links to the dark obsidian tone (and a darker gold for links). */
-  .our-play-section strong {
-    color: var(--color-brand-bg);
-    opacity: 1;
-  }
-  .our-play-section em {
-    color: var(--color-brand-bg);
-    opacity: 0.85;
-  }
-  .our-play-section a {
-    color: #6b5410;
-    text-decoration-color: rgba(107, 84, 16, 0.4);
-  }
-  .our-play-section a:hover {
-    color: var(--color-brand-bg);
-    text-decoration-color: var(--color-brand-bg);
   }
 
   /* Feedback CTA Section */
