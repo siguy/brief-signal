@@ -32,8 +32,9 @@ LOG_FILE="${LOG_DIR}/generate-$(date +%Y-%m-%d).log"
 
 log() { echo "[$(date '+%H:%M:%S')] $*" | tee -a "$LOG_FILE"; }
 
-# Monday's date (Sunday + 1 day)
-MONDAY_DATE=$(date -v+1d +%Y-%m-%d)
+# Monday's date (Sunday + 1 day). Override with the MONDAY_DATE env var when
+# running the pipeline manually on a day other than Sunday.
+MONDAY_DATE=${MONDAY_DATE:-$(date -v+1d +%Y-%m-%d)}
 BRANCH="briefing/${MONDAY_DATE}"
 PLAYLIST_URL="https://www.youtube.com/playlist?list=PL1FeClOi-gXpoHHLPfOgeGltGMNWY9Wjk"
 
@@ -98,6 +99,17 @@ log "Stage 1: Extracting X bookmarks (foreground, serial)..."
   claude -p --dangerously-skip-permissions --no-session-persistence "Run /extract-bookmarks"
 ) >> "$LOG_FILE" 2>&1 && log "Stage 1 complete: bookmarks extracted." \
                     || log "WARN: Stage 1 failed (bookmark extraction). Continuing..."
+
+# Stage 1b: Enrich bookmarks with linked-article content (deterministic safety
+# net — the extract-bookmarks skill also runs this, but the call is idempotent
+# so a second run only fetches anything still missing). This fetches the bodies
+# of articles that bookmarks LINK OUT to, which fetch-bookmarks.py does not.
+log "Stage 1b: Enriching bookmarks with linked-article content..."
+(
+  cd "$BRIEF_SIGNAL_DIR"
+  python3 scripts/enrich-bookmarks.py
+) >> "$LOG_FILE" 2>&1 && log "Stage 1b complete: linked articles enriched." \
+                    || log "WARN: Stage 1b failed (bookmark enrichment). Continuing..."
 
 # Stage 2: Extract YouTube playlist (SERIAL — foreground, do not background)
 log "Stage 2: Extracting YouTube playlist (foreground, serial)..."
