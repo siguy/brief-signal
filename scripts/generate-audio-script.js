@@ -131,10 +131,20 @@ async function main() {
         "After merging, run `npm run audio:generate` to create the MP3.",
       ].join("\n");
 
-      execSync(
-        `gh pr create --title "Audio: ${briefing.slug}" --body "${prBody.replace(/"/g, '\\"')}"`,
-        { stdio: "inherit" }
-      );
+      // Write the body to a temp file and pass it via --body-file. The body
+      // contains backticks (e.g. `npm run audio:generate`); interpolating it
+      // into a shell string would make /bin/sh command-substitute them. A
+      // file hands gh the literal text with zero shell parsing.
+      const bodyFile = path.join(AUDIO_DIR, `.pr-body-${briefing.slug}.tmp.md`);
+      fs.writeFileSync(bodyFile, prBody);
+      try {
+        execSync(
+          `gh pr create --title "Audio: ${briefing.slug}" --body-file "${bodyFile}"`,
+          { stdio: "inherit" }
+        );
+      } finally {
+        fs.rmSync(bodyFile, { force: true });
+      }
 
       execSync("git checkout main", { stdio: "inherit" });
       console.log("PR created. Returning to main.");
