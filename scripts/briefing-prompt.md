@@ -159,6 +159,14 @@ Specific people or companies shipping things worth knowing about. (2-3 items)
 
 {One actionable thing to try or share with a founder. Be specific. Link to [source](url) if relevant.}
 
+## Seller's Edge
+
+ONE teachable mental model that upgrades how a rep *thinks* — not a talking point for this week, but a durable lens they carry into every founder meeting. The best teach is a belief founders already operate by that sellers usually don't. Ground it in this week's signal, but the lesson must outlive the week.
+
+**{Framework name — e.g., "Don't sell the model. Sell the substrate."}**
+
+{2-4 sentences: (1) state the mental model in plain language, (2) ground it in a source from this week, (3) make the behavior change explicit — what the rep does differently in the next meeting because of it.} [source link](url)
+
 ## Our Play
 
 What Google Cloud shipped, announced, or signaled this week — and how it connects to the market themes above.
@@ -289,6 +297,24 @@ The dedicated home for **product positioning** — connecting the week's market 
 ### "Try This Week"
 One specific thing the team can do before next Monday. Forward an article, ask a specific question, try a demo. Not vague ("think about agents") but concrete ("forward this video to the founder who's spending $40K on their marketing site").
 
+### "Seller's Edge" (teaching layer)
+
+The part of the briefing that **compounds**. Every other section is situational — "Your angle" arms the rep for this week's conversations, "Our Play" positions product. Seller's Edge teaches a *durable mental model* so a rep who reads many editions gets smarter about selling into the AI market, not just more current. This is the differentiator vs. generic "what happened in AI this week" newsletters.
+
+**Rules:**
+- Exactly ONE framework per edition. Don't dilute.
+- It must be a *way of thinking*, not a fact or a play. Test: would it still be useful in six months? If it's only true this week, it belongs in Big Picture, not here.
+- Ground it in a real source from this week's signal, then state the behavior change explicitly — what the rep does *differently* in the next meeting.
+- Don't pitch. The teach can imply where GCP fits, but the value is the lens, not the product.
+- Don't repeat the same framework in consecutive editions. Rotate.
+
+**Founding framework library (draw from these; add new ones over time):**
+1. **"Don't sell the model. Sell the substrate."** — Models are commoditizing (no network effects → no winner-take-all → low margin, like cloud). Leading with "Gemini is better" sells the commoditizing layer. Durable value = the substrate beneath (compute certainty, data gravity, governance) + helping the founder build defensibility in *their* app/workflow/data layer.
+2. **"In a supply-constrained market, sell certainty — not capacity."** — Every hyperscaler is supply-constrained. The buyer's real fear is *can I get compute when I need it, at a predictable price*. The lever is commitment terms + provisioned throughput, never "we have more GPUs." (Aligns with the Capacity framing rule below.)
+3. **"Two-layer pricing: intelligence-per-dollar vs. dollars-per-outcome."** — Model companies compete on intelligence-per-dollar; the app layer competes on dollars-per-outcome. Reusable diagnostic: "which layer does your founder compete on?" → cost layer = Flash-Lite + routing; outcome layer = GEAP + data.
+
+(Longer-horizon teach to grow into: *reference-architecture literacy* — being able to whiteboard the agent stack so the rep is an advisor, not a vendor.)
+
 ---
 
 ## The "Our Play" Section — Detailed Rules
@@ -402,6 +428,7 @@ Before finalizing, verify:
 - [ ] Every "Your angle" / "Conversation starter" is actually usable (curiosity, not pitch)
 - [ ] Quick Hits are one sentence each, all linked
 - [ ] Try This Week is specific and actionable
+- [ ] **Seller's Edge teaches exactly ONE durable mental model (would still be useful in 6 months), grounded in a source, with an explicit behavior change — not a weekly talking point or a product pitch**
 - [ ] Total length is ~800-1000 words (briefings frequently land 1500-2000; that's acceptable if every sentence earns its place)
 - [ ] **No source URL appears in multiple sections UNLESS timestamps are 30+ minutes apart AND citations cover different speakers/topics**
 - [ ] **No person or company is the headline subject of more than one section**
