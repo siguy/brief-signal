@@ -59,7 +59,17 @@ function getDateAfter() {
 }
 
 function getTodayDate() {
-  return new Date().toISOString().split("T")[0];
+  // Use the LOCAL date (not UTC) so this matches extract-rss-podcasts.py's
+  // `datetime.now()` date. Both podcast stages must name their KB with the same
+  // date — the RSS stage appends to the file this stage creates. If they diverge
+  // (e.g. an after-5pm-PDT run where UTC has already crossed midnight), two
+  // separate KB files are written and generate-briefing.js reads only the newest,
+  // silently dropping one podcast source. See feedback_podcast_kb_date_divergence.
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
 }
 
 function loadConfig() {
