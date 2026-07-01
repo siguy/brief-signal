@@ -32,7 +32,8 @@
     "source": "youtube",
     "channelHandle": "@TheDiaryOfACEO",
     "category": "Founder/Interview",
-    "enabled": true
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-04-08–2026-07-01). Last appeared in 2026-04-06 briefing (1 day outside window). Re-enable if a highly relevant founder episode drops."
   },
   {
     "name": "My First Million",
@@ -117,8 +118,8 @@
     "rssUrl": "https://feeds.transistor.fm/acquired",
     "transcriptUrl": "https://www.acquired.fm/episodes/",
     "category": "Deep Dive",
-    "enabled": true,
-    "note": "Scrape transcript from acquired.fm — speaker-labeled, highest quality"
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-04-08–2026-07-01). Scrape transcript from acquired.fm — speaker-labeled, highest quality. Re-enable when an episode covers a directly relevant company (hyperscaler, AI infrastructure player, etc.)."
   },
   {
     "name": "AI Daily Brief",
@@ -132,14 +133,16 @@
     "source": "rss",
     "rssUrl": "https://anchor.fm/s/751173b0/podcast/rss",
     "category": "GTM",
-    "enabled": true
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-04-08–2026-07-01). No briefing appearances this quarter."
   },
   {
     "name": "Rethinking with Adam Grant",
     "source": "rss",
     "rssUrl": "https://feeds.acast.com/public/shows/675858676d1777b3683ec351",
     "category": "Leadership",
-    "enabled": true
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-04-08–2026-07-01). General leadership/psychology show not surfacing named AI/infra moves relevant to this audience."
   },
   {
     "name": "Stratechery",
@@ -171,32 +174,32 @@
     "source": "youtube",
     "channelHandle": "@GoogleDeepMind",
     "category": "AI/First-party Lab",
-    "enabled": true,
-    "note": "Hannah Fry. Seasonal (8-10 eps/season, 30-50 min). First-party DeepMind context (Gemini training, AlphaFold, robotics). Channel mixes the podcast with research demos and product clips. Watch first run — duration filter may not catch all non-podcast content (some research talks exceed 20 min)."
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-04-08–2026-07-01). noise check: zero briefing citations despite being configured suggests channel noise (research demos, product clips, AlphaFold talks) is passing the duration filter and crowding out signal. Hannah Fry seasonal format unlikely to produce high-frequency briefing hits. Re-enable when a new season launches."
   },
   {
     "name": "ChinaTalk",
     "source": "youtube",
     "channelHandle": "@ChinaTalkMedia",
     "category": "Geopolitics/AI Supply Chain",
-    "enabled": true,
-    "note": "Jordan Schneider. Export controls, chip flows, DeepSeek/Qwen context — closes the Asia-AI gap. Substack RSS exists at https://www.chinatalk.media/feed but doesn't expose audio enclosures; YouTube is the reliable ingestion path."
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-04-08–2026-07-01). Jordan Schneider's export-control and chip-flow coverage has not translated into briefing citations this quarter. Re-enable when China AI/semiconductor themes become primary briefing focus again. Substack RSS at https://www.chinatalk.media/feed doesn't expose audio enclosures; YouTube remains the reliable ingestion path."
   },
   {
     "name": "Big Technology Podcast",
     "source": "youtube",
     "channelHandle": "@BigTechnologyPodcast",
     "category": "News/Tech",
-    "enabled": true,
-    "note": "Alex Kantrowitz. Lands CEO interviews (Altman, Nadella, Pichai, Zuckerberg). Sharper enterprise-AI lens than Hard Fork (cultural) or Pivot (market). Clean podcast channel."
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-04-08–2026-07-01). Alex Kantrowitz. CEO interview access (Altman, Nadella, Pichai) is high-quality but this audience's enterprise-AI angle is better served by All-In and Pivot. Re-enable if Kantrowitz breaks a story ahead of those shows."
   },
   {
     "name": "Machine Learning Street Talk",
     "source": "youtube",
     "channelHandle": "@MachineLearningStreetTalk",
     "category": "AI/Research",
-    "enabled": true,
-    "note": "Tim Scarfe + Keith Duggar. Most technically rigorous English-language AI podcast. Episodes 60-180 min. Covers interpretability, alignment, RL methods — where founders' future technical objections show up first."
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-04-08–2026-07-01). Tim Scarfe + Keith Duggar. Technical depth (interpretability, alignment, RL methods) may be too academic for the briefing's synthesis layer targeting field sales. 0 citations in 12 weeks confirms it is not producing usable signal at current extraction depth."
   },
   {
     "name": "The MAD Podcast (Matt Turck)",
@@ -219,16 +222,16 @@
     "source": "youtube",
     "channelHandle": "@natolambert",
     "category": "AI/Open Source",
-    "enabled": true,
-    "note": "Nathan Lambert (AI2). Covers the open-model ecosystem (Llama, Mistral, Qwen, OLMo, DeepSeek) — a category the current list under-covers. Channel mixes podcast interviews with RLHF course lectures; duration filter (>20min) keeps both. Companion Substack RSS at https://www.interconnects.ai/feed mixes essays + podcast — YouTube is cleaner."
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-04-08–2026-07-01). Nathan Lambert (AI2). Open-model ecosystem coverage is well-served by Latent Space and Practical AI in current briefings. Re-enable if Interconnects uniquely surfaces RLHF/post-training or open-weight model moves not covered elsewhere."
   },
   {
     "name": "The OpenAI Podcast",
     "source": "youtube",
     "channelHandle": "@OpenAI",
     "category": "AI/First-party Lab",
-    "enabled": true,
-    "note": "Official OpenAI podcast with researchers and product leads. WARNING: channel mixes the podcast with product demos, Dev Day talks, and ads. Duration filter catches short demos but long marketing content (Dev Day keynotes, etc.) will pass through. Watch first run closely; if noisy, consider disabling and ingesting via dedicated podcast RSS if it becomes available."
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-04-08–2026-07-01). noise check: zero pipeline citations despite configuration confirms the @OpenAI channel noise (product demos, Dev Day talks, ad content) is diluting signal and likely overwhelming the podcast entries. Re-enable only if a dedicated podcast-only RSS feed becomes available."
   },
   {
     "name": "Unsupervised Learning (Redpoint)",
@@ -245,5 +248,38 @@
     "category": "Founder/Builder",
     "enabled": true,
     "note": "John Collison's interview series, posted on Stripe's main YouTube channel alongside Stripe Sessions talks and product clips. Guest list is signal-rich (Altman, Brockman, Pichai, Friedman, Spiegel). Verified that most non-podcast content is <20 min (filtered out), but Stripe Sessions keynotes (often 30-90 min) may slip through. Acceptable noise tradeoff given guest quality."
+  },
+
+  {
+    "name": "Lex Fridman Podcast",
+    "source": "youtube",
+    "channelHandle": "@lexfridman",
+    "category": "AI/Research",
+    "enabled": true,
+    "note": "Lex Fridman. 490+ episodes; episode #490 (State of AI in 2026) published June 2026. Long-form (2-4 hr) interviews with frontier AI researchers and lab leaders — Dario Amodei, Sam Altman, Ilya Sutskever, Yann LeCun, Andrej Karpathy. Gets candor and depth from lab insiders that no other show matches. Clean podcast channel. RSS also available at https://lexfridman.com/feed/podcast/ — YouTube preferred for subtitles. Activity confirmed via web search (ep #490 published June 2026); yt-dlp blocked by environment proxy."
+  },
+  {
+    "name": "Generative Now (Lightspeed)",
+    "source": "rss",
+    "rssUrl": "https://anchor.fm/s/e9b477e4/podcast/rss",
+    "category": "VC/Builder",
+    "enabled": true,
+    "note": "Michael Mignano (Lightspeed partner, co-founder of Anchor/Spotify Podcasts). 91 episodes; 2026 guests include Kayvon Beykpour (Macroscope), Marissa Mayer, Suno co-founder, Haystack GP. Fills the Lightspeed gap in current VC coverage. Lightspeed has backed >165 AI-native companies — Mignano has direct portfolio access. Weekly, ~30-45 min. RSS verified via Anchor/Spotify; audio enclosure check blocked by environment proxy."
+  },
+  {
+    "name": "CSIS AI Policy Podcast",
+    "source": "rss",
+    "rssUrl": "https://feeds.megaphone.fm/CSIS8973369418",
+    "category": "AI/Policy",
+    "enabled": true,
+    "note": "Aalok Mehta, Director of the Wadhwani AI Center (CSIS). Biweekly. Latest episode June 25, 2026 (Trump AI order, federal AI framework, US stakes in AI firms). Fills the policy/governance gap — zero coverage on current list. Directly relevant to GCP enterprise sales: export controls (Fable 5/Mythos 5 shutdown), KYC/audit-trail requirements, sovereign AI mandates. Episodes typically 30-45 min. RSS verified via Megaphone; enclosure check blocked by environment proxy."
+  },
+  {
+    "name": "Greymatter (Greylock)",
+    "source": "youtube",
+    "channelHandle": "@GreylockVC",
+    "category": "VC/AI Builder",
+    "enabled": true,
+    "note": "Greylock Partners. 313 episodes; weekly interviews with VCs, founders, and AI builders. Greylock is among the first-check investors for AI-first founders (80%+ of investments at Pre-Seed/Seed/Series A). Fills Greylock gap in VC coverage. Channel mixes podcast episodes with firm content — apply duration filter. Activity: 313 episodes confirmed active on YouTube; yt-dlp blocked by environment proxy, 2026 episode dates unconfirmed — monitor first run."
   }
 ]
