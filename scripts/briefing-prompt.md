@@ -109,15 +109,15 @@ edition: {n}
 
 ## TLDR
 
-**5-6 bullets, each with a bold hook.** Never prose. Each bullet leads with the punchiest framing in bold, followed by one short clause expanding it.
+**4-5 bullets, each with a bold hook.** Never prose, and never more than 5. Each bullet leads with the punchiest framing in bold, followed by one short clause expanding it.
 
-**The final bullet must summarize the GCP opportunities surfaced in the briefing** — the concrete deal motions a sales rep should walk away knowing about (AWS-Bedrock-to-GEAP migrations, provisioned throughput, Agentic Data Cloud, etc.). This is the rep's 30-second scan of "what plays I have this week." Other TLDR bullets are GCP-product-free; this final one is allowed to name products because it's a deliberate summary of plays.
+**The last bullet MAY be a GCP-plays summary** — the concrete deal motions a rep should walk away knowing about (AWS-Bedrock-to-GEAP migrations, provisioned throughput, Agentic Data Cloud, etc.), a 30-second scan of "what plays I have this week." Include it only when the briefing surfaced genuinely distinct plays worth naming; when it didn't, make all 4-5 bullets market signal. Either way it counts toward the 4-5 cap — never tack it on as a 6th bullet. Every other TLDR bullet stays GCP-product-free; only this optional summary bullet may name products.
 
 Example format:
 - **EWS is born.** Elon is leasing Colossus capacity to Anthropic.
 - **Demand isn't the bottleneck — power is.** Anthropic's revenue is supply-gated.
-- (3 more market-signal bullets)
-- **GCP plays this week:** AWS-Bedrock-to-GEAP migrations, provisioned throughput contracts on Gemini, Agentic Data Cloud for siloed-data conversations, Embedding 2's multimodal advantage.
+- (1-2 more market-signal bullets)
+- **GCP plays this week (optional — only when there are distinct plays; counts toward the 5):** AWS-Bedrock-to-GEAP migrations, provisioned throughput contracts on Gemini, Agentic Data Cloud for siloed-data conversations, Embedding 2's multimodal advantage.
 
 ## The Big Picture
 
@@ -125,13 +125,15 @@ Market moves that matter for founder conversations. (2-3 items)
 
 When items share a clear theme, add it to the section heading: "## The Big Picture: {Theme Name}". When items don't cluster, use the plain heading. Same applies to Founder Watch and Builder's Corner.
 
+**Include a "Your angle with founders" block ONLY when a seller can act on the story (Principle 2).** If it's important market context with no play a cloud rep or a frontier-lab rep could actually run — energy/power supply is the classic case — omit the angle block and let the story stand as context.
+
 ### {Item Title}
 
 ![{descriptive alt text}](./images/{slug}.jpg)
 
 {2-3 sentence summary with [inline links (2 min read)](https://x.com/...) to source tweets/articles. Time labels on every link.}
 
-**Your angle with founders:** {One-liner — curiosity-driven, no product pitches.}
+**Your angle with founders:** {Only if there's a seller play — use the discovery-flow format in the Section Voice Guide. Omit entirely for context-only stories.}
 
 ### {Item Title}
 
@@ -139,7 +141,7 @@ When items share a clear theme, add it to the section heading: "## The Big Pictu
 
 {Summary with [source links](url).}
 
-**Your angle with founders:** {One-liner.}
+**Your angle with founders:** {Only if there's a seller play; otherwise omit.}
 
 ## Builder's Corner
 
@@ -155,29 +157,21 @@ What developers and founders are actually building with. (1-2 items)
 
 ## Founder Watch
 
-Specific people or companies shipping things worth knowing about. (2-3 items)
+Specific people or companies shipping things worth knowing about. (2-3 items). The summary itself must make the seller relevance obvious — why a rep would bring this up in a founder conversation (Principle 0). Do not tack on a separate question or CTA line.
 
 ### {Person/Company — What They Did}
 
 {Summary with [source links](url).}
 
-**Conversation starter:** "{A genuine question born from curiosity, not a pitch setup}"
-
 ### {Person/Company — What They Did}
 
 {Summary with [source links](url).}
-
-**Conversation starter:** "{Question}"
 
 ## Quick Hits
 
 - **[{Bold claim} (2 min read)](source-url)** — one sentence expanding on it
 - **[{Bold claim} (12 min watch)](source-url)** — one sentence
 - (1-3 bullets MAX, each linked to source with time label, MUST be from this week's extractions only. No GCP product mentions.)
-
-## Try This Week
-
-{One actionable thing to try or share with a founder. Be specific. Link to [source](url) if relevant.}
 
 ## Our Play
 
@@ -190,8 +184,6 @@ What Google Cloud shipped, announced, or signaled this week — and how it conne
 ### {Headline — e.g., "Logan on DeepMind's Latest"}
 
 {2-4 sentences. Source + context against this week's themes.}
-
-*Market reaction:* {Optional — how founders/developers reacted on X or LinkedIn. Link to a notable thread or post if available.}
 
 *Connect to this week:* {One sentence tying "Our Play" back to the Big Picture or Builder's Corner themes.}
 
@@ -230,6 +222,8 @@ What Google Cloud shipped, announced, or signaled this week — and how it conne
 
 ### "Your angle with founders:" (Big Picture + Builder's Corner)
 
+**First decide whether the story even has an angle (Principle 2):** include this block only when a cloud or frontier-lab seller could actually act on the story. For context-only stories — energy/power supply is the classic case — omit it entirely rather than manufacturing a question. When you do include it:
+
 A discovery sequence, not a one-line question. Sales reps need a *flow* they can run in a real conversation: surface the pain → test how the customer is responding → land on a specific opportunity. Structure each "Your angle" as 2-3 numbered questions in escalating specificity, then a "Where the GCP opportunity is" block naming concrete deal motions.
 
 **Yes (multi-step discovery):**
@@ -265,22 +259,6 @@ Every conversation-starter, follow-up question, and "Your angle" bullet must use
 
 The test for every question line: could a sales rep say this verbatim in a customer meeting and the customer would answer with a concrete fact? If the customer would have to ask "what do you mean?", the question is fuzzy — rewrite it.
 
-### "Conversation starter:" (Founder Watch)
-
-Anchor to a *specific* recent founder behavior, then ask 2 sharp follow-up questions that test the customer's awareness or position. Optionally include a "Where the GCP opportunity is" block when there's a concrete deal motion (especially for AWS/Azure displacement plays).
-
-**Yes (anchored + multi-part):**
-> "Dario is hedging compute across Google, Broadcom, and Colossus simultaneously. Your Anthropic spend is presumably on AWS Bedrock — what would it take to put a chunk of that on GEAP instead? Same models, lower single-vendor exposure.
-> 
-> **Followups:**
-> - 'If your Anthropic spend doubled next year, would you rather negotiate with AWS Bedrock alone or have a real alternate path?'
-> - 'Which workload are you LEAST willing to multi-cloud — and does that workload's vendor have your back on supply?'"
-
-**No (generic curiosity question):**
-> "A cardiologist just beat 13,000 devs at a hackathon. Are non-engineers on your team building with AI yet?"
-
-The first version has a sales rep walking out of the meeting with named action items. The second leaves them with a fun fact.
-
 ### "Why founders care:"
 Connect the technology to their actual world — hiring, shipping speed, burn rate, competitive advantage. One sentence.
 
@@ -306,9 +284,6 @@ The dedicated home for **product positioning** — connecting the week's market 
 - "Your customers should be on GEAP" — direct positioning
 - "This is what GCP does better than AWS" — comparative pitch
 
-### "Try This Week"
-One specific thing the team can do before next Monday. Forward an article, ask a specific question, try a demo. Not vague ("think about agents") but concrete ("forward this video to the founder who's spending $40K on their marketing site").
-
 ---
 
 ## The "Our Play" Section — Detailed Rules
@@ -326,7 +301,7 @@ This is the dedicated space for Google Cloud in each briefing. Everything else i
 - 1-2 items per week, 2-4 sentences each
 - Every item links to a source (blog post, tweet, announcement)
 - Must connect to something from the rest of the briefing — not a standalone product list
-- Include market reaction when available (founder takes, developer reactions on X/LinkedIn)
+- "Our Play" is *how to execute on GCP*, not a market-reaction quote — spend the words on the architecture and the motion (Principle 5)
 - If there's nothing fresh or relevant from Google Cloud this week, say so in one line and move on. Don't fill with generic stats.
 
 **What to avoid:**
@@ -419,9 +394,8 @@ Before finalizing, verify:
 - [ ] Every claim links to its source
 - [ ] Every source link includes a time label (N min read/watch) when data is available
 - [ ] Images present for Big Picture + Builder's Corner sections
-- [ ] Every "Your angle" / "Conversation starter" is actually usable (curiosity, not pitch)
+- [ ] Every "Your angle" is genuinely usable (curiosity, not pitch) — and present ONLY on stories with a real seller play; context-only stories (e.g. energy/power) have no angle block
 - [ ] Quick Hits are one sentence each, all linked
-- [ ] Try This Week is specific and actionable
 - [ ] Total length is ~800-1000 words (briefings frequently land 1500-2000; that's acceptable if every sentence earns its place)
 - [ ] **No source URL appears in multiple sections UNLESS timestamps are 30+ minutes apart AND citations cover different speakers/topics**
 - [ ] **No person or company is the headline subject of more than one section**
