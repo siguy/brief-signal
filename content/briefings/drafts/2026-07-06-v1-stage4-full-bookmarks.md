@@ -8,9 +8,6 @@ featured_topics:
   - ai-power-bottleneck-nuclear
   - enterprise-ai-cost-reckoning
   - model-routing-harness-optimization
-  - fable5-prompting-goals
-  - ploy-aoe-solo-founder
-  - valar-atomics-nuclear-ai
   - databricks-agent-cloud
 ---
 
@@ -21,7 +18,6 @@ featured_topics:
 -   **Power is the next GPU.** Valor Atomics is building nuclear reactors to deliver abundant, cheap power for AI compute, with Taiwan's energy crisis highlighting the looming bottleneck.
 -   **Open-weights close the gap.** Chinese models like GLM 5.2 are now genuinely competitive, with a 65x cost advantage over frontier models for many enterprise tasks.
 -   **Harness optimization is the new fine-tuning.** Builders are achieving frontier-level performance at a fraction of the cost by evolving the scaffolding around cheaper models.
--   **GCP plays this week:** Secure your customers' alpha with Agentic Data Cloud's control plane, enable true multi-model optionality with GEAP, and solve compute/power concerns with committed throughput.
 
 ## The Big Picture: The New Sovereignty Landscape
 
@@ -40,18 +36,15 @@ Palantir CEO Alex Karp ignited a debate this week, publicly accusing frontier AI
 
 ![valor-atomics-nuclear-power-ai](./images/valor-atomics-nuclear-power-ai.jpg)
 
-The relentless demand for AI compute is exposing a new critical bottleneck: cheap, abundant power. Isaiah Taylor, CEO of Valor Atomics, argues that humanity is now "manufacturing intelligence" and that "electricity becomes the key factor," creating an "infinite market" for energy if costs can be significantly reduced [Isaiah Taylor on No Priors (62min, 0:30:10)](https://www.youtube.com/watch?v=5Xvbq_zvO4Q). Valor Atomics is tackling this by building "planetary scale" nuclear reactors, already demonstrating their W250 reactor directly powering Nvidia Blackwell AI chips [Isaiah Taylor on No Priors (62min, 0:39:56)](https://www.youtube.com/watch?v=5Xvbq_zvO4Q). This comes as even global tech giants like Google and Amazon are finding themselves constrained by electricity, unable to build "infinite data centers" in critical regions like Taiwan due to severe energy shortages and political dysfunction [Akab Zakaria on ChinaTalk (75min, 1:00:23)](https://www.youtube.com/watch?v=092XsqT7HyQ). While physical infrastructure (construction, cooling, copper, skilled labor) remains a bottleneck, the looming power crisis signals a fundamental shift in AI's foundational resource [Harry Stebbings on X (2 min watch)](https://x.com/HarryStebbings/status/2072023612710588421).
+The relentless demand for AI compute is exposing a new critical bottleneck: cheap, abundant power. Isaiah Taylor, CEO of Valor Atomics, argues that humanity is now "manufacturing intelligence" and that "electricity becomes the key factor," creating an "infinite market" for energy if costs can be significantly reduced [Isaiah Taylor on No Priors (62min, 0:30:10)](https://www.youtube.com/watch?v=5Xvbq_zvOQ4). Valor Atomics is tackling this by building "planetary scale" nuclear reactors, already demonstrating their W250 reactor directly powering Nvidia Blackwell AI chips [Isaiah Taylor on No Priors (62min, 0:39:56)](https://www.youtube.com/watch?v=5Xvbq_zvOQ4). This comes as even global tech giants like Google and Amazon are finding themselves constrained by electricity, unable to build "infinite data centers" in critical regions like Taiwan due to severe energy shortages and political dysfunction [Akab Zakaria on ChinaTalk (75min, 1:00:23)](https://www.youtube.com/watch?v=092XsqT7HyQ). While physical infrastructure (construction, cooling, copper, skilled labor) remains a bottleneck, the looming power crisis signals a fundamental shift in AI's foundational resource [Harry Stebbings on X (2 min watch)](https://x.com/HarryStebbings/status/2072023612710588421).
 
-**Your angle with founders:**
-1.  **Where it hurts:** "Beyond GPU allocation, what's your long-term strategy for securing scalable and cost-effective power for your compute, especially as demand for digital intelligence skyrockets?"
-2.  **How they're hedging:** "Are you tracking the geopolitical and supply chain risks associated with energy for AI, or are you assuming current power infrastructure can keep pace?"
-3.  **Where the GCP opportunity is:** Committed-use agreements that lock in predictable pricing and priority capacity for the customer's actual workload mix (TPUs and GPUs) | Proactive strategic capacity planning with our teams, leveraging Google's global data center investments and renewable energy commitments.
+*Context, not an angle: we don't sell power, and neither does a frontier lab — there's no founder "play" here. But energy is becoming the real gate on where and how fast compute gets built, which is the backdrop to every capacity conversation this year.*
 
 ### The Enterprise Reckoning: Why 'Frontier Only' AI is Fading
 
 ![open-source-enterprise-ai-reckoning](./images/open-source-enterprise-ai-reckoning.jpg)
 
-The days of companies relying solely on expensive frontier models "are coming to an end," according to Peter Yang [Peter Yang on X (2 min read)](https://x.com/petergyang/status/2072685484011344032). The consensus is clear: frontier API prices are collapsing, with Nikesh Arora predicting "tokens at one-tenth" of today's prices long-term, and others predicting tokens will be "effectively free" by Christmas 2026 for most users [Nikesh Arora on X (1 min read)](https://x.com/gokulr/status/2071692278582890889), [Andrew Amann on X (2 min read)](https://x.com/andrewamann/status/2071991666173521942). Companies are now pursuing a "portfolio of models," using frontier models for high-stakes, differentiated tasks, and cheaper, increasingly capable open-source alternatives for everything else. Chinese open-source models like GLM 5.2 and Qwen are gaining significant traction, with companies like Coinbase, Airbnb, and Microsoft actively using or testing them [Yuhasbeentaken on X (1 min read)](https://x.com/yuhasbeentaken/status/2071464716786950223). The temporary export controls on Claude Fable 5 further highlighted the risk of "single model reliance," creating "consternation and concern" among European customers [Nikesh Arora on X (2 min read)](https://x.com/nikesharora/status/2072392817721397640). This shift is driven by a realization that the enduring enterprise advantage is the "context a system holds about you, not the model" [Nikesh Arora on X (1 min read)](https://x.com/gokulr/status/2071692278582890889]. As moats based on models alone disappear, AI is being "unbundled," with value moving to private data, real workflows, and the partners who deeply understand customer systems [Michael Mignano on X (2 min read)](https://x.com/mignano/status/2073080670365032808].
+The days of companies relying solely on expensive frontier models "are coming to an end," according to Peter Yang [Peter Yang on X (2 min read)](https://x.com/petergyang/status/2072685484011344032). The consensus is clear: frontier API prices are collapsing, with Nikesh Arora predicting "tokens at one-tenth" of today's prices long-term, and others predicting tokens will be "effectively free" by Christmas 2026 for most users [Nikesh Arora on X (1 min read)](https://x.com/gokulr/status/2071692278582890889), [Andrew Amann on X (2 min read)](https://x.com/andrewamann/status/2071991666173521942). Companies are now pursuing a "portfolio of models," using frontier models for high-stakes, differentiated tasks, and cheaper, increasingly capable open-source alternatives for everything else. Chinese open-source models like GLM 5.2 and Qwen are gaining significant traction, with companies like Coinbase, Airbnb, and Microsoft actively using or testing them [Yuhasbeentaken on X (1 min read)](https://x.com/yuhasbeentaken/status/2071464716786950223). The temporary export controls on Claude Fable 5 further highlighted the risk of "single model reliance," creating "consternation and concern" among European customers [Nikesh Arora on X (2 min read)](https://x.com/nikesharora/status/2072392817721397640). This shift is driven by a realization that the enduring enterprise advantage is the "context a system holds about you, not the model" [Nikesh Arora on X (1 min read)](https://x.com/gokulr/status/2071692278582890889). As moats based on models alone disappear, AI is being "unbundled," with value moving to private data, real workflows, and the partners who deeply understand customer systems [Michael Mignano on X (2 min read)](https://x.com/mignano/status/2073080670365032808).
 
 **Your angle with founders:**
 1.  **Where it hurts:** "How are you balancing the perceived 'best' performance of frontier models with the rapidly improving capabilities and significantly lower costs of open-source alternatives?"
@@ -68,33 +61,11 @@ As token costs become critical, builders are shifting focus from training bigger
 
 **Why founders care:** Get frontier-grade AI performance at a fraction of the cost, maintain control over their model stack, and de-risk model migrations with real-world evaluations before committing.
 
-### Prompting Fable 5: Give it the Goal, Not the Steps
-
-![claude-fable-5-prompting-goals](./images/claude-fable-5-prompting-goals.jpg)
-
-With the return of Claude Fable 5, top builders like Matt Shumer are sharing deep insights into prompting the new model. The core shift: "I stopped spelling out how to do things." Unlike older models, Fable thrives on "big, underspecified goals," with better results the "more room you give it." The secret is to pair these goals with strict "house rules" (e.g., "don't hard-code special cases, describe what you want in the agent's system prompt") and to always use a *separate* Fable sub-agent with a fresh context window to judge the output of the builder agent [Matt Shumer on X (2 min read)](https://x.com/mattshumer_/status/2073150750411088190). This aligns with Andrej Karpathy's advice to "master the model first, don't force the agent," emphasizing the foundation over the agentic layer for true breakthroughs [0xCodila on X (1 min read)](https://x.com/0xCodila/status/2073544407643496771).
-
-**Why founders care:** Unlock Fable 5's advanced reasoning and coding capabilities for complex projects by radically rethinking how they prompt and manage AI agents, driving faster iteration and higher-quality output.
-
 ## Founder Watch
-
-### Y Combinator's Ploy: The Age of the 40-Year-Old Solo Founder Arrives
-
-Bryant Chou, co-founder and former CTO of Webflow, is back with a new startup called Ploy, directly targeting the "AI-native website + full marketing platform." Ploy builds bespoke, award-winning sites and then *runs* ads, *writes* copy, *finds* customers, and *optimizes for AEO* (AI Search Engine Optimization) for services like ChatGPT, Claude, and Perplexity. Chou's thesis: the era of the 40-year-old solo founder with deep domain expertise and "taste" has arrived because AI amplifies that taste, compressing "years of engineering into days" and making one experienced founder equal to "hundreds or thousands of clones" [Bryant Chou on Y Combinator (42 min watch)](https://www.youtube.com/watch?v=8OOuCnZB-4o).
-
-**Conversation starter:** "YC is saying the 40-year-old solo founder with 'taste' and AI is the new 1000-person startup, productizing their own playbooks. Where in your business are you finding that your team's unique taste is more valuable than raw headcount, and how are you leveraging AI to amplify it?"
-
-### Valar Atomics: Building Nuclear Power for AI Compute at Planetary Scale
-
-Isaiah Taylor, founder of Valar Atomics, is building nuclear reactors "for planetary scale" with the explicit goal of making energy 10x cheaper to power the AI age. His team has already brought their first reactor, the W250, online and is directly powering Nvidia Blackwell AI chips, even hosting a website from a nuclear-powered Nvidia chip. Taylor argues that because AI manufactures intelligence and compute demand is infinite, the demand for cheap energy is also infinite, and his focus on rapid hardware iteration (a "Toyota Camry" approach to nuclear) will solve this problem much sooner than the traditional industry expects [Isaiah Taylor on No Priors (62min, 0:02:40, 0:39:56)](https://www.youtube.com/watch?v=5Xvbq_zvO4Q).
-
-**Conversation starter:** "The biggest bottleneck for scaling AI isn't just GPUs anymore—it's power. Valor Atomics is powering Nvidia Blackwells directly from nuclear reactors. What does your long-term energy strategy look like for your compute infrastructure, especially as demand scales for agentic workloads?"
 
 ### Databricks' Omnigents: The New Agent Cloud for Enterprise
 
 Matei Zaharia and Reynold Xin of Databricks are making a big bet on the "Agent Cloud" with their new Omnigents platform, aiming to provide a collaborative, secure, and portable environment for AI agents. Their core insight: "Traditional software will be rewritten with this new paradigm which is just get the data to be there and then let's slap some AGI on top. Magic will come out." They emphasize unifying the storage layer—not a single compute engine—as the right approach for enterprise HTAP (Hybrid Transactional/Analytical Processing), with security and governance for agents being critical concerns, often outweighing token cost optimization [Matei Zaharia on Latent Space (71min, 0:00:20, 0:23:40)](https://www.youtube.com/watch?v=Yp_u1NpbkJg). Databricks, which orchestrates 50-60 million virtual machines daily across major clouds, aims to provide enterprises with an open foundation, avoiding the vendor lock-in seen with proprietary data formats [Reynold Xin on Latent Space (71min, 0:52:00)](https://www.youtube.com/watch?v=Yp_u1NpbkJg).
-
-**Conversation starter:** "Databricks is betting on an 'Agent Cloud' that unifies data storage and prioritizes security for enterprise AI. For your agentic workflows, are you building on a unified data layer for governance and cost control, or letting agents access data independently across disparate systems?"
 
 ## Quick Hits
 
@@ -102,23 +73,15 @@ Matei Zaharia and Reynold Xin of Databricks are making a big bet on the "Agent C
 -   **[Nvidia + Eli Lilly: a $1B AI drug-discovery lab (1 min read)](https://x.com/bearlyai/status/2071606615682449636)** — Nvidia and Eli Lilly are co-building a $1B AI drug discovery lab in SF, leveraging Lilly's "3 million failed drugs" as a proprietary data moat.
 -   **[OpenAI cut inference costs in half (1 min read)](https://x.com/steph_palazzolo/status/2071972245849710938)** — OpenAI engineers achieved an optimization that cut inference costs in half for models where it was applied, reducing GPU needs for logged-out ChatGPT traffic to a couple hundred.
 
-## Try This Week
-
-Forward [Sam Hogan's Inference Gateway recipe (1 min read)](https://x.com/samhogan/status/2071608749429829858) to a founder who's spending heavily on frontier model APIs. The idea: install the Gateway, mirror live traffic to a cheaper model (like GLM 5.2), auto-generate evals from their live data, and only switch to the cheaper model when evals look healthy. This is a concrete way to "own your LLM stack end-to-end" and de-risk a model swap.
-
 ## Our Play
 
 ### Secure Founder Alpha with Agentic Data Cloud & Multi-Model Optionality
 
-Connecting to this week's dominant themes around "alpha transfer," AI sovereignty, and the shift away from single-model reliance, the play is to position **Gemini Enterprise Agent Platform (FKA Vertex AI)** and **Agentic Data Cloud** as the structural answers for founders who want to own their intelligence layer without ceding their strategic advantage.
+Karp's "alpha transfer" anxiety is the opening. Position **Gemini Enterprise Agent Platform (FKA Vertex AI)** and **Agentic Data Cloud** as how a founder owns their intelligence layer without handing it to a model vendor.
 
--   **Own the context, not just the code.** Agentic Data Cloud (with Knowledge Catalog and Data Agent Kit) enables founders to build a truly sovereign data layer, ensuring their internal knowledge, chat history, and documents are discoverable, auditable, and permissioned—but *remain theirs*. This prevents any "alpha transfer" to external model vendors, giving them full control over their "means of production."
--   **True multi-model optionality on one platform.** GEAP's Model Garden allows founders to serve Gemini, Anthropic Claude (with founder optionality framing), and cost-optimized open-weight models (like Gemma or fine-tuned custom models) behind a single, consistent API. This makes models swappable, insulating customers from single-vendor risk, export controls, or the "magic box" problem.
--   **Predictable compute for unpredictable demand.** Leverage GEAP's provisioned throughput contracts for predictable agent loops and long-running AI workloads, shielding customers from spot-market volatility and capacity squeezes. For raw compute, position our TPU Ironwood economics and GPU commitments as the long-term solution to the "energy is the next bottleneck" reality.
-
-*Market reaction:* Foundry agents and internal "autopilots" are generating immense excitement, but enterprises are deeply concerned about data leakage and vendor lock-in. The ability to deploy agentic systems that operate within an organization's existing governance and security frameworks—rather than on third-party, opaque platforms—is a major differentiator.
-
-*Connect to this week:* This is the direct response to the "Alpha Transfer" problem, giving founders the control, cost-efficiency, and optionality needed to navigate the AI sovereignty wars while building their own enduring intelligence.
+-   **Own the context, not just the code.** Agentic Data Cloud (Knowledge Catalog + Data Agent Kit) keeps a founder's internal knowledge, chat history, and docs discoverable, permissioned, and *theirs* — the context stays put even as models change, so there's no "alpha transfer."
+-   **Model optionality on one platform.** GEAP's Model Garden serves Gemini, Anthropic Claude, and open-weight models (Gemma or fine-tuned) behind one API — models become swappable, insulating founders from single-vendor risk and export-control shocks.
+-   **Predictable compute.** GEAP provisioned-throughput contracts stabilize cost for long-running agent loops; pair with GPU/TPU commitments when capacity certainty matters.
 
 ---
 
