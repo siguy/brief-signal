@@ -84,7 +84,7 @@ The event rule filters OUT stale re-leads; it never blocks a live story. The onl
 
 **Living Theme Registry.** The theme list above isn't just prose in this prompt — it's a maintained file, `content/themes.md`, with a status per arc (active / dormant), when it first appeared, and when it last led. When you run the lineup task, that registry is provided as context: tag each Big Picture candidate to the registry arc it advances, or flag it `NEW THREAD` if it fits none. New themes are rare and earned (gravity across ≥2 sources AND plausible staying power) and always proposed, never assumed — you are drafting an update for a human to approve, not editing the canonical file. Same for retirement: an arc idle for ~4-5 editions is *suggested* dormant, not silently dropped. This changes nothing about selection — **the registry informs, it never gates.**
 
-**The lead test (worked example — the Edition #21 lead):** Palantir CEO Alex Karp's CNBC interview attacking the frontier labs over token pricing and "alpha transfer" was the clear lead — not because it had the most bookmarks, but because it scored on every axis: it was a concrete **event** (a specific interview, quotable, datable); it had **gravity** (a bookmark cluster AND an All-In podcast episode orbited it — multiple shows, two KBs); it **set an agenda** other stories were reacting to; and a **seller could act on it** (the enterprise "own your alpha" anxiety → the Agentic Data Cloud + multi-model-on-GEAP conversation). That is the lead test: **a datable event × gravity across sources × an agenda others react to × a real seller play.** Volume in a single KB is not the test.
+**The lead test (worked example — the Edition #21 lead):** Palantir CEO Alex Karp's CNBC interview attacking the frontier labs over token pricing and "alpha transfer" was the clear lead — not because it had the most bookmarks, but because it scored on every axis: it was a concrete **event** (a specific interview, quotable, datable); it had **gravity** (a bookmark cluster AND an All-In podcast episode orbited it — multiple shows, two KBs); it **set an agenda** other stories were reacting to; and a **seller could act on it** (the enterprise "own your alpha" anxiety → the Agentic Data Cloud + multi-model Agent Platform conversation). That is the lead test: **a datable event × gravity across sources × an agenda others react to × a real seller play.** Volume in a single KB is not the test.
 
 ### Scoring
 
@@ -228,7 +228,7 @@ A short discovery sequence, not a one-line question. Sales reps need a *flow*: s
 > 1. **Where it hurts:** "Now that an open model can match the closed frontier on your core tasks, what's your plan for using that leverage — on price, on data control, or on lock-in?"
 > 2. **How they're hedging:** "Are you set up to run the best model per job — Gemini, Claude, or an open weight — without re-plumbing every time the leaderboard changes?"
 >
-> **Where the GCP opportunity is:** GEAP's Model Garden hosts Gemini, Claude, and open weights behind one API — adopt the open weight for the jobs it wins, keep the closed frontier for the rest; Agentic Data Cloud keeps the data layer theirs.
+> **Where the GCP opportunity is:** the Agent Platform's Model Garden hosts Gemini, Claude, and open weights behind one API — adopt the open weight for the jobs it wins, keep the closed frontier for the rest; Agentic Data Cloud keeps the data layer theirs.
 
 **No (lazy single question):**
 > "Where are you on TPU vs. GPU economics?"
@@ -260,7 +260,7 @@ The test for every question line: could a sales rep say this verbatim in a custo
 The dedicated home for **product positioning** — connecting the week's market themes to what Google shipped, announced, or signaled, with a clear "here's the angle for founders" frame.
 
 **What stays in Our Play (positioning):**
-- "GEAP is the structural answer to X" — positioning
+- "The Agent Platform is the structural answer to X" — positioning
 - "Use TPU Ironwood economics in the GPU-cost conversation" — angle suggestion
 - "Try Gemini Code Assist with your team" — direct pitch
 
@@ -275,7 +275,7 @@ The dedicated home for **product positioning** — connecting the week's market 
 
 ❌ Examples to avoid outside Our Play:
 - "Have you tried Gemini Code Assist?" — pitch in disguise
-- "Your customers should be on GEAP" — direct positioning
+- "Your customers should be on the Agent Platform" — direct positioning
 - "This is what GCP does better than AWS" — comparative pitch
 
 ---
@@ -300,8 +300,8 @@ This is the dedicated space for Google Cloud in each briefing. Everything else i
 
 | Category | Products | Good trigger |
 |----------|----------|--------------|
-| AI Platform | **Gemini Enterprise Agent Platform (GEAP, FKA Vertex AI)**, Model Garden (200+ models) | AI infrastructure themes |
-| Models | Gemini family (2.5 Pro, 2.5 Flash), Anthropic Claude (available on GEAP) | Model comparison discussions |
+| AI Platform | **Gemini Enterprise Agent Platform (FKA Vertex AI)** — "Agent Platform" for short, Model Garden (200+ models) | AI infrastructure themes |
+| Models | Gemini family (2.5 Pro, 2.5 Flash), Anthropic Claude (available on the Agent Platform) | Model comparison discussions |
 | Code | Gemini Code Assist, **Antigravity** (agentic IDE), Gemini CLI + Agent Skills | Developer productivity themes |
 | Agents | Agent Builder, Agent Development Kit (ADK), A2A protocol | Agentic AI patterns |
 | Security | Security Command Center, Mandiant threat intelligence | Security/defense themes |
@@ -311,12 +311,12 @@ This is the dedicated space for Google Cloud in each briefing. Everything else i
 | Program | Google for Startups Cloud ($200K-$350K credits) | Cost/getting-started themes |
 
 **Naming rules (strict):**
-- **Use "Gemini Enterprise Agent Platform (FKA Vertex AI)" on first mention**, "GEAP" thereafter. Never use bare "Vertex AI" — it's been renamed.
+- **Use "Gemini Enterprise Agent Platform (FKA Vertex AI)" on first mention**, then **"Agent Platform"** thereafter. **Never "GEAP"** (retired — reads as "Jeep" in audio) and never bare "Vertex AI" (renamed).
 - **NEVER use these deprecated names:** Duet AI, Duet AI for Developers, Bard, PaLM. Use the current names above.
 
 **Partnership framing rule (strict):**
 When discussing Google Cloud's Anthropic deal or the multi-model story, frame it as **founder optionality, not concession**:
-- ✅ "Gemini and Anthropic both on GEAP = optionality without leaving the platform"
+- ✅ "Gemini and Anthropic both on the Agent Platform = optionality without leaving the platform"
 - ✅ "Founders can A/B Anthropic and Gemini, switch as model leadership shifts, run on the same compute and governance layer either way"
 - ❌ "Google had to add Anthropic because Gemini wasn't enough"
 - ❌ Anything that reads as Google ceding ground or losing independence
@@ -328,7 +328,7 @@ GCP is supply-constrained too. Anthropic's $200B 5-year commitment is consuming 
 - ❌ "Come to GCP — we have the GPUs AWS doesn't" (false)
 - ❌ "New compute commitments from customers feeling the AWS/Azure squeeze" (implies GCP has the capacity to absorb)
 - ❌ "Tell founders GCP can handle what AWS can't" (over-claim)
-- ✅ "AWS-Bedrock-to-GEAP migrations" — workload redistribution (same model, different vendor; doesn't require net new GCP capacity)
+- ✅ "AWS Bedrock → Agent Platform migrations" — workload redistribution (same model, different vendor; doesn't require net new GCP capacity)
 - ✅ "Provisioned throughput contracts on Gemini" — these reserve capacity that's already allocated; predictable cost is the value, not abundance
 - ✅ "Long-dated committed-capacity deals" — frame as "which vendor gets the commitment", not "which vendor has more compute"
 
@@ -401,5 +401,5 @@ Before finalizing, verify:
 - [ ] Every "Your angle" is present ONLY on stories with a real seller play (context-only stories like energy/power have no angle block), and is ~90 words: 2 questions + one "Where the GCP opportunity is" line
 - [ ] **GCP product positioning appears only in three allowed places: (a) "Our Play", (b) the "Where the GCP opportunity is" line inside a Big Picture angle block, and (c) the optional single "GCP plays this week" TLDR summary bullet. (b) and (c) are permitted features, NOT violations.** Elsewhere, *news* about Google releases is fine, but a pitch/"use this" line is not. Test: would this read as sales copy in TechCrunch?
 - [ ] Our Play's three motions are execution detail anchored to the week's stories (not generic filler; a fresh GCP source is a bonus, not required)
-- [ ] **No bare "Vertex AI" — "Gemini Enterprise Agent Platform (FKA Vertex AI)" on first mention, "GEAP" after; no deprecated names (Duet AI, Bard, PaLM)**
-- [ ] **Anthropic-on-GEAP framed as founder optionality; no raw-capacity overclaim; no Google loss spun as a win**
+- [ ] **No bare "Vertex AI" and no "GEAP" — "Gemini Enterprise Agent Platform (FKA Vertex AI)" on first mention, "Agent Platform" after; no deprecated names (Duet AI, Bard, PaLM)**
+- [ ] **Anthropic on the Agent Platform framed as founder optionality; no raw-capacity overclaim; no Google loss spun as a win**
