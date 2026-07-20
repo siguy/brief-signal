@@ -235,7 +235,7 @@ The best way to understand a system is to watch it break. Edition #22 was a manu
 
 - **The triplication loop.** The generator produced the entire briefing *three times over* in one response — a known failure mode of the model where it loops instead of stopping. The first copy was complete and good, so the fix was to truncate to it. (A follow-up task is now hardening the generator to catch this automatically.)
 
-- **"GEAP" became "Jeep."** This one's my favorite. The text-to-speech step read the acronym GEAP as the car brand — "run it all on Jeep." Caught it in the proofread and spelled it `G-E-A-P` so the audio says it right. A reminder that the *last* mile (audio) has its own gremlins, and a human-in-the-loop proofread earns its keep.
+- **"GEAP" became "Jeep."** This one's my favorite — and it has the best lesson. The text-to-speech step read the acronym GEAP as the car brand — "run it all on Jeep." I caught it in the proofread. But the *deeper* fix came from asking why it kept happening: the audio prompt was **explicitly telling** the model to write GEAP as "Jeep" ("how it's pronounced internally"). The bug wasn't the model misbehaving — it was doing exactly what we told it. So we retired the acronym entirely; it's "Agent Platform" now. The lesson: when a bug keeps coming back, the fix usually isn't "catch it again" — it's finding *why the system produces it* and removing that.
 
 None of these individually is dramatic. The point is the *pattern*: every one had a documented lesson or became one, and the system got a little more bulletproof each time. That's compounding engineering — the codebase remembers its scars.
 

@@ -14,6 +14,7 @@
 
 ### Changed
 - **Briefing structure simplified** (`scripts/briefing-prompt.md`) — removed Builder's Corner and Founder Watch as standing sections (that material now lives in Quick Hits as one-liners); Quick Hits → 3-6 bullets, may cite podcasts; "Our Play" → one framing sentence + exactly 3 named GCP motions; word target corrected to ~1,700-1,800 (was 800-1000); critique quality-checklist rewritten (dropped false-positive rules, carved out the required "Where the GCP opportunity is" angle line).
+- **Retired the "GEAP" acronym** (`scripts/briefing-prompt.md`, `scripts/audio-script-prompt.md`) — now "Gemini Enterprise Agent Platform (FKA Vertex AI)" on first mention, then "Agent Platform" (audio: "the Agent Platform"). Removed the audio prompt's "write GEAP as Jeep" instruction — root cause of the recurring TTS mispronunciation. Never "GEAP" or "Jeep." (Published editions #5–#22 keep "GEAP" as shipped history.)
 
 ### Fixed
 - **Gemini repetition loop in briefing generation** (`scripts/generate-briefing.js`) — `truncateRepetition()` detects a duplicated frontmatter/`## TLDR` after the first `*Sources:*` line and truncates to the first complete copy (Edition #22 emitted the briefing 3×, 5,518 words). Covered by `scripts/generate-briefing.test.js` (`npm test`).

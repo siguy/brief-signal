@@ -194,16 +194,17 @@ Concrete rules:
   joins the existing audio PR. Merging that PR ships script + MP3 and the new `.mp3`
   triggers the subscriber email.
 
-- **Always proofread the audio script for acronym mispronunciations before generating the
-  MP3.** The `audio:pr` generator expanded "GEAP" to the phonetic **"Jeep"** (the car) —
-  "or Jeep, internally", "store on Jeep", "Jeep's Model Garden", "Bedrock to Jeep
-  migrations" (Edition #20). The TTS reads the script verbatim, so this would have shipped
-  as audio saying "Jeep." Fix: spell new/ambiguous acronyms letter-by-letter the way the
-  script already does for others (A-I, H-B-M, A-I-U-C, L-L-M) — i.e. `G-E-A-P` — or after
-  first mention just say "the platform." Durable fix worth doing: add a rule to
-  `scripts/audio-script-prompt.md` to render GEAP as "G-E-A-P" (never "Jeep") and to spell
-  unfamiliar acronyms as letters. Scan every script for the brand/product names of the week
-  before running `audio:generate`.
+- **"GEAP" is retired — use "Agent Platform" everywhere (2026-07-20).** Root cause of the
+  recurring "Jeep" bug: `scripts/audio-script-prompt.md` *explicitly instructed* the model to
+  render GEAP as "Jeep" ("how it's pronounced internally"), which shipped again in #22 until
+  caught in proofread. Simon's durable fix: drop the acronym. Convention — briefing text: first
+  mention "Gemini Enterprise Agent Platform (FKA Vertex AI)", then "Agent Platform"; audio: first
+  mention "the Gemini Enterprise Agent Platform", then "the Agent Platform" (fully spoken). Never
+  "GEAP," never "Jeep." (Published editions #5–#22 keep "GEAP" as shipped history.)
+
+- **Still: proofread every audio script for acronym mispronunciations before `audio:generate`.**
+  The TTS reads verbatim; spell ambiguous acronyms letter-by-letter (A-I, H-B-M, L-L-M, G-C-P) and
+  scan for the week's brand/product names.
 
 - **A thin-bookmark week is a red flag to check the raw JSON, NOT proof the week was quiet.**
   `fetch-bookmarks.py` dedups against the last `DEDUP_WEEKS=4` of `bookmarks-raw-*.json` files.
