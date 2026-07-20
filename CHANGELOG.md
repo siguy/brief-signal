@@ -3,9 +3,23 @@
 ## Unreleased
 
 ### Added
-- **Edition #7 briefing + audio** — "AI's Infrastructure Paradox, Autonomous Defense, & Generative UI Takes Hold" — 42 podcast episodes, 10 bookmarks, playlist data
+- **Edition #22 briefing + audio** — "Open Weights Leapfrog the Frontier as Enterprises Fight to Own the Model" — 137 bookmarks, 2 videos, 82 podcast episodes (67 YouTube + 15 RSS)
+- **Lead-Story Doctrine** (`scripts/briefing-prompt.md`) — explicit lead-selection rules: scan all 3 KBs for model releases first; a lead is a datable *event*, not a theme; gravity counted across distinct sources/shows; seller-relevance applied at selection time; serial-narrative continuity (advance recurring arcs, don't recycle). `lead = fresh event × (developing theme OR new thread) × seller play`.
+- **Story-lineup pass (Stage 4a)** (`scripts/generate-briefing.js`) — plans 2-3 leads (event, gravity count, merges, cut-list) to `content/briefings/drafts/{date}-lineup.md` before drafting, then drafts from it; also feeds the last 4 editions' leads into context (`getRecentLeads`).
+- **Coverage-aware critique** (`scripts/critique-briefing.js`) — feeds the critic a compact KB index and flags notable stories the briefing skipped ("is any bigger than what's included?").
+- **Theme registry** (`content/themes.md`) — 8 recurring macro-narrative arcs with status + "where it stands," seeded from the 22-edition history; the briefing's long-term memory. No hard cap (emergent count via entry bar + retirement).
+
+### Changed
+- **Briefing structure simplified** (`scripts/briefing-prompt.md`) — removed Builder's Corner and Founder Watch as standing sections (that material now lives in Quick Hits as one-liners); Quick Hits → 3-6 bullets, may cite podcasts; "Our Play" → one framing sentence + exactly 3 named GCP motions; word target corrected to ~1,700-1,800 (was 800-1000); critique quality-checklist rewritten (dropped false-positive rules, carved out the required "Where the GCP opportunity is" angle line).
 
 ### Fixed
+- **Gemini repetition loop in briefing generation** (`scripts/generate-briefing.js`) — `truncateRepetition()` detects a duplicated frontmatter/`## TLDR` after the first `*Sources:*` line and truncates to the first complete copy (Edition #22 emitted the briefing 3×, 5,518 words). Covered by `scripts/generate-briefing.test.js` (`npm test`).
+
+### Documentation
+- **FOR_SIMON.md** — added chapters on the generation "head chef" rewrite (Lead-Story Doctrine, lineup pass, coverage-aware critique), the theme registry, and the Edition #22 "war stories"; marked the RSS/whisper pipeline built.
+
+### Previously (undocumented, now noted)
+- **Edition #7 briefing + audio** — "AI's Infrastructure Paradox, Autonomous Defense, & Generative UI Takes Hold" — 42 podcast episodes, 10 bookmarks, playlist data
 - **Podcast subtitle downloads broken by `--print` flag** — yt-dlp's `--print` silently disables all file writes including subtitle downloads. Split `downloadSubtitleAsync` into separate subtitle download and date fetch calls. 43/44 subtitles now download vs 1/45 before.
 - **Stale GCP product names in briefing prompt** — Replaced "Duet AI for Developers" with Gemini Code Assist. Added deprecated product blocklist to `scripts/briefing-prompt.md`.
 

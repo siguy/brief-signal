@@ -185,9 +185,65 @@ The new approach uses **twikit**, a Python library that calls X's internal Graph
 
 ---
 
+## The Head Chef: How the Briefing Gets Written — and How We Taught It Taste
+
+_(Added 2026-07-20.)_
+
+Everything above is prep cooks chopping ingredients. This section is about the head chef — `scripts/generate-briefing.js` — the thing that takes three knowledge-base files and writes the actual briefing. Its recipe book is `scripts/briefing-prompt.md`, a long system prompt that tells Gemini what a good briefing looks like.
+
+Here's the problem we discovered. Every week, you'd get the auto-generated draft and send it back to the kitchen with the *same* corrections: cut the "Builder's Corner" section you never like, tighten the sales angles, shorten "Our Play," demote a story you didn't care about. We were fixing the same things by hand, edition after edition. That's a smell. When you correct the same mistake every time, the fix doesn't belong in your head — it belongs in the recipe book.
+
+So we did a big rewrite. Three ideas matter:
+
+**1. The Lead-Story Doctrine.** The single biggest failure was picking the wrong lead story. The generator was letting the *loudest pile of bookmarks* win — so in Edition #22 it led with a so-so open-model release and completely missed **Kimi K3**, the first open model to beat *every* proprietary model on a benchmark, which was sitting right there in a podcast deep dive. You caught it; the machine hadn't. The fix is a doctrine with a memorable rule:
+
+> **A lead = a fresh EVENT × (a developing theme OR a genuinely new thread) × a real seller play.**
+
+Three things packed in there. First, a lead must be a datable *event* ("Kimi K3 beat proprietary models on Tuesday"), never a vague *theme* ("the supply-constrained economy") — themes are section headings, events are stories. Looking back at all 22 editions, every weak lead was a theme dressed up as a story. Second, "gravity" is now *countable* — how many different sources and shows independently talk about it — so a story three podcasts orbit beats a loud single tweet. Third, the generator now scans *all three* knowledge bases for model releases *first*, before anything else, so a Kimi-class release can never get buried again.
+
+**2. The lineup pass (plan before you cook).** Instead of writing the whole briefing in one shot, the generator now does a planning step first: it produces a short "lineup" — here are my 2-3 lead stories, here's the event and gravity count for each, here's what I considered and *cut and why*. That lineup lands in the PR so you can sanity-check the *selection* in 60 seconds before reading a single polished paragraph. It's the difference between a chef showing you the menu before cooking versus plating a five-course meal you didn't order.
+
+**3. A critic that has read the whole pantry.** There was already an automated "critique" step that scored each draft. Trouble was, it was half-noise — it kept flagging things your own rules *require*, and it could only see the finished briefing, so it could never say "hey, you skipped the biggest story." We rewired it: we killed the false alarms, and we now feed it a compact index of *everything that was available* to cover. So it can now ask the one question that actually matters — *"which notable stories did the briefing skip, and is any of them bigger than what you included?"* That's the structural catch that would have flagged the Kimi miss automatically.
+
+The payoff: better *first* drafts, so your Monday review is about taste and nuance, not repair.
+
+---
+
+## The Theme Registry: Giving the Briefing a Memory
+
+_(Added 2026-07-20.)_
+
+Here's a subtle but important idea. The AI market isn't 22 unrelated weeks — it's a handful of long-running *stories* that keep developing: compute scarcity, open weights closing the frontier, "who owns the model," the SaaS-to-agents flip. We call these **themes**, and they're the briefing's real superpower. Anyone can read 50 disconnected sources; what a sales rep *can't* easily get is "here's how the open-weights story went from DeepSeek six months ago to Kimi beating proprietary today, and what it means for your next meeting." That through-line is the moat.
+
+So we gave the briefing a memory: `content/themes.md`, a small registry of the ~8 recurring arcs, each with a one-line "where it stands now." Picture a spreadsheet — themes are the columns, weeks are the rows, and each edition's lead is simply whichever cell lit up brightest that week. Not every column fires every week; a quiet theme just sits out and resurfaces when it moves again.
+
+The design lesson worth keeping: **don't cap it with an arbitrary number.** My first draft said "max 8 themes," and you rightly called it arbitrary. The right discipline isn't a count — it's a *high bar to get in* (a real structural force that's recurred) plus *retirement* of arcs that go quiet. Do that, and the count regulates itself. A hard number would have forced you to arbitrarily merge two genuinely different stories just to stay under budget. Good constraints describe the *quality* you want, not a magic number.
+
+---
+
+## War Stories: The Manual Run That Hit Every Landmine (Edition #22)
+
+_(Added 2026-07-20.)_
+
+The best way to understand a system is to watch it break. Edition #22 was a manual run that tripped nearly every wire we'd ever documented — and it's a great tour of how real debugging works: see the symptom, find the root cause, fix it, and write a rule so it never bites again.
+
+- **The silent 401.** The Sunday cron never fired because the Claude CLI login token had expired days earlier. The extraction stages that shell out to `claude -p` just quietly returned errors and kept going. *Lesson already on file, and it held:* run the extractions inside an authenticated session instead. (Durable fix for you: `/login` before Sundays.)
+
+- **The dedup trap that hides 100 bookmarks.** A half-finished earlier run had *fetched* a week of bookmarks into a raw file but never built them into a knowledge base. When I re-fetched, the dedup logic saw those as "already seen" and reported a suspiciously thin week — the exact trap that once buried the Alex Karp story. This time we caught it: combined the stranded raw file with the fresh fetch and rescued 63 bookmarks that would otherwise have vanished.
+
+- **The broken podcast file.** A podcast KB on disk *claimed* to be current but was full of stale 2025 episodes — a previous run's recency filter had failed. The tell was reading the actual episode dates instead of trusting the filename. We threw it out and did a clean 14-day re-pull.
+
+- **The triplication loop.** The generator produced the entire briefing *three times over* in one response — a known failure mode of the model where it loops instead of stopping. The first copy was complete and good, so the fix was to truncate to it. (A follow-up task is now hardening the generator to catch this automatically.)
+
+- **"GEAP" became "Jeep."** This one's my favorite. The text-to-speech step read the acronym GEAP as the car brand — "run it all on Jeep." Caught it in the proofread and spelled it `G-E-A-P` so the audio says it right. A reminder that the *last* mile (audio) has its own gremlins, and a human-in-the-loop proofread earns its keep.
+
+None of these individually is dramatic. The point is the *pattern*: every one had a documented lesson or became one, and the system got a little more bulletproof each time. That's compounding engineering — the codebase remembers its scars.
+
+---
+
 ## What to Build Next
 
-**RSS/whisper pipeline for audio-only podcasts.** The design is already written (see `docs/plans/2026-03-23-podcast-sources-design.md`, "Follow-Up" section). The approach:
+**RSS/whisper pipeline for audio-only podcasts — ✅ BUILT (2026-07-20).** This was the "what to build next" from March, and it shipped. `scripts/extract-rss-podcasts.py` now transcribes audio-only shows (AI Daily Brief, Acquired, etc.) locally with `mlx-whisper` and appends them into the same podcast knowledge base — no paid transcription API. Edition #22 pulled 15 RSS episodes this way. The original design (kept below for the record):
 
 1. Use `mlx-whisper` (free, runs locally on Apple Silicon) to transcribe audio from RSS feeds
 2. Scrape Acquired.fm's website transcripts directly (they publish speaker-labeled transcripts -- higher quality than any transcription tool)
@@ -197,3 +253,10 @@ The new approach uses **twikit**, a Python library that calls X's internal Graph
 This unlocks 5 more podcasts (Acquired, AI Daily Brief, 10/10 GTM, Rethinking with Adam Grant, and potentially Stratechery) without paying for any transcription API. The design decision to avoid paid services like Deepgram ($6-10/mo) or Podscan ($100/mo) was deliberate -- the free/local approach is good enough for 3-5 podcasts, and you can always upgrade later if quality is insufficient.
 
 Build this when you notice you're consistently missing signal from audio-only sources. If the YouTube-only coverage feels complete, there's no rush.
+
+### Next up (as of 2026-07-20)
+
+- **Theme-registry machinery.** The registry file (`content/themes.md`) exists; the next step wires the generator to read it, tag each lead to an arc, and propose slow, approval-gated updates each edition. (In progress.)
+- **Repetition-loop guard.** A small safeguard in `generate-briefing.js` so the triplication bug from Edition #22 gets truncated automatically instead of needing a human catch. (In progress.)
+- **Web analytics.** We can measure site traffic in ~5 minutes with a lightweight, privacy-friendly beacon (Cloudflare Web Analytics or GoatCounter) dropped into `template.html` — no cookie banner, no migration. Not done yet; on hold pending your call.
+- **Maybe Vercel.** Worth considering not for analytics alone but for **PR preview deployments** — every briefing PR would get a live rendered URL, so Monday review happens on the real page instead of raw markdown. ~1-2 hours, low risk. On hold.
