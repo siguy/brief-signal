@@ -11,12 +11,14 @@
 - **Story-lineup pass (Stage 4a)** (`scripts/generate-briefing.js`) — plans 2-3 leads (event, gravity count, merges, cut-list) to `content/briefings/drafts/{date}-lineup.md` before drafting, then drafts from it; also feeds the last 4 editions' leads into context (`getRecentLeads`).
 - **Coverage-aware critique** (`scripts/critique-briefing.js`) — feeds the critic a compact KB index and flags notable stories the briefing skipped ("is any bigger than what's included?").
 - **Theme registry** (`content/themes.md`) — 8 recurring macro-narrative arcs with status + "where it stands," seeded from the 22-edition history; the briefing's long-term memory. No hard cap (emergent count via entry bar + retirement).
+- **Theme registry wired into the generator** (`scripts/generate-briefing.js`) — Stage 4a's lineup pass now reads `content/themes.md`, tags each Big Picture candidate to the arc it advances (`advances:` field, or flags a new thread), and proposes an update (per-theme "moved to," any new-theme births or dormant retirements) written to `content/briefings/drafts/{date}-themes-proposed.md`. Registry informs lead selection, never gates it; canonical `content/themes.md` is never auto-overwritten — Simon reviews and promotes it manually. The proposed-update summary also surfaces in the weekly PR body (`generate-weekly.sh`). Validated with a live dry run against a real Gemini call in an isolated copy of the repo.
 
 ### Changed
 - **Briefing structure simplified** (`scripts/briefing-prompt.md`) — removed Builder's Corner and Founder Watch as standing sections (that material now lives in Quick Hits as one-liners); Quick Hits → 3-6 bullets, may cite podcasts; "Our Play" → one framing sentence + exactly 3 named GCP motions; word target corrected to ~1,700-1,800 (was 800-1000); critique quality-checklist rewritten (dropped false-positive rules, carved out the required "Where the GCP opportunity is" angle line).
 
 ### Fixed
 - **Gemini repetition loop in briefing generation** (`scripts/generate-briefing.js`) — `truncateRepetition()` detects a duplicated frontmatter/`## TLDR` after the first `*Sources:*` line and truncates to the first complete copy (Edition #22 emitted the briefing 3×, 5,518 words). Covered by `scripts/generate-briefing.test.js` (`npm test`).
+- **Lineup file corrupted by code-fence stripping** (`scripts/generate-briefing.js`) — the saved `{date}-lineup.md` file's own trailing ` ``` ` fence was silently eaten by `stripCodeFences`'s end-of-string-anchored regex whenever the theme-registry block was the last thing in the response. New `stripLineupFences()` preserves it. Found via a live dry run, not by hand-written tests; 16 tests now cover the theme-registry functions.
 
 ### Documentation
 - **FOR_SIMON.md** — added chapters on the generation "head chef" rewrite (Lead-Story Doctrine, lineup pass, coverage-aware critique), the theme registry, and the Edition #22 "war stories"; marked the RSS/whisper pipeline built.

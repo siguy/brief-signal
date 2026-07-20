@@ -93,18 +93,20 @@ Stage 4a lineup pass. Full plan: `~/.claude/plans/theme-registry-wiring.md` (rev
   `stripLineupFences()` function that skips the trailing rule whenever the
   internal marker is present; added 2 more committed tests reproducing the
   exact failure and confirming the fallback path is unchanged (16 tests total).
-- One non-bug observation: the model's proposed registry correctly dropped the
-  original file's non-theme "Notes & open judgment calls" section (reasonable
-  reading of "reproduce every existing *theme*"), so if Simon promotes a
-  proposed file as-is he should re-add that section manually — flagging for
-  awareness, not fixing, since auto-preserving arbitrary non-theme content is
-  out of scope for this feature.
+- ~~One non-bug observation: the model's proposed registry correctly dropped the
+  original file's non-theme "Notes & open judgment calls" section~~ — fixed in
+  a follow-up commit: the lineup prompt now explicitly instructs reproducing the
+  whole registry file (header, discipline rules, legend, every theme, AND any
+  trailing notes/appendix section), not just theme entries. Test added.
+- **Merged.** PR #68 squash-merged to `main` as `4ac8f76` after 3 rounds of
+  fixes (code review + a live dry run against a real Gemini call).
 
 ---
 
 # Backlog (not started)
 
-- [ ] **Analytics performance report** — a simple report built on the existing
-      GoatCounter analytics (pageviews + scroll-depth + audio-play tracking,
-      `npm run analytics` → `logs/analytics-signal.md` per-edition read-signal)
-      that tells Simon how editions are performing. Scope/format TBD.
+- [x] ~~**Analytics performance report**~~ — done. Turned out to already exist as
+      [PR #67](https://github.com/siguy/brief-signal/pull/67)
+      (`scripts/fetch-analytics.js`, `npm run analytics` → `logs/analytics-signal.md`,
+      per-edition read/scroll/audio signal mapped to themes) — merged to `main`
+      while this doc-update work was in flight.

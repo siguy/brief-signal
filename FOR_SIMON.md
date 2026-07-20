@@ -219,6 +219,15 @@ So we gave the briefing a memory: `content/themes.md`, a small registry of the ~
 
 The design lesson worth keeping: **don't cap it with an arbitrary number.** My first draft said "max 8 themes," and you rightly called it arbitrary. The right discipline isn't a count — it's a *high bar to get in* (a real structural force that's recurred) plus *retirement* of arcs that go quiet. Do that, and the count regulates itself. A hard number would have forced you to arbitrarily merge two genuinely different stories just to stay under budget. Good constraints describe the *quality* you want, not a magic number.
 
+**Update, same day: the machinery is now built and shipped.** A registry file nobody reads is just a nice document — the actual point was to make the generator *use* it. Now, at the same Stage 4a "plan the lineup before you write" step, the model gets the whole registry as context, tags each Big Picture story with the arc it advances (or flags it as a genuinely new thread), and proposes an update: "here's how Compute Scarcity moved this week," plus any new-theme births or quiet-arc retirements. Crucially, it only *proposes* — the model never touches `content/themes.md` directly. It writes a draft to `content/briefings/drafts/{date}-themes-proposed.md`, and you promote it by hand when you're happy with it, the same way you already review the lineup and the draft briefing itself. The registry *informs* which story leads; it never *gates* one out — a strong new thread can still lead even if it fits no existing arc.
+
+I validated this the way you'd want a real feature validated, not just by reading the code: I built an isolated copy of the whole pipeline in `/tmp` — same scripts, same registry, same knowledge-base files you'd use for a real Monday — and ran it against a real Gemini call, without any risk to the actual site (it writes into its own throwaway `content/briefings/`, never yours). That single real run caught two bugs that no amount of hand-written test strings would have found:
+
+1. The model's own registry-update text ends in a closing code fence (` ``` `), and a pre-existing cleanup function in the generator — one that strips Gemini's occasional habit of wrapping its whole answer in a stray ```markdown fence — was silently eating that closing fence too, because both patterns look the same to a regex anchored "at the very end of the string." The fix: teach the cleanup step to recognize *our* fence and leave it alone.
+2. The model read the instruction "reproduce every existing theme" a little too literally and quietly dropped a non-theme "Notes" section at the bottom of the registry file. The fix was just clearer instructions: reproduce the *whole file*, not just the theme entries.
+
+Neither bug would have shown up in a code review or a hand-typed test case — they only appear when the actual model produces actual text and you actually look at what landed on disk. That's the case for occasionally running the real thing in a sandbox before trusting a pipeline change, even when the code "looks right."
+
 ---
 
 ## War Stories: The Manual Run That Hit Every Landmine (Edition #22)
@@ -278,7 +287,7 @@ Build this when you notice you're consistently missing signal from audio-only so
 
 ### Next up (as of 2026-07-20)
 
-- **Theme-registry machinery.** The registry file (`content/themes.md`) exists; the next step wires the generator to read it, tag each lead to an arc, and propose slow, approval-gated updates each edition. (In progress.)
-- **Repetition-loop guard.** A small safeguard in `generate-briefing.js` so the triplication bug from Edition #22 gets truncated automatically instead of needing a human catch. (In progress.)
+- **Theme-registry machinery — ✅ BUILT (2026-07-20).** The generator now reads `content/themes.md` at the Stage 4a lineup step, tags each lead to the arc it advances, and proposes slow, approval-gated updates each edition to `content/briefings/drafts/{date}-themes-proposed.md`. See "The Theme Registry" section above for the full story, including two real bugs a live test run caught.
+- **Repetition-loop guard — ✅ BUILT.** `truncateRepetition()` in `generate-briefing.js` now catches the Edition #22 triplication bug automatically and truncates to the first complete copy, with tests in `scripts/generate-briefing.test.js`.
 - **Web analytics — ✅ BUILT (2026-07-20).** GoatCounter is live: pageviews + scroll-depth + audio-play events on the deployed site, plus `npm run analytics` to pull a per-edition read-signal. See "Watching What Gets Read" above. Next optional step (your call): wire the signal into the generator's story selection, and/or add scroll-depth heatmaps or traffic-source tracking.
 - **Maybe Vercel.** Worth considering not for analytics alone but for **PR preview deployments** — every briefing PR would get a live rendered URL, so Monday review happens on the real page instead of raw markdown. ~1-2 hours, low risk. On hold.
