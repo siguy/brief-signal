@@ -74,3 +74,37 @@ Stage 4a lineup pass. Full plan: `~/.claude/plans/theme-registry-wiring.md` (rev
 - LOW items (unguarded `readThemeRegistry` file read; case-sensitive PR-body awk
   extraction) left as-is — consistent with existing sibling-function style and
   non-fatal by design; not fixed in this pass.
+
+### Live dry-run validation (isolated copy, real gemini-2.5-flash call)
+- Ran the full new-rules pipeline end-to-end in a directory isolated from the real
+  repo (real code + registry, copied history, real KB files, no risk to the
+  published Edition #22). Produced a real Edition #23 lineup + drafted briefing.
+- Model correctly tagged each Big Picture story with `advances:`, produced a
+  well-formed proposed registry update, and did NOT fabricate any new themes —
+  all 8 headings in the proposed registry matched the original file's headings
+  exactly, confirming the "rare and earned" bar held on a real run.
+- **Found and fixed a real bug this way, not catchable by hand-written test
+  strings:** the raw lineup response ends in our internal `themes-proposed`
+  fence, and the existing `stripCodeFences(rawLineup)` call — used to save
+  `{today}-lineup.md` — silently ate that fence's closing marker (same
+  end-of-string-anchor issue as before, but on the *saved* file this time, not
+  the extraction path). Confirmed via byte inspection of the actual file the
+  pipeline wrote. Fixed by extracting the trailing-strip guard into a named
+  `stripLineupFences()` function that skips the trailing rule whenever the
+  internal marker is present; added 2 more committed tests reproducing the
+  exact failure and confirming the fallback path is unchanged (16 tests total).
+- One non-bug observation: the model's proposed registry correctly dropped the
+  original file's non-theme "Notes & open judgment calls" section (reasonable
+  reading of "reproduce every existing *theme*"), so if Simon promotes a
+  proposed file as-is he should re-add that section manually — flagging for
+  awareness, not fixing, since auto-preserving arbitrary non-theme content is
+  out of scope for this feature.
+
+---
+
+# Backlog (not started)
+
+- [ ] **Analytics performance report** — a simple report built on the existing
+      GoatCounter analytics (pageviews + scroll-depth + audio-play tracking,
+      `npm run analytics` → `logs/analytics-signal.md` per-edition read-signal)
+      that tells Simon how editions are performing. Scope/format TBD.

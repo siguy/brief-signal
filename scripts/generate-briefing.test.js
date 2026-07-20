@@ -14,6 +14,7 @@ const {
   readThemeRegistry,
   extractProposedThemes,
   lineupTask,
+  stripLineupFences,
 } = require("./generate-briefing.js");
 
 // One complete, well-formed briefing copy: frontmatter -> body -> Sources line.
@@ -180,6 +181,26 @@ test("draft-facing lineup excludes the registry block (Stage 4b never sees it)",
   );
   assert.ok(lineupForDraft.includes("Quick Hits"), "Quick Hits section was lost");
   assert.ok(lineup.includes("themes-proposed"), "sanity: original lineup keeps the fence");
+});
+
+test("stripLineupFences preserves the internal themes-proposed fence (regression from a live dry run)", () => {
+  // Reproduces a real failure observed in an isolated live dry run against
+  // gemini-2.5-flash: the raw lineup response ends in our own internal fence,
+  // and the OLD stripCodeFences(rawLineup) call silently ate its closing ```
+  // (trailing-fence regex is anchored to end-of-string), leaving the saved
+  // {today}-lineup.md file with a dangling/unterminated code block.
+  const rawLineup =
+    "## Proposed Lineup\n...\n\n**Proposed registry update:** stuff\n\n" +
+    "**Full proposed registry:**\n\n```themes-proposed\n" +
+    "<!-- PROPOSED -->\n## Compute Scarcity\n- Status: active\n```";
+  const result = stripLineupFences(rawLineup);
+  assert.ok(result.endsWith("```"), "closing fence should survive intact");
+  assert.ok(result.includes("Compute Scarcity"));
+});
+
+test("stripLineupFences still strips a Gemini outer-wrap when no internal fence is present", () => {
+  const wrapped = "```markdown\n## Some Lineup\nno theme fence here\n```";
+  assert.strictEqual(stripLineupFences(wrapped), "## Some Lineup\nno theme fence here");
 });
 
 console.log(`\nAll ${passed} tests passed.`);

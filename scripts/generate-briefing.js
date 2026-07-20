@@ -118,6 +118,19 @@ function stripCodeFences(text) {
   return text.replace(/^```(?:markdown)?\s*\n?/i, "").replace(/\n?```\s*$/, "");
 }
 
+// stripCodeFences's trailing rule is anchored to end-of-string and can't tell a
+// Gemini-added *outer* wrap apart from our own internal ```themes-proposed fence
+// — which is often the literal last thing in the lineup response. Running it
+// unconditionally silently eats that fence's closing marker (confirmed in a live
+// dry run: the saved lineup file rendered as a dangling code block). Skip the
+// trailing-strip whenever our marker is present; the leading strip (Gemini
+// sometimes wraps the whole response in ```markdown) is still safe either way.
+function stripLineupFences(rawLineup) {
+  return rawLineup.includes("```themes-proposed")
+    ? rawLineup.replace(/^```(?:markdown)?\s*\n?/i, "").trim()
+    : stripCodeFences(rawLineup).trim();
+}
+
 // Stage 4a task: ask the model to plan the lineup before writing prose. This
 // forces the Lead-Story Doctrine to run as an explicit selection step, and the
 // lineup file that lands in the PR lets the reviewer check "is this the right
@@ -305,7 +318,7 @@ async function main() {
       config: { systemInstruction: `${systemPrompt}\n\n${lineupTask(edition)}` },
     });
     const rawLineup = lineupResp.text || "";
-    lineup = stripCodeFences(rawLineup).trim();
+    lineup = stripLineupFences(rawLineup);
     lineupForDraft = lineup
       .replace(/\n\*\*Proposed registry update:\*\*[\s\S]*$/, "")
       .trimEnd();
@@ -385,6 +398,7 @@ if (require.main === module) {
 
 module.exports = {
   stripCodeFences,
+  stripLineupFences,
   truncateRepetition,
   countWords,
   readThemeRegistry,
