@@ -16,6 +16,7 @@ const path = require("path");
 const SKILLS_DIR = path.join(process.env.HOME, "skills");
 const BRIEFINGS_DIR = path.join(__dirname, "..", "content", "briefings");
 const PROMPT_PATH = path.join(__dirname, "briefing-prompt.md");
+const THEMES_PATH = path.join(__dirname, "..", "content", "themes.md");
 const MAX_AGE_DAYS = 14;
 
 function findKnowledgeBaseFiles() {
@@ -97,6 +98,16 @@ function getRecentLeads(n) {
     .join("\n");
 }
 
+// Living Theme Registry (content/themes.md) — the curated set of recurring
+// macro-narrative arcs (compute scarcity, open weights, sovereignty, etc).
+// Fed to the Stage 4a lineup pass only, so the lineup can tag each candidate
+// to the arc it advances and propose registry updates. Stage 4b just expands
+// the approved lineup, so it doesn't need the raw registry itself.
+function readThemeRegistry() {
+  if (!fs.existsSync(THEMES_PATH)) return "";
+  return fs.readFileSync(THEMES_PATH, "utf-8");
+}
+
 function getTodayDate() {
   const d = new Date();
   return d.toISOString().split("T")[0];
@@ -128,6 +139,7 @@ For each story:
    - changed this week: {the new development, esp. vs. any prior edition on this theme}
    - merges: {what's merged + the tension, or "single"}
    - seller play: {one line, or "context-only — no angle"}
+   - advances: {the Theme Registry arc this story moves forward, by name} OR NEW THREAD — candidate theme? {a name, or "one-off, no arc"}
 
 **Why the lead beats the runner-up:** {one line}
 
@@ -139,7 +151,35 @@ For each story:
 **Considered but cut (and why):**
 - {story} — {no seller play / no new development / too old / thin / already led a prior edition}
 
-**Model-release coverage self-check:** list EVERY major model release or benchmark milestone found anywhere in the KBs, and where each landed (lead / big picture / quick hit / cut). Nothing major may be silently dropped — this is how we avoid missing a release like Kimi K3.`;
+**Model-release coverage self-check:** list EVERY major model release or benchmark milestone found anywhere in the KBs, and where each landed (lead / big picture / quick hit / cut). Nothing major may be silently dropped — this is how we avoid missing a release like Kimi K3.
+
+**Proposed registry update:** the registry informs selection — it never gates it (a new thread or standalone one-off may always lead on its own merits). For each Theme Registry arc that led or advanced this edition, one line: {theme name} — moved to: {new one-line "where it stands"}. Then, only where earned, list births and retirements:
+- NEW THEME: {name} — {why it earns a slot: gravity across ≥2 sources AND plausible staying power, not a one-off}
+- RETIRE (→ dormant): {name} — {hasn't led in ~4-5 editions}
+If nothing changed, write "No registry changes this edition."
+
+**Full proposed registry:** immediately after, output the ENTIRE updated registry — every existing theme (edited only if it led or advanced this edition, otherwise unchanged verbatim) plus any new births — wrapped EXACTLY like this, with nothing else inside the fence:
+
+\`\`\`themes-proposed
+<!-- PROPOSED — do not merge directly. Simon reviews and promotes this to content/themes.md on PR approval. -->
+{full registry markdown, same structure as the current content/themes.md}
+\`\`\``;
+}
+
+// Pulls the fenced ```themes-proposed block out of a raw Stage 4a lineup
+// response. Must run on the RAW response, before stripCodeFences — that
+// function's trailing-fence regex is anchored to end-of-string and would eat
+// this block's closing fence if it runs first, since the registry block is
+// the last thing in the lineup output.
+//
+// Returns "" (skip, non-fatal) if the fence is missing, unclosed, or looks
+// truncated (no theme heading inside) rather than writing a partial file.
+function extractProposedThemes(lineupText) {
+  const match = lineupText.match(/```themes-proposed\r?\n([\s\S]*?)```/);
+  if (!match) return "";
+  const content = match[1].trim();
+  if (!content || !/^##\s+/m.test(content)) return "";
+  return content;
 }
 
 function countWords(text) {
@@ -235,8 +275,15 @@ async function main() {
     previousContext += `\n\n## Recent edition leads (the running arc — advance it, don't recycle or dodge it)\n\n${recentLeads}`;
   }
 
+  // Theme Registry context is Stage 4a-only (the lineup pass), not previousContext —
+  // Stage 4b's userMessage never reads it, since it just expands the approved lineup.
+  const themeRegistry = readThemeRegistry();
+  const themeRegistryContext = themeRegistry
+    ? `\n\n## Theme Registry (long-term memory — tag each Big Picture candidate to the arc it advances, or flag NEW THREAD; propose updates)\n\n${themeRegistry}`
+    : "";
+
   const ai = new GoogleGenAI({ apiKey });
-  const kbAndContext = `Today is ${today}. Edition #${edition}.\n\n## Knowledge Base Content\n\n${kbContent}${previousContext}`;
+  const kbAndContext = `Today is ${today}. Edition #${edition}.\n\n## Knowledge Base Content\n\n${kbContent}${previousContext}${themeRegistryContext}`;
 
   // 5. Stage 4a — story lineup (planning pass). Runs the Lead-Story Doctrine as
   //    an explicit selection step and drops a lineup file in drafts/ so the PR
@@ -250,11 +297,30 @@ async function main() {
       contents: kbAndContext,
       config: { systemInstruction: `${systemPrompt}\n\n${lineupTask(edition)}` },
     });
-    lineup = stripCodeFences(lineupResp.text || "").trim();
+    const rawLineup = lineupResp.text || "";
+    lineup = stripCodeFences(rawLineup).trim();
     const draftsDir = path.join(BRIEFINGS_DIR, "drafts");
     if (!fs.existsSync(draftsDir)) fs.mkdirSync(draftsDir, { recursive: true });
     fs.writeFileSync(path.join(draftsDir, `${today}-lineup.md`), lineup, "utf-8");
     console.log(`  Lineup saved: content/briefings/drafts/${today}-lineup.md`);
+
+    if (themeRegistry) {
+      const proposedThemes = extractProposedThemes(rawLineup);
+      if (proposedThemes) {
+        fs.writeFileSync(
+          path.join(draftsDir, `${today}-themes-proposed.md`),
+          proposedThemes,
+          "utf-8"
+        );
+        console.log(
+          `  Proposed theme registry update saved: content/briefings/drafts/${today}-themes-proposed.md`
+        );
+      } else {
+        console.warn(
+          `  WARN: lineup didn't include a valid themes-proposed block; skipping registry update proposal.`
+        );
+      }
+    }
   } catch (err) {
     console.warn(`  WARN: lineup pass failed (${err.message || err}); drafting without it.`);
   }
@@ -307,4 +373,11 @@ if (require.main === module) {
   });
 }
 
-module.exports = { stripCodeFences, truncateRepetition, countWords };
+module.exports = {
+  stripCodeFences,
+  truncateRepetition,
+  countWords,
+  readThemeRegistry,
+  extractProposedThemes,
+  lineupTask,
+};

@@ -21,3 +21,37 @@ so first drafts are focused and match what he actually ships. Branch: `feat/brie
 
 ## Notes
 - Also uncommitted on main working tree: LOOKBACK_DAYS env-override in extract-podcasts.js + extract-rss-podcasts.py (separate concern).
+
+---
+
+# Living Theme Registry — wiring (follow-up to #63/#64)
+
+`content/themes.md` is seeded (#64) but nothing reads or advances it. Wire it into the
+Stage 4a lineup pass. Full plan: `~/.claude/plans/theme-registry-wiring.md` (reviewed by
+3 parallel agents; sentinel→fence-block + dedup cuts already folded in).
+
+- [x] 1. `generate-briefing.js`: `readThemeRegistry()` + inject into Stage 4a context only
+- [x] 2. Extend `lineupTask`: per-candidate theme tag (or NEW THREAD) + proposed registry
+      update summary + full proposed `themes.md` in a `themes-proposed` fenced block
+- [x] 3. `extractProposedThemes(lineupText)` → write `drafts/{date}-themes-proposed.md`
+      only (no separate diff file); never touch canonical `content/themes.md`
+- [x] 4. `briefing-prompt.md`: short Living Theme Registry note (informs, never gates)
+- [x] 5. `generate-weekly.sh`: PR body reads the update summary from the lineup file
+- [x] 6. Add new fns to existing `module.exports`; inline verification (no new test file)
+- [x] 7. Dry-run validation without touching a shipped briefing
+- [ ] 8. Flag to Simon, open PR, hold merge (pipeline code)
+
+## Review
+- Caught a real bug during validation: `stripCodeFences`'s trailing-fence regex is
+  anchored to end-of-string, and since the new `themes-proposed` fence is the LAST
+  thing in the Stage 4a lineup response, running `stripCodeFences` before extraction
+  would have silently eaten the closing fence and broken extraction on every real run.
+  Fixed by extracting from the raw response before `stripCodeFences` runs. Verified
+  with a side-by-side repro (see conversation) — confirmed the bug exists in the wrong
+  order and is absent in the shipped order.
+- Diff stat matches the plan exactly (4 files, no unplanned files touched):
+  `scripts/generate-briefing.js`, `scripts/briefing-prompt.md`, `scripts/generate-weekly.sh`.
+- All dry-run checks passed with no API key / network: registry read, `lineupTask`
+  content, extraction happy-path + 3 negative cases (missing fence, unclosed fence,
+  no-heading truncation heuristic), and the `generate-weekly.sh` awk extraction
+  against a sample lineup file.
