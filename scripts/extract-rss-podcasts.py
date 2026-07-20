@@ -41,7 +41,9 @@ TMP_DIR = Path("/tmp/brief-signal-rss")
 # Constants
 # ---------------------------------------------------------------------------
 MAX_DEEP_DIVES = 3
-LOOKBACK_DAYS = 7
+# Days back to scan. Default 7 (weekly). Override via the LOOKBACK_DAYS env var for a
+# multi-week catch-up (e.g. LOOKBACK_DAYS=21). generate-weekly.sh exports it for the run.
+LOOKBACK_DAYS = int(os.environ.get("LOOKBACK_DAYS", "7"))
 MIN_DURATION_SEC = 1200  # 20 minutes
 GEMINI_DELAY_SEC = 2
 

@@ -22,7 +22,10 @@ const EXTRACTIONS_DIR = path.join(process.env.HOME, "info-agg", "extractions");
 const L1_PROMPT_PATH = path.join(__dirname, "podcast-extraction-prompt.md");
 const L2_PROMPT_PATH = path.join(__dirname, "podcast-deep-dive-prompt.md");
 const MAX_DEEP_DIVES = 3;
-const LOOKBACK_DAYS = 7;
+// How many days back to scan for episodes. Default 7 (weekly run). Override with
+// the LOOKBACK_DAYS env var for a multi-week catch-up (e.g. LOOKBACK_DAYS=21 after
+// being away 3 weeks). generate-weekly.sh exports it so one setting covers the run.
+const LOOKBACK_DAYS = Number(process.env.LOOKBACK_DAYS) || 7;
 const MIN_DURATION_SEC = 1200; // 20 minutes — filters out clips, shorts, promos, demos
 
 // Input validation — prevent command injection via config or yt-dlp output
