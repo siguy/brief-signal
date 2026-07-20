@@ -12,6 +12,7 @@
     "preview": "npm run build && open dist/index.html",
     "notify": "node scripts/send-email.js",
     "featured": "node scripts/get-featured-topics.js",
+    "analytics": "node scripts/fetch-analytics.js",
     "snapshot": "./scripts/snapshot-briefing.sh",
     "test": "node scripts/generate-briefing.test.js"
   },

@@ -241,6 +241,28 @@ None of these individually is dramatic. The point is the *pattern*: every one ha
 
 ---
 
+## Watching What Gets Read: The Analytics Layer
+
+_(Added 2026-07-20.)_
+
+For 22 editions we flew blind — we wrote briefings and never knew if anyone read them. Now we can see. Here's how it works and, more usefully, how to *think* about it.
+
+**The tool: GoatCounter.** You asked for the simplest thing that lives inside Claude Code, and this is it. GoatCounter is a tiny (~3KB) privacy-first analytics service. Think of it as a turnstile at the door of each briefing: it clicks once every time someone walks in. No cookies (so no annoying "we use cookies" banner, and no GDPR headache), and it has an API so I can read the numbers back from the terminal instead of you squinting at a dashboard.
+
+**How the tracking gets onto the page — and the one clever bit.** Every page is stamped out from a single mold, `template.html`. I added a placeholder, `{{analytics}}`, to its `<head>`, and `build.js` fills that placeholder in **only when it's building the real, deployed site** (it checks `BASE_PATH`, the flag that's set on GitHub but not on your laptop). Why bother? Because otherwise *your own* previewing while writing would show up as "reads" and pollute the data. It's the analytics equivalent of a chef not counting their own taste-tests as customers served.
+
+**Beyond "did they open it" — "how much did they read?"** A raw turnstile only tells you someone came in. But your briefing is one long page, so the real question is *how far down they got.* I added a little scroll-tracker: as a reader passes 25%, 50%, 75%, and 100% of the page, it quietly sends an event. Same for hitting play on the audio. Now you can see the *shape* of attention — if everyone bails at the halfway mark, the back half is too long or the front is front-loaded. That's a direct, actionable signal for how you write the next one.
+
+**Closing the loop: `npm run analytics`.** This is the part that matters for making the briefings *better*, not just measuring them. The script (`scripts/fetch-analytics.js`) pulls the numbers, groups them by edition, cross-references each edition's *theme* (from `content/themes.md`), and writes a plain-English summary to `logs/analytics-signal.md` — e.g. "most-read editions led with Sovereignty and Open Weights; most readers drop past 50% → tighten the back half." That's data you can feed into story selection. (I deliberately did *not* wire this straight into the generator's prompt — messing with what the AI sees when it picks stories is a delicacy-sensitive change, and you should sign off on it consciously, not have it slipped in.)
+
+**Two gotchas I hit — and why they're worth knowing.** When I tested it live, nothing recorded at first. Two culprits, both instructive:
+1. *Background tabs lie.* Browsers deliberately throttle hidden tabs — GoatCounter won't count a pageview for a tab you can't see, and the scroll-tracker's timing loop (`requestAnimationFrame`) is frozen. Both fire perfectly for a *real* reader with the tab in front of them; my automated test just had to bring the tab to the foreground. Lesson: when a thing "doesn't work" in a test harness, ask whether the *test* is the unusual condition, not the code.
+2. *Off-by-one on dates.* GoatCounter's "end date" doesn't include today (the day's still in progress), so my first pull found zero. Fixed by asking for data through *tomorrow*. Classic boundary bug — the kind that's invisible until real data sits right on the edge.
+
+**The honest limits (so you don't over-trust it).** Your audience is niche, so numbers will be small — treat a 2–3× gap between editions as signal and ignore small wiggles; one influential person sharing a link can swing a whole week. And scroll depth is a *proxy* for reading, not proof. Pair the quantitative reads with the qualitative Google feedback form you already have, and you've got a real feedback loop. What we explicitly did *not* build: traffic-source/SEO tooling, a custom domain, and per-paragraph heatmaps — all deferred on purpose to keep this simple.
+
+---
+
 ## What to Build Next
 
 **RSS/whisper pipeline for audio-only podcasts — ✅ BUILT (2026-07-20).** This was the "what to build next" from March, and it shipped. `scripts/extract-rss-podcasts.py` now transcribes audio-only shows (AI Daily Brief, Acquired, etc.) locally with `mlx-whisper` and appends them into the same podcast knowledge base — no paid transcription API. Edition #22 pulled 15 RSS episodes this way. The original design (kept below for the record):
@@ -258,5 +280,5 @@ Build this when you notice you're consistently missing signal from audio-only so
 
 - **Theme-registry machinery.** The registry file (`content/themes.md`) exists; the next step wires the generator to read it, tag each lead to an arc, and propose slow, approval-gated updates each edition. (In progress.)
 - **Repetition-loop guard.** A small safeguard in `generate-briefing.js` so the triplication bug from Edition #22 gets truncated automatically instead of needing a human catch. (In progress.)
-- **Web analytics.** We can measure site traffic in ~5 minutes with a lightweight, privacy-friendly beacon (Cloudflare Web Analytics or GoatCounter) dropped into `template.html` — no cookie banner, no migration. Not done yet; on hold pending your call.
+- **Web analytics — ✅ BUILT (2026-07-20).** GoatCounter is live: pageviews + scroll-depth + audio-play events on the deployed site, plus `npm run analytics` to pull a per-edition read-signal. See "Watching What Gets Read" above. Next optional step (your call): wire the signal into the generator's story selection, and/or add scroll-depth heatmaps or traffic-source tracking.
 - **Maybe Vercel.** Worth considering not for analytics alone but for **PR preview deployments** — every briefing PR would get a live rendered URL, so Monday review happens on the real page instead of raw markdown. ~1-2 hours, low risk. On hold.
