@@ -4,6 +4,8 @@ dist/
 voice-overlay.md
 .claude/
 scripts/logs/
+logs/
+project.log
 GEMINI.md
 vite-signal/
 .env

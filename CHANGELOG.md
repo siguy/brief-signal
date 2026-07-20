@@ -3,6 +3,9 @@
 ## Unreleased
 
 ### Added
+- **Analytics — GoatCounter** (`template.html`, `build.js`) — privacy-first, no-cookie-banner pageview tracking on the live site. Snippet injected via a `{{analytics}}` placeholder in `render()`, **production-only** (gated on `BASE_PATH`) so local dev never pollutes stats. Dashboard: https://briefsignal.goatcounter.com.
+- **Engagement events** (`template.html`) — briefing pages fire GoatCounter events for scroll depth (25/50/75/100%) and first audio play; throttled and a silent no-op when the tracking script isn't loaded (i.e. local dev).
+- **Analytics pull script** (`scripts/fetch-analytics.js`, `npm run analytics`) — reads GoatCounter via its API and writes a per-edition read-signal (reads, scroll drop-off funnel, audio-play rate) mapped to each edition's theme from `content/themes.md`, to `logs/analytics-signal.md`. Read-only and advisory; treats total reads ≈ first-week reads (nobody revisits old editions) and never blocks the pipeline.
 - **Edition #22 briefing + audio** — "Open Weights Leapfrog the Frontier as Enterprises Fight to Own the Model" — 137 bookmarks, 2 videos, 82 podcast episodes (67 YouTube + 15 RSS)
 - **Lead-Story Doctrine** (`scripts/briefing-prompt.md`) — explicit lead-selection rules: scan all 3 KBs for model releases first; a lead is a datable *event*, not a theme; gravity counted across distinct sources/shows; seller-relevance applied at selection time; serial-narrative continuity (advance recurring arcs, don't recycle). `lead = fresh event × (developing theme OR new thread) × seller play`.
 - **Story-lineup pass (Stage 4a)** (`scripts/generate-briefing.js`) — plans 2-3 leads (event, gravity count, merges, cut-list) to `content/briefings/drafts/{date}-lineup.md` before drafting, then drafts from it; also feeds the last 4 editions' leads into context (`getRecentLeads`).
