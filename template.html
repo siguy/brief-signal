@@ -26,6 +26,9 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+    <!-- Analytics (GoatCounter) — injected by build.js only in production builds -->
+    {{analytics}}
   </head>
   <body
     class="bg-brand-bg text-brand-text font-sans antialiased relative min-h-screen selection:bg-brand-accent selection:text-brand-bg overflow-x-hidden"
@@ -249,6 +252,61 @@
             audio.currentTime = pct * audio.duration;
           });
         }
+
+        // Engagement events (GoatCounter) — no-op unless the tracking script is
+        // loaded (production). Only tracked on briefing pages.
+        (function () {
+          const m = location.pathname.match(/briefings\/([^/]+)/);
+          if (!m) return;
+          const slug = m[1];
+          function gc(path) {
+            if (window.goatcounter && window.goatcounter.count) {
+              window.goatcounter.count({ path: path, title: path, event: true });
+            }
+          }
+
+          // Audio play — fire once on first actual playback
+          const audioEl = document.getElementById("audioElement");
+          if (audioEl) {
+            let firedAudio = false;
+            audioEl.addEventListener("play", () => {
+              if (!firedAudio) {
+                firedAudio = true;
+                gc("audio-play-" + slug);
+              }
+            });
+          }
+
+          // Scroll depth — fire each milestone once
+          const marks = [25, 50, 75, 100];
+          const fired = {};
+          function checkScroll() {
+            const doc = document.documentElement;
+            const scrollable = doc.scrollHeight - window.innerHeight;
+            const pct = scrollable > 0 ? (window.scrollY / scrollable) * 100 : 100;
+            for (const mk of marks) {
+              if (pct >= mk && !fired[mk]) {
+                fired[mk] = true;
+                gc("scroll-" + mk + "-" + slug);
+              }
+            }
+          }
+          let ticking = false;
+          window.addEventListener(
+            "scroll",
+            () => {
+              if (!ticking) {
+                ticking = true;
+                requestAnimationFrame(() => {
+                  checkScroll();
+                  ticking = false;
+                });
+              }
+            },
+            { passive: true }
+          );
+          checkScroll(); // handle short pages / already-scrolled loads
+        })();
       });
     </script>
   </body>

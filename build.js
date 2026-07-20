@@ -20,6 +20,13 @@ const GOOGLE_FORM_EDITION_ENTRY = 'entry.659640151';
 // Buttondown email subscribe — replace with your Buttondown username after signup
 const BUTTONDOWN_USERNAME = 'briefsignal';
 
+// GoatCounter analytics snippet — public count endpoint, safe to ship in page source.
+// Injected only in production builds (BASE_PATH set) so local file:// dev views
+// never pollute the stats. Dashboard: https://briefsignal.goatcounter.com
+const ANALYTICS_SNIPPET = BASE_PATH
+  ? '<script data-goatcounter="https://briefsignal.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>'
+  : '';
+
 // Parse YAML-ish frontmatter (simple key: value pairs between --- fences)
 function parseFrontmatter(raw) {
   const match = raw.match(/^---\n([\s\S]*?)\n---\n([\s\S]*)$/);
@@ -99,6 +106,7 @@ function getBase(depth) {
 function render(template, vars) {
   let html = template;
   vars.base = vars.base || BASE_PATH;
+  html = html.replaceAll('{{analytics}}', ANALYTICS_SNIPPET);
   for (const [key, val] of Object.entries(vars)) {
     html = html.replaceAll(`{{${key}}}`, val || '');
   }
