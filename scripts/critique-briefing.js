@@ -23,11 +23,14 @@
 
 const { GoogleGenAI } = require("@google/genai");
 const fs = require("fs");
+const os = require("os");
 const path = require("path");
 
 const BRIEFINGS_DIR = path.join(__dirname, "..", "content", "briefings");
 const PROMPT_PATH = path.join(__dirname, "briefing-prompt.md");
 const LOGS_DIR = path.join(__dirname, "logs");
+const SKILLS_DIR = path.join(os.homedir(), "skills");
+const KB_MAX_AGE_DAYS = 14;
 
 function getLatestBriefingPath() {
   const files = fs
@@ -56,6 +59,62 @@ function extractRulesFromPrompt(prompt) {
 
 function stripJsonFences(text) {
   return text.replace(/^```(?:json)?\s*\n?/i, "").replace(/\n?```\s*$/, "");
+}
+
+// --- Coverage check support -------------------------------------------------
+// Feed the critic a compact index of what was AVAILABLE to cover (KB headings +
+// signal ratings) so it can flag notable stories the briefing skipped — the
+// "you missed the Kimi K3 release" check that a briefing-only review can't do.
+
+function newestKb(prefix) {
+  if (!fs.existsSync(SKILLS_DIR)) return null;
+  const cutoff = Date.now() - KB_MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
+  const files = fs
+    .readdirSync(SKILLS_DIR)
+    .filter((f) => f.startsWith(prefix) && f.endsWith(".md"))
+    .map((f) => ({ f, m: fs.statSync(path.join(SKILLS_DIR, f)).mtimeMs }))
+    .filter((x) => x.m >= cutoff)
+    .sort((a, b) => b.m - a.m);
+  return files.length ? path.join(SKILLS_DIR, files[0].f) : null;
+}
+
+// Pull `## ` headings; attach a HIGH/MEDIUM/LOW signal rating when the next few
+// lines carry one (podcast KBs do). Skips `### ` sub-headings.
+function extractHeadings(text, maxLines) {
+  const lines = text.split("\n");
+  const out = [];
+  for (let i = 0; i < lines.length && out.length < maxLines; i++) {
+    if (/^##\s+/.test(lines[i]) && !/^###/.test(lines[i])) {
+      const title = lines[i].replace(/^##\s+/, "").trim();
+      const window = lines.slice(i + 1, i + 6).join(" ");
+      const sig =
+        window.match(/Signal Rating:\**\s*(HIGH|MEDIUM|LOW)/i) ||
+        window.match(/GCP Relevance:\**\s*(HIGH|MEDIUM|LOW)/i);
+      out.push(sig ? `${title}  [${sig[1].toUpperCase()}]` : title);
+    }
+  }
+  return out;
+}
+
+function buildKbIndex() {
+  const specs = [
+    ["podcasts-knowledge-base-", "Podcast episodes (title + signal)", 140],
+    ["bookmarks-knowledge-base-", "Bookmark topic clusters", 40],
+    ["playlist-knowledge-base-", "Playlist videos", 20],
+  ];
+  const parts = [];
+  for (const [prefix, label, max] of specs) {
+    const p = newestKb(prefix);
+    if (!p) continue;
+    const headings = extractHeadings(fs.readFileSync(p, "utf-8"), max);
+    if (headings.length) {
+      parts.push(
+        `### ${label} — ${path.basename(p)}\n` +
+          headings.map((h) => `- ${h}`).join("\n")
+      );
+    }
+  }
+  return parts.join("\n\n");
 }
 
 function renderMarkdown(report) {
@@ -90,6 +149,18 @@ function renderMarkdown(report) {
     lines.push("");
   }
 
+  if (report.coverage_gaps?.length) {
+    lines.push(`### 🔍 Coverage check — stories in the KB the briefing skipped (${report.coverage_gaps.length})`);
+    lines.push("");
+    lines.push("_Judgment prompts, not failures — decide whether any belongs in the edition._");
+    lines.push("");
+    for (const g of report.coverage_gaps) {
+      lines.push(`- **${g.story}**`);
+      if (g.why_it_matters) lines.push(`  - ${g.why_it_matters}`);
+    }
+    lines.push("");
+  }
+
   return lines.join("\n");
 }
 
@@ -119,11 +190,15 @@ async function main() {
   const rules = extractRulesFromPrompt(promptText);
   const briefingDate = path.basename(briefingPath, ".md");
 
-  const systemInstruction = `You are a rigorous editor reviewing a weekly AI market briefing for Google Cloud startup sales reps. You will be given the briefing markdown and the quality rules it must satisfy. Your job is to report violations honestly — not to praise good writing.
+  const kbIndex = buildKbIndex();
 
-Categorize every finding as either:
-- "hard" — violates an explicit rule (e.g., TLDR not bullets, "Vertex AI" used bare, source URL appears twice). These are mechanical and verifiable.
+  const systemInstruction = `You are a rigorous editor reviewing a weekly AI market briefing for Google Cloud startup sales reps. You will be given the briefing markdown, the quality rules it must satisfy, and an index of the source material that was available to cover. Your job is to report problems honestly — not to praise good writing.
+
+Categorize every rule finding as either:
+- "hard" — violates an explicit rule (e.g., TLDR not bullets, "Vertex AI" used bare, the same exact source URL anchoring two Big Picture stories). Mechanical and verifiable.
 - "soft" — judgment-call issues (story choice is weak, angle reads like a pitch, etc.).
+
+ALSO perform a COVERAGE CHECK against the source-material index: identify up to 5 notable stories or releases that appear in the index but are ABSENT from the briefing, and for each judge whether it looks bigger or sharper than something that WAS included. A major model release or benchmark milestone (especially a HIGH-signal podcast episode) that the briefing skipped is a coverage gap worth flagging. This is the single most valuable thing you can catch — the briefing author cannot see the whole KB at once, you can. If coverage looks complete, return an empty array.
 
 Respond with ONLY a JSON object matching this schema. No prose before or after.
 
@@ -134,14 +209,21 @@ Respond with ONLY a JSON object matching this schema. No prose before or after.
   ],
   "soft_findings": [
     { "rule": "name of the concern", "evidence": "quote or location", "suggestion": "concrete suggestion" }
+  ],
+  "coverage_gaps": [
+    { "story": "the KB story/release the briefing skipped", "why_it_matters": "why it may be bigger/sharper than what was included, or 'minor' if not" }
   ]
 }
 
-If there are no failures of a given type, return an empty array.`;
+If there are no findings of a given type, return an empty array.`;
 
   const userMessage = `## Quality rules the briefing must satisfy
 
 ${rules}
+
+## Source-material index (what was available to cover — use for the COVERAGE CHECK)
+
+${kbIndex || "(no knowledge-base files found — skip the coverage check)"}
 
 ## Briefing under review (Edition for ${briefingDate})
 
