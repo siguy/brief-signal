@@ -153,12 +153,12 @@ For each story:
 
 **Model-release coverage self-check:** list EVERY major model release or benchmark milestone found anywhere in the KBs, and where each landed (lead / big picture / quick hit / cut). Nothing major may be silently dropped — this is how we avoid missing a release like Kimi K3.
 
-**Proposed registry update:** the registry informs selection — it never gates it (a new thread or standalone one-off may always lead on its own merits). For each Theme Registry arc that led or advanced this edition, one line: {theme name} — moved to: {new one-line "where it stands"}. Then, only where earned, list births and retirements:
+**Proposed registry update:** if no "## Theme Registry" section was provided to you above, write "No registry provided this run" and skip straight to your Quick Hits — do not fabricate one. Otherwise: the registry informs selection — it never gates it (a new thread or standalone one-off may always lead on its own merits). For each Theme Registry arc that led or advanced this edition, one line: {theme name} — moved to: {new one-line "where it stands"}. Then, only where earned, list births and retirements:
 - NEW THEME: {name} — {why it earns a slot: gravity across ≥2 sources AND plausible staying power, not a one-off}
 - RETIRE (→ dormant): {name} — {hasn't led in ~4-5 editions}
 If nothing changed, write "No registry changes this edition."
 
-**Full proposed registry:** immediately after, output the ENTIRE updated registry — every existing theme (edited only if it led or advanced this edition, otherwise unchanged verbatim) plus any new births — wrapped EXACTLY like this, with nothing else inside the fence:
+**Full proposed registry:** skip this entirely if no registry was provided above. Otherwise, immediately after, output the ENTIRE updated registry — every existing theme (edited only if it led or advanced this edition, otherwise unchanged verbatim) plus any new births — wrapped EXACTLY like this, with nothing else inside the fence:
 
 \`\`\`themes-proposed
 <!-- PROPOSED — do not merge directly. Simon reviews and promotes this to content/themes.md on PR approval. -->
@@ -175,7 +175,7 @@ If nothing changed, write "No registry changes this edition."
 // Returns "" (skip, non-fatal) if the fence is missing, unclosed, or looks
 // truncated (no theme heading inside) rather than writing a partial file.
 function extractProposedThemes(lineupText) {
-  const match = lineupText.match(/```themes-proposed\r?\n([\s\S]*?)```/);
+  const match = lineupText.match(/```themes-proposed[ \t]*\r?\n([\s\S]*?)```/);
   if (!match) return "";
   const content = match[1].trim();
   if (!content || !/^##\s+/m.test(content)) return "";
@@ -290,6 +290,13 @@ async function main() {
   //    reviewer can sanity-check the SELECTION before reading the full draft.
   //    Non-fatal: if it fails, fall back to drafting directly.
   let lineup = "";
+  // Stage 4b only needs the story selection (Big Picture / Quick Hits / cuts /
+  // coverage self-check) to expand into prose — never the registry admin footer
+  // (proposed update + the full themes.md block, which can run several KB and
+  // has its own "## " headings right before "generate a complete briefing").
+  // Derived from `lineup`, which keeps the registry block for the saved
+  // {today}-lineup.md file the PR reviewer reads.
+  let lineupForDraft = "";
   try {
     console.log(`\nStage 4a: planning story lineup for Edition #${edition}...`);
     const lineupResp = await ai.models.generateContent({
@@ -299,6 +306,9 @@ async function main() {
     });
     const rawLineup = lineupResp.text || "";
     lineup = stripCodeFences(rawLineup).trim();
+    lineupForDraft = lineup
+      .replace(/\n\*\*Proposed registry update:\*\*[\s\S]*$/, "")
+      .trimEnd();
     const draftsDir = path.join(BRIEFINGS_DIR, "drafts");
     if (!fs.existsSync(draftsDir)) fs.mkdirSync(draftsDir, { recursive: true });
     fs.writeFileSync(path.join(draftsDir, `${today}-lineup.md`), lineup, "utf-8");
@@ -328,7 +338,7 @@ async function main() {
   // 6. Stage 4b — draft the briefing, expanding the approved lineup.
   const userMessage = `Today is ${today}. This is Edition #${edition}.
 
-${lineup ? `You already planned this story lineup for this edition. Expand it into the full briefing, following the template and all rules exactly. Keep the selection and merges from the lineup unless a rule forces a change.\n\n## Approved Story Lineup\n\n${lineup}\n\n` : ""}Generate a complete weekly briefing using the knowledge base content below. Follow the template and all rules from your system instructions exactly.
+${lineup ? `You already planned this story lineup for this edition. Expand it into the full briefing, following the template and all rules exactly. Keep the selection and merges from the lineup unless a rule forces a change.\n\n## Approved Story Lineup\n\n${lineupForDraft}\n\n` : ""}Generate a complete weekly briefing using the knowledge base content below. Follow the template and all rules from your system instructions exactly.
 
 ## Knowledge Base Content
 

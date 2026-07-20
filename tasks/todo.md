@@ -55,3 +55,22 @@ Stage 4a lineup pass. Full plan: `~/.claude/plans/theme-registry-wiring.md` (rev
   content, extraction happy-path + 3 negative cases (missing fence, unclosed fence,
   no-heading truncation heuristic), and the `generate-weekly.sh` awk extraction
   against a sample lineup file.
+
+### Post-PR review fixes (PR #68 review)
+- **HIGH, fixed:** the full proposed registry (and its "Proposed registry update"
+  summary) was leaking into Stage 4b's drafting prompt via the shared `lineup`
+  variable — Stage 4b has no use for it and it's pure token bloat + a plausible
+  confusion risk next to the existing repetition-loop bug. Added `lineupForDraft`,
+  truncated at the `**Proposed registry update:**` marker, used only in Stage 4b's
+  `userMessage`; the full `lineup` (registry included) is still what's saved to
+  `{today}-lineup.md` for the PR reviewer. Verified with a side-by-side transform test.
+- **MEDIUM, fixed:** `extractProposedThemes`'s fence-open regex required the newline
+  immediately after `` ```themes-proposed `` with no tolerance for trailing
+  whitespace — widened to `[ \t]*\r?\n`. Verified against a trailing-space sample.
+- **MEDIUM, fixed:** the registry-update/full-registry prompt instructions were
+  unconditional even when no registry was actually injected into context — added
+  an explicit "if no Theme Registry section was provided above, write 'No registry
+  provided this run' / skip this entirely" branch so the model doesn't fabricate one.
+- LOW items (unguarded `readThemeRegistry` file read; case-sensitive PR-body awk
+  extraction) left as-is — consistent with existing sibling-function style and
+  non-fatal by design; not fixed in this pass.
