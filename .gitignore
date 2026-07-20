@@ -6,6 +6,7 @@ voice-overlay.md
 scripts/logs/
 logs/
 project.log
+__pycache__/
 GEMINI.md
 vite-signal/
 .env

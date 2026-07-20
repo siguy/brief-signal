@@ -38,6 +38,13 @@ MONDAY_DATE=${MONDAY_DATE:-$(date -v+1d +%Y-%m-%d)}
 BRANCH="briefing/${MONDAY_DATE}"
 PLAYLIST_URL="https://www.youtube.com/playlist?list=PL1FeClOi-gXpoHHLPfOgeGltGMNWY9Wjk"
 
+# How many days of podcasts to scan. Default 7 (normal weekly run). Bump this for a
+# catch-up run after being away: e.g. `LOOKBACK_DAYS=21 ./scripts/generate-weekly.sh`
+# after 3 weeks off. Exported so both podcast extractors (Stages 3a/3b) use one setting.
+# NOTE: this widens the PODCAST window only. Bookmarks capture everything since the last
+# run (dedup-based), and the playlist skill already looks back 14 days.
+export LOOKBACK_DAYS=${LOOKBACK_DAYS:-7}
+
 REPO="siguy/brief-signal"
 INFO_AGG_DIR="$HOME/info-agg"
 BRIEF_SIGNAL_DIR="$HOME/brief-signal"
@@ -45,6 +52,7 @@ BRIEF_SIGNAL_DIR="$HOME/brief-signal"
 log "=== Brief Signal Weekly Generation ==="
 log "Target date: ${MONDAY_DATE}"
 log "Branch: ${BRANCH}"
+log "Podcast lookback: ${LOOKBACK_DAYS} days"
 
 # Guard: skip if PR already exists for this week
 EXISTING_PR=$(gh pr list --repo "$REPO" --head "$BRANCH" --json number --jq '.[0].number' 2>/dev/null || true)
