@@ -53,23 +53,39 @@ After drafting, add a `featured_topics` list to the new briefing's YAML frontmat
 
 ## Content Curation
 
-Score each item from the provided knowledge base by:
-- **Relevance to founders:** Would this come up in a startup conversation?
-- **Conversational value:** Can a sales rep use this as an opener or talking point?
-- **Market signal strength:** Does this indicate a trend or shift?
+### Lead-Story Doctrine — decide the lead BEFORE you decide the structure
 
-**Assign each item to ONE section only** — No source should appear in multiple sections. Use this logic:
-- **Big Picture** = macro trends, market shifts, industry-level moves (e.g., "YC says 20x companies are the future")
-- **Builder's Corner** = specific tools, techniques, or technical patterns (e.g., "Gemini one-shots landing pages")
-- **Founder Watch** = a specific person or company doing something noteworthy that ISN'T already covered above
-- **Quick Hits** = 1-3 items that didn't fit above but are worth a mention. Must be from the MOST RECENT week's sources only.
-- If a source could fit multiple sections, pick the ONE where it adds the most unique value. If a founder/company is used as a supporting example in Big Picture, they do NOT get their own Founder Watch entry.
+The most common failure is letting the loudest-by-volume cluster in one knowledge base become the lead by default, while a sharper story sits under-weighted in another. Work in this order:
+
+**Step 1 — Model-release scan, first, across ALL THREE knowledge bases.** Before scoring anything else, sweep the bookmarks, playlist, AND podcast KBs (especially the podcast *deep dives* and HIGH-signal episodes) for major model releases and capability milestones. A model that beats a proprietary/frontier model on any real benchmark, tops a leaderboard, or resets price/performance is a **presumptive lead candidate** — even if it appears in only one source or one podcast episode. Do not let a bookmark-heavy story crowd it out. (The Edition #22 miss: Kimi K3 — the first open model to top *every* proprietary model on a benchmark — sat in a single podcast deep dive and was missed while a more-bookmarked release led. That must not repeat.)
+
+**Step 2 — Merge same-thesis items into ONE story, and name the tension.** If two items share a thesis, they are one story, not two. Write them as a single story whose spine is the tension or contrast between them. (E.g. Inkling — a *US* open model pitched to escape Chinese open weights — landing the same fortnight as Kimi K3, a *Chinese* open model that leapfrogged the closed frontier: one "open weights leapfrog" story, and the irony IS the story.) Two thin adjacent items are always worse than one story that connects them.
+
+**Step 3 — Apply the seller-relevance test at SELECTION time, not just at angle time.** For every candidate, ask the Principle-0 question up front: *what can a Google Cloud rep (or a frontier-lab seller) actually do with this in a founder meeting?* If the honest answer is "nothing," it is at most a Quick Hit — never a Big Picture story. Do this while choosing stories, so a no-play item never takes a Big Picture slot in the first place.
+
+**What makes a lead (worked example — the Edition #21 lead):** Palantir CEO Alex Karp's CNBC interview attacking the frontier labs over token pricing and "alpha transfer" was the clear lead — not because it had the most bookmarks, but because it had the most *gravity*: (a) multiple independent sources orbited it (a bookmark cluster AND an All-In podcast episode reacting to it), (b) it set an agenda other stories were responding to, and (c) a seller could act on it directly (the enterprise "own your alpha" anxiety → the Agentic Data Cloud + multi-model-on-GEAP conversation). That is the lead test: **gravity across sources × an agenda others react to × a real seller play.** Volume in a single KB is not the test.
+
+### Scoring
+
+Score each remaining item by:
+- **Seller-actionability:** what can a rep *do or say* with this in a founder meeting? (Principle 0 — the gate, not a tiebreaker.)
+- **Market signal strength:** does this indicate a real trend or shift, or is it novelty?
+- **Gravity:** do other sources orbit or react to it?
+
+### Section assignment (the only three sections)
+
+Assign each surviving item to ONE of exactly three homes:
+- **The Big Picture** = the 2-3 stories with the most gravity and the clearest seller play. This is the spine of the briefing. Order them as a narrative arc — put stories that share a thread adjacent so the edition reads as a connected story, not a list.
+- **Quick Hits** = everything else worth a mention: a notable founder/company move, a builder pattern, a smaller release, a sharp stat. Condense each to ONE linked sentence. (This is where former "Founder Watch" and "Builder's Corner" material now lives — as one-liners, not standing sections.) Podcast-sourced items are allowed here.
+- **Our Play** = Google Cloud positioning only (see the dedicated rules below).
+
+There is no Builder's Corner or Founder Watch section. If a builder tool or a founder move is big enough to be a lead, it earns a Big Picture slot on its own merits; otherwise it is a Quick Hit.
 
 **Source diversity (hard rules — do not violate):**
-- **A source URL may appear in more than one section ONLY if BOTH of these hold:** (a) the citations are at least 30 minutes apart in the episode (or are clearly from different segments of an article), AND (b) the citations capture different speakers or different topics. The intent: a 90-minute podcast can legitimately anchor two distinct stories (e.g., a hyperscaler debate at 0:14 and a founder-strategy take at 1:05), but lazy duplication of the same point — same speaker, adjacent timestamps — is forbidden. When unsure, pick one section and find a different source for the other.
-- **No person or company appears as the headline subject of more than one section.** Amjad Masad cannot be the centerpiece of Big Picture *and* get a Founder Watch entry. Pick one. (Being mentioned in passing in another section is fine; being the headline subject is not.)
-- **No statistic, quote, or dollar figure is repeated within the same briefing.** If Anthropic's $44B ARR appears in Big Picture, don't restate it in Our Play. Pick the spot it lands hardest.
-- **The top two Big Picture stories must come from different shows/channels.** Two stories from the same podcast = one story too many; find a second source from a different show.
+- **The same exact source URL may anchor more than one Big Picture story ONLY if BOTH hold:** (a) the citations are at least 30 minutes apart in the episode (or clearly different segments of an article), AND (b) they capture different speakers or different topics. A 90-minute podcast can legitimately anchor two distinct stories; lazy duplication of the same point (same speaker, adjacent timestamps) is forbidden. Two *different* episodes from the same show/host are different URLs and are fine.
+- **No person or company is the headline subject of more than one Big Picture story.** Being mentioned in passing elsewhere is fine; being the headline subject twice is not.
+- **No statistic, quote, or dollar figure is repeated anywhere in the briefing.** If a figure appears in the TLDR or a Big Picture story, don't restate it in a Quick Hit or Our Play. Pick the spot it lands hardest.
+- **The top two Big Picture stories must come from different shows/channels/sources.**
 
 ---
 
@@ -81,7 +97,7 @@ Podcast sources provide opinion, analysis, and predictions — not news. Handle 
 
 **Link format:** `[Speaker on Podcast Name (Nmin, timestamp)](youtube-url)` — e.g., `[Chamath on All-In (62min, 12:34)](https://youtube.com/watch?v=xxx)`
 
-**Weaving in signal:** Podcast insights should enrich existing sections, not stand alone. A VC quote about infrastructure spending goes in Big Picture. A founder's tool stack revelation goes in Builder's Corner. A specific company move goes in Founder Watch.
+**Weaving in signal:** Podcast insights should enrich the Big Picture stories, not stand alone. A VC quote about infrastructure spending strengthens a Big Picture story on compute; a founder's tool-stack revelation or a specific company move that isn't a lead becomes a Quick Hit.
 
 **Consensus/debate patterns:** When multiple podcast hosts or guests independently make the same point, that's high-value signal. Call it out: "Three separate VCs flagged concerns about agent infrastructure costs this week." Disagreements are equally valuable — they show where the market is undecided.
 
@@ -91,13 +107,13 @@ Podcast sources provide opinion, analysis, and predictions — not news. Handle 
 - Don't treat opinions as news ("VCs say X" is opinion, not fact)
 - Don't over-index on one person's take — balance with other sources
 - Don't quote lengthy dialogue — pick the sharpest one-liner
-- Don't use podcast signal in Quick Hits (those should be short, factual items)
+- A podcast item CAN be a Quick Hit — keep it to one linked sentence and attribute the take to the speaker
 
 ---
 
 ## Briefing Template
 
-Use this exact frontmatter and structure:
+The briefing has exactly four parts, in this order: **TLDR → The Big Picture → Quick Hits → Our Play.** There is no Builder's Corner and no Founder Watch. Use this exact frontmatter and structure:
 
 ```markdown
 ---
@@ -109,83 +125,44 @@ edition: {n}
 
 ## TLDR
 
-**4-5 bullets, each with a bold hook.** Never prose, and never more than 5. Each bullet leads with the punchiest framing in bold, followed by one short clause expanding it.
+**4-5 bullets, each with a bold hook.** Never prose, never more than 5. Each bullet leads with the punchiest framing in bold, then ONE short clause — one sentence, scannable in 3 seconds. Do not pack a paragraph into a bullet.
 
-**The last bullet MAY be a GCP-plays summary** — the concrete deal motions a rep should walk away knowing about (AWS-Bedrock-to-GEAP migrations, provisioned throughput, Agentic Data Cloud, etc.), a 30-second scan of "what plays I have this week." Include it only when the briefing surfaced genuinely distinct plays worth naming; when it didn't, make all 4-5 bullets market signal. Either way it counts toward the 4-5 cap — never tack it on as a 6th bullet. Every other TLDR bullet stays GCP-product-free; only this optional summary bullet may name products.
+**The last bullet MAY be a GCP-plays summary** — the concrete deal motions a rep should walk away knowing about, a 30-second scan of "what plays I have this week." Include it only when the briefing surfaced genuinely distinct plays; otherwise make all 4-5 bullets market signal. Either way it counts toward the 4-5 cap — never a 6th bullet. Every other TLDR bullet stays GCP-product-free; only this optional summary bullet may name products.
 
-Example format:
-- **EWS is born.** Elon is leasing Colossus capacity to Anthropic.
-- **Demand isn't the bottleneck — power is.** Anthropic's revenue is supply-gated.
-- (1-2 more market-signal bullets)
-- **GCP plays this week (optional — only when there are distinct plays; counts toward the 5):** AWS-Bedrock-to-GEAP migrations, provisioned throughput contracts on Gemini, Agentic Data Cloud for siloed-data conversations, Embedding 2's multimodal advantage.
+## The Big Picture: {Theme Name}
 
-## The Big Picture
-
-Market moves that matter for founder conversations. (2-3 items)
-
-When items share a clear theme, add it to the section heading: "## The Big Picture: {Theme Name}". When items don't cluster, use the plain heading. Same applies to Founder Watch and Builder's Corner.
-
-**Include a "Your angle with founders" block ONLY when a seller can act on the story (Principle 2).** If it's important market context with no play a cloud rep or a frontier-lab rep could actually run — energy/power supply is the classic case — omit the angle block and let the story stand as context.
+The 2-3 lead stories, ordered as a narrative arc (related stories adjacent). Always add a theme to the heading. This is the spine of the briefing.
 
 ### {Item Title}
 
 ![{descriptive alt text}](./images/{slug}.jpg)
 
-{2-3 sentence summary with [inline links (2 min read)](https://x.com/...) to source tweets/articles. Time labels on every link.}
+{The story. ~250-300 words MAX per story — usually 1-2 tight paragraphs. Lead with the sharpest fact + source link, give the context that makes it matter, and — when two items are merged — name the tension between them. Every claim carries an inline [link with a time label (2 min read)](url).}
 
-**Your angle with founders:** {Only if there's a seller play — use the discovery-flow format in the Section Voice Guide. Omit entirely for context-only stories.}
-
-### {Item Title}
-
-![{descriptive alt text}](./images/{slug}.jpg)
-
-{Summary with [source links](url).}
-
-**Your angle with founders:** {Only if there's a seller play; otherwise omit.}
-
-## Builder's Corner
-
-What developers and founders are actually building with. (1-2 items)
+**Your angle with founders:** {Include ONLY when a seller can act on the story (Principle 2) — omit entirely for context-only stories like energy/power. When present, keep it to ~90 words: 2 escalating questions + one "Where the GCP opportunity is" line. Use the format in the Section Voice Guide.}
 
 ### {Item Title}
 
 ![{descriptive alt text}](./images/{slug}.jpg)
 
-{Summary with [source links](url).}
-
-**Why founders care:** {One-liner connecting to their world. No product mentions.}
-
-## Founder Watch
-
-Specific people or companies shipping things worth knowing about. (2-3 items). The summary itself must make the seller relevance obvious — why a rep would bring this up in a founder conversation (Principle 0). Do not tack on a separate question or CTA line.
-
-### {Person/Company — What They Did}
-
-{Summary with [source links](url).}
-
-### {Person/Company — What They Did}
-
-{Summary with [source links](url).}
+{Story. Angle block only if there's a seller play.}
 
 ## Quick Hits
 
-- **[{Bold claim} (2 min read)](source-url)** — one sentence expanding on it
-- **[{Bold claim} (12 min watch)](source-url)** — one sentence
-- (1-3 bullets MAX, each linked to source with time label, MUST be from this week's extractions only. No GCP product mentions.)
+Everything else worth a mention — smaller releases, a founder/company move, a builder pattern, a sharp stat. 3-6 bullets, each ONE linked sentence with a time label. This is where former "founder watch" and "builder" items live now, as one-liners. Podcast items are allowed (attribute the take to the speaker). No GCP product positioning here.
+
+- **[{Bold claim} (2 min read)](source-url)** — one sentence expanding on it.
+- **[{Bold claim} (26 min watch)](source-url)** — one sentence, attributed to the speaker if it's a podcast take.
 
 ## Our Play
 
-What Google Cloud shipped, announced, or signaled this week — and how it connects to the market themes above.
+One framing sentence that ties the edition's themes to a single Google Cloud position, then **exactly three bold, named motions** — each: the play → the specific product surface → what the rep actually does. Concrete execution detail, not market-reaction quotes (Principle 5). No sub-headings, no CTA tack-ons.
 
-### {Headline — e.g., "Agent Engine Pricing Just Dropped"}
+Every thread this edition — {name them in a clause} — points to one GCP position: **{the one-line position}.** Three concrete motions:
 
-{2-4 sentences. What happened + why it matters for our conversations. Link to source (blog post, tweet, announcement).}
-
-### {Headline — e.g., "Logan on DeepMind's Latest"}
-
-{2-4 sentences. Source + context against this week's themes.}
-
-*Connect to this week:* {One sentence tying "Our Play" back to the Big Picture or Builder's Corner themes.}
+-   **{Named play, e.g. "Lead with Model Garden, not a single model."}** {How to run it on the specific product surface, and what the rep says/does.}
+-   **{Named play.}** {Execution detail.}
+-   **{Named play.}** {Execution detail.}
 
 ---
 
@@ -210,33 +187,31 @@ What Google Cloud shipped, announced, or signaled this week — and how it conne
   - The label goes inside the link text, before the closing bracket: `[descriptive text (3 min read)](url)`
 
 **Images:**
-- Add `![alt](./images/{slug}.jpg)` to Big Picture and Builder's Corner sections (4-6 images per briefing)
-- Use descriptive kebab-case slugs: `openclaw-ecosystem`, `yc-20x-companies`
-- Founder Watch, Quick Hits, and Our Play do NOT need images
-- The first URL link after each image tag is used by the image fetcher to find the OG image
-- YouTube URLs produce great thumbnails via `maxresdefault.jpg`
+- Add `![alt](./images/{slug}.jpg)` to each Big Picture story (one per story — 2-3 images per briefing)
+- Use descriptive kebab-case slugs: `open-weights-leapfrog`, `who-owns-the-model`
+- Quick Hits and Our Play do NOT get images
+- The first URL link after each image tag is used by the image fetcher to find the OG image — so lead each story with the source whose thumbnail you want (YouTube URLs produce great thumbnails via `maxresdefault.jpg`)
 
 ---
 
 ## Section Voice Guide
 
-### "Your angle with founders:" (Big Picture + Builder's Corner)
+### "Your angle with founders:" (Big Picture only)
 
-**First decide whether the story even has an angle (Principle 2):** include this block only when a cloud or frontier-lab seller could actually act on the story. For context-only stories — energy/power supply is the classic case — omit it entirely rather than manufacturing a question. When you do include it:
+**First decide whether the story even has an angle (Principle 2):** include this block only when a cloud or frontier-lab seller could actually act on the story. For context-only stories — energy/power supply is the classic case — omit it entirely rather than manufacturing a question. When you do include it, keep the whole block to **~90 words**.
 
-A discovery sequence, not a one-line question. Sales reps need a *flow* they can run in a real conversation: surface the pain → test how the customer is responding → land on a specific opportunity. Structure each "Your angle" as 2-3 numbered questions in escalating specificity, then a "Where the GCP opportunity is" block naming concrete deal motions.
+A short discovery sequence, not a one-line question. Sales reps need a *flow*: surface the pain → test how the customer is responding → land on a specific opportunity. Structure each "Your angle" as **2 escalating questions** (a 3rd only if it genuinely adds a step), then one **"Where the GCP opportunity is"** line naming a concrete deal motion.
 
-**Yes (multi-step discovery):**
-> 1. **Where it hurts:** "How many GPUs short are you for next quarter?"
-> 2. **How they're hedging:** "What does your 24-month compute hedge look like — single-vendor today, or actively diversifying?"
-> 3. **Where critical workloads land:** "Have you priced provisioned throughput for Gemini? Looked at Anthropic on GEAP as the multi-model hedge?"
+**Yes (tight discovery):**
+> 1. **Where it hurts:** "Now that an open model can match the closed frontier on your core tasks, what's your plan for using that leverage — on price, on data control, or on lock-in?"
+> 2. **How they're hedging:** "Are you set up to run the best model per job — Gemini, Claude, or an open weight — without re-plumbing every time the leaderboard changes?"
 >
-> **Where the GCP opportunity is:** AWS-Bedrock-to-GEAP migrations (same models, lower switching cost) | Provisioned throughput contracts | New compute commitments when AWS/Azure squeezes.
+> **Where the GCP opportunity is:** GEAP's Model Garden hosts Gemini, Claude, and open weights behind one API — adopt the open weight for the jobs it wins, keep the closed frontier for the rest; Agentic Data Cloud keeps the data layer theirs.
 
 **No (lazy single question):**
 > "Where are you on TPU vs. GPU economics?"
 
-The discovery sequence forces the rep to listen first; the "Where the opportunity is" block tells them what to *do* with what they hear. Single-question angles fail both tests.
+The discovery sequence forces the rep to listen first; the "Where the opportunity is" line tells them what to *do* with what they hear. Single-question angles fail both tests. This "Where the GCP opportunity is" line is the ONE place GCP product positioning is allowed outside "Our Play" — it is required, not a violation.
 
 ### Sales-grade concreteness (applies to every question and angle line)
 
@@ -259,9 +234,6 @@ Every conversation-starter, follow-up question, and "Your angle" bullet must use
 
 The test for every question line: could a sales rep say this verbatim in a customer meeting and the customer would answer with a concrete fact? If the customer would have to ask "what do you mean?", the question is fuzzy — rewrite it.
 
-### "Why founders care:"
-Connect the technology to their actual world — hiring, shipping speed, burn rate, competitive advantage. One sentence.
-
 ### "Our Play" (dedicated section)
 The dedicated home for **product positioning** — connecting the week's market themes to what Google shipped, announced, or signaled, with a clear "here's the angle for founders" frame.
 
@@ -275,7 +247,7 @@ The dedicated home for **product positioning** — connecting the week's market 
 - "Antigravity is winning Google-stack-native builders" — market adoption signal
 - "Gemini Embedding 2 ships natively multimodal" — release news
 - "GCP grew 63% YoY, ahead of Azure and AWS" — competitive datapoint
-- Builder's Corner can absolutely cover Google releases when those releases are the builder story of the week
+- A Big Picture story or Quick Hit can absolutely cover a Google release when that release is genuinely the news of the week
 
 **The distinguishing question:** "Is this *reporting what happened* or *suggesting the reader use it*?" The first is news (any section); the second is positioning (Our Play). When in doubt: if the line could equally well appear in a TechCrunch article without sounding like sales copy, it's news.
 
@@ -288,27 +260,19 @@ The dedicated home for **product positioning** — connecting the week's market 
 
 ## The "Our Play" Section — Detailed Rules
 
-This is the dedicated space for Google Cloud in each briefing. Everything else in the briefing is pure market intelligence.
+This is the dedicated space for Google Cloud in each briefing. Everything else is pure market intelligence.
 
-**What goes here:**
-- A product release that connects to the week's market themes
-- A Logan Kilpatrick tweet that signals where Gemini/DeepMind is heading
-- A startup case study on the Google Cloud blog
-- A competitive move and our positioning against it
-- Cloud Next context or countdown
+**Format (strict):** one framing sentence that ties the edition's themes to a single GCP position, then **exactly three bold, named motions**. Each motion = a named play → the specific product surface → what the rep actually does with it. No sub-headings. No CTA tack-ons ("Conversation starter", "Try this week"). No standalone product list.
 
-**Rules:**
-- 1-2 items per week, 2-4 sentences each
-- Every item links to a source (blog post, tweet, announcement)
-- Must connect to something from the rest of the briefing — not a standalone product list
-- "Our Play" is *how to execute on GCP*, not a market-reaction quote — spend the words on the architecture and the motion (Principle 5)
-- If there's nothing fresh or relevant from Google Cloud this week, say so in one line and move on. Don't fill with generic stats.
+**Each motion must be execution detail, not a market-reaction quote (Principle 5).** "Lead with Model Garden, not a single model: run Gemini, Claude, and open weights behind one API; adopt the open weight for the jobs it wins" is a motion. A quote about how the market feels about cloud is not — and a quote that argues *against* using cloud is a hard cut.
+
+**Anchor to the week's stories.** Each motion should trace back to a Big Picture story or Quick Hit, so Our Play reads as the answer to what the edition just described — not a generic capability list. Naming a fresh Google Cloud release is a bonus, not a requirement; the founder-content KBs rarely contain GCP announcements, so it is fine (and expected) for Our Play to apply existing GCP surfaces to this week's themes.
 
 **What to avoid:**
 - Generic "Google Cloud is great" filler
 - Repeating the same data points every week (60% stat, $350K credits) unless there's new context
-- Product announcements with no connection to the week's themes
-- More than 2 items — keep it tight
+- Motions with no connection to the week's stories
+- More or fewer than three motions — keep it to exactly three, tight
 
 **Product reference (for "Our Play" only):**
 
@@ -373,38 +337,47 @@ When in doubt: every hyperscaler is squeezed. The GCP story is about *workload m
 - **Opinionated** — Take a stance on what matters and what's noise
 - **Connective** — Link patterns across items. "This reminds me of..." energy.
 - **Action-oriented** — Every section should make the reader want to do something
-- **Concise** — Target 800-1000 words total. Every sentence earns its place.
+- **Concise** — Target **~1,700-1,800 words total** (hard ceiling ~2,000). Big Picture stories ~250-300 words each; the angle block ~90 words; Quick Hits one sentence each; Our Play ~150 words. If you're over, cut a Quick Hit or tighten a story — never pad.
 
 ## Writing Pattern
 
-Lead with the punch, link for depth. For each item:
-1. **One sentence with the boldest fact** + source link
-2. **One sentence of context** (why it matters, what it connects to) + optional second link
-3. **The angle/starter line**
+Lead with the punch, link for depth. Within each Big Picture story:
+1. **Open with the boldest fact** + source link
+2. **Give the context that makes it matter** — and when two items are merged, name the tension between them + second link
+3. **The angle block** (if the story has a seller play)
 
-Do NOT write 3-4 sentence summaries before the angle. Readers are sales reps scanning on Monday morning — they need the "so what" instantly and the link if they want depth.
+Readers are sales reps scanning on Monday morning — they need the "so what" instantly and the link if they want depth. Keep each story to 1-2 tight paragraphs; if it's sprawling past ~300 words, you're including detail the rep won't use.
 
 ---
 
 ## Quality Checklist
 
 Before finalizing, verify:
-- [ ] Headline is catchy and specific (not generic)
-- [ ] **TLDR is 4-5 bullets with bold hooks, never prose**
-- [ ] Every claim links to its source
-- [ ] Every source link includes a time label (N min read/watch) when data is available
-- [ ] Images present for Big Picture + Builder's Corner sections
-- [ ] Every "Your angle" is genuinely usable (curiosity, not pitch) — and present ONLY on stories with a real seller play; context-only stories (e.g. energy/power) have no angle block
-- [ ] Quick Hits are one sentence each, all linked
-- [ ] Total length is ~800-1000 words (briefings frequently land 1500-2000; that's acceptable if every sentence earns its place)
-- [ ] **No source URL appears in multiple sections UNLESS timestamps are 30+ minutes apart AND citations cover different speakers/topics**
-- [ ] **No person or company is the headline subject of more than one section**
-- [ ] **No statistic, quote, or dollar figure is repeated within the briefing**
-- [ ] **Top two Big Picture stories come from different shows/channels**
-- [ ] Quick Hits are 1-3 items from the most recent week only
-- [ ] No repeated content from previous edition
-- [ ] **Google Cloud product *positioning* (pitches, angle suggestions, "use this") only appears in "Our Play". *News* about Google releases (TPU Ironwood unveiled, Antigravity adoption, Gemini Embedding 2 shipped) is fine wherever it fits the story. Test: would this line read as sales copy in TechCrunch? If yes, move to Our Play.**
-- [ ] **"Our Play" has fresh content from this week's Google Cloud sources (not generic filler)**
-- [ ] **No use of "Vertex AI" alone — must be "Gemini Enterprise Agent Platform (FKA Vertex AI)" on first mention, "GEAP" after**
-- [ ] **No deprecated names: Duet AI, Bard, PaLM**
-- [ ] **Anthropic-on-GEAP framed as founder optionality, never as Google ceding ground**
+
+**Structure & length**
+- [ ] Exactly four parts: TLDR → The Big Picture → Quick Hits → Our Play. **No Builder's Corner, no Founder Watch section.**
+- [ ] The Big Picture has **exactly 2-3 stories**, each with a themed heading and (one) image
+- [ ] Quick Hits has **3-6 bullets**, each ONE linked sentence with a time label
+- [ ] Our Play is **one framing sentence + exactly three named motions** (no sub-headings, no CTA tack-ons)
+- [ ] **TLDR is 4-5 bullets with bold hooks, never prose; each bullet is one scannable sentence**
+- [ ] Length is tight — roughly **1,200-1,500 words of prose** (≈1,700-2,000 counting links/markdown). Being OVER is the failure to catch; shorter is fine as long as the 2-3 lead stories are complete. Never flag "too short" as a reason to pad.
+
+**Selection**
+- [ ] The lead story passes the lead test (gravity across sources × sets an agenda × a real seller play) — not just "most bookmarked"
+- [ ] Any major model release in the KBs (esp. podcast deep dives) is either a Big Picture story or an explicit Quick Hit — not silently dropped
+- [ ] Same-thesis items are merged into one story, not split into two thin ones
+
+**Sourcing & fidelity**
+- [ ] Every claim links to its source; every link has a time label (N min read/watch) when data is available
+- [ ] **The same exact source URL does not anchor two Big Picture stories** unless timestamps are 30+ min apart AND cover different speakers/topics. (Two *different* episodes from the same show are different URLs — that is allowed.)
+- [ ] **No person or company is the headline subject of more than one Big Picture story**
+- [ ] **No statistic, quote, or dollar figure is repeated anywhere in the briefing**
+- [ ] **The top two Big Picture stories come from different shows/channels/sources**
+- [ ] No repeated person/narrative from a previous edition
+
+**GCP positioning**
+- [ ] Every "Your angle" is present ONLY on stories with a real seller play (context-only stories like energy/power have no angle block), and is ~90 words: 2 questions + one "Where the GCP opportunity is" line
+- [ ] **GCP product positioning appears only in three allowed places: (a) "Our Play", (b) the "Where the GCP opportunity is" line inside a Big Picture angle block, and (c) the optional single "GCP plays this week" TLDR summary bullet. (b) and (c) are permitted features, NOT violations.** Elsewhere, *news* about Google releases is fine, but a pitch/"use this" line is not. Test: would this read as sales copy in TechCrunch?
+- [ ] Our Play's three motions are execution detail anchored to the week's stories (not generic filler; a fresh GCP source is a bonus, not required)
+- [ ] **No bare "Vertex AI" — "Gemini Enterprise Agent Platform (FKA Vertex AI)" on first mention, "GEAP" after; no deprecated names (Duet AI, Bard, PaLM)**
+- [ ] **Anthropic-on-GEAP framed as founder optionality; no raw-capacity overclaim; no Google loss spun as a win**

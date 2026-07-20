@@ -85,6 +85,33 @@ function stripCodeFences(text) {
   return text.replace(/^```(?:markdown)?\s*\n?/i, "").replace(/\n?```\s*$/, "");
 }
 
+// Stage 4a task: ask the model to plan the lineup before writing prose. This
+// forces the Lead-Story Doctrine to run as an explicit selection step, and the
+// lineup file that lands in the PR lets the reviewer check "is this the right
+// set of stories?" before line-editing.
+function lineupTask(edition) {
+  return `---
+
+# YOUR TASK RIGHT NOW: produce a STORY LINEUP, not the briefing prose.
+
+Apply the Lead-Story Doctrine from your instructions (model-release scan across ALL knowledge bases first; merge same-thesis items and name the tension; apply the seller-relevance test at selection time). Output ONLY the markdown below — no briefing, no preamble:
+
+## Proposed Lineup — Edition #${edition}
+
+**The Big Picture (exactly 2-3 stories, in the order they'll run):**
+1. {story title} — sources: {which KB items/URLs} — merges: {what's merged + the tension, or "single"} — seller play: {one line, or "context-only — no angle"}
+2. ...
+3. ...
+
+**Quick Hits (3-6 candidates):**
+- {one-liner} — {source}
+
+**Considered but cut (and why):**
+- {story} — {no seller play / too old / thin / duplicate of a previous edition}
+
+**Model-release coverage self-check:** list EVERY major model release or benchmark milestone found anywhere in the KBs, and where each landed (lead / big picture / quick hit / cut). Nothing major may be silently dropped — this is how we avoid missing a release like Kimi K3.`;
+}
+
 async function main() {
   const apiKey = process.env.GOOGLE_API_KEY;
   if (!apiKey) {
@@ -131,19 +158,40 @@ async function main() {
     console.log("No previous briefing found. This will be Edition #1.");
   }
 
-  // 5. Build user message
+  const ai = new GoogleGenAI({ apiKey });
+  const kbAndContext = `Today is ${today}. Edition #${edition}.\n\n## Knowledge Base Content\n\n${kbContent}${previousContext}`;
+
+  // 5. Stage 4a — story lineup (planning pass). Runs the Lead-Story Doctrine as
+  //    an explicit selection step and drops a lineup file in drafts/ so the PR
+  //    reviewer can sanity-check the SELECTION before reading the full draft.
+  //    Non-fatal: if it fails, fall back to drafting directly.
+  let lineup = "";
+  try {
+    console.log(`\nStage 4a: planning story lineup for Edition #${edition}...`);
+    const lineupResp = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: kbAndContext,
+      config: { systemInstruction: `${systemPrompt}\n\n${lineupTask(edition)}` },
+    });
+    lineup = stripCodeFences(lineupResp.text || "").trim();
+    const draftsDir = path.join(BRIEFINGS_DIR, "drafts");
+    if (!fs.existsSync(draftsDir)) fs.mkdirSync(draftsDir, { recursive: true });
+    fs.writeFileSync(path.join(draftsDir, `${today}-lineup.md`), lineup, "utf-8");
+    console.log(`  Lineup saved: content/briefings/drafts/${today}-lineup.md`);
+  } catch (err) {
+    console.warn(`  WARN: lineup pass failed (${err.message || err}); drafting without it.`);
+  }
+
+  // 6. Stage 4b — draft the briefing, expanding the approved lineup.
   const userMessage = `Today is ${today}. This is Edition #${edition}.
 
-Generate a complete weekly briefing using the knowledge base content below. Follow the template and all rules from your system instructions exactly.
+${lineup ? `You already planned this story lineup for this edition. Expand it into the full briefing, following the template and all rules exactly. Keep the selection and merges from the lineup unless a rule forces a change.\n\n## Approved Story Lineup\n\n${lineup}\n\n` : ""}Generate a complete weekly briefing using the knowledge base content below. Follow the template and all rules from your system instructions exactly.
 
 ## Knowledge Base Content
 
 ${kbContent}${previousContext}`;
 
-  // 6. Call Gemini
-  console.log(`\nCalling Gemini (gemini-2.5-flash) for Edition #${edition}...`);
-  const ai = new GoogleGenAI({ apiKey });
-
+  console.log(`\nStage 4b: drafting Edition #${edition} (gemini-2.5-flash)...`);
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash",
     contents: userMessage,
