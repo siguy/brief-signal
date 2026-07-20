@@ -250,6 +250,20 @@ None of these individually is dramatic. The point is the *pattern*: every one ha
 
 ---
 
+## The Bug That Almost Overwrote a Published Edition
+
+_(Added 2026-07-20.)_
+
+Here's a scary one, because it was *quiet*. After all the generation upgrades merged, a pipeline re-ran on its own and opened a pull request that *looked* like a harmless backfill for the July 13 week we'd skipped. It wasn't. It had generated a brand-new **Edition #23** — and, because the generator named its output file by *today's date*, it wrote that #23 straight into `2026-07-20.md`: the exact file holding the already-published, already-emailed **Edition #22**. Merge that PR, and the live edition silently becomes a different machine draft. Your Kimi rework, the restructure, all your edits — gone, with no error anywhere.
+
+**Why it happened:** the generator computed the filename from the day it *ran* (`getTodayDate()`), not from the edition it was actually *making*. That shortcut is completely fine — right up until a re-run lands on a date that already has a briefing. It's the software equivalent of a label-maker that stamps today's date on every box: works great until you re-print and slap "July 20" onto a box that's already sealed and shipped.
+
+**The fix, two parts.** First, name the file by the *target* edition date, passed in explicitly (`BRIEFING_DATE`), so a run always files under the edition it's making — never the day it happens to run. Second, and more important, a **guard**: before writing, the generator checks whether that briefing file already exists, and if it does, it *refuses* and exits with a clear error (there's a `FORCE_OVERWRITE=1` escape hatch for when you genuinely mean to regenerate one in place). It fails *fast* — before spending a cent on the AI call.
+
+**The lesson — the one worth carrying to every project:** *anything that writes a file should never silently destroy an existing one.* Published work is sacred. A pipeline that can overwrite its own output is one stray re-run away from erasing a week of work, and the failure is invisible — no crash, no red text, just quietly wrong. The guard costs nothing on a normal run and saves you on the bad day. (The fancy word engineers use here is **idempotency**: running something twice shouldn't cause damage. When in doubt, make the destructive path *ask*.)
+
+---
+
 ## Watching What Gets Read: The Analytics Layer
 
 _(Added 2026-07-20.)_
