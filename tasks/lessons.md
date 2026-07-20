@@ -250,10 +250,15 @@ Concrete rules:
   `content/briefings/<date>.md`. **Detection:** after Stage 4, `grep -c '^## TLDR'` should be 1;
   a word count >~2,800 or repeated headings = a loop. **Fix for a run:** the FIRST copy is a
   complete, valid briefing — truncate the file to end at the first `*Sources: ...*` line (delete
-  the restarted `---` frontmatter and everything after). Then re-run critique. **Durable fix worth
-  doing:** add a de-dup guard to `generate-briefing.js` — after `stripCodeFences`, if a second
-  `^---\ntitle:` or a duplicate `## TLDR` appears, cut everything from the first `*Sources:*` line
-  onward; and/or set a `maxOutputTokens` cap. (Flag to Simon before changing pipeline code.)
+  the restarted `---` frontmatter and everything after). Then re-run critique. **Durable fix
+  (DONE 2026-07-20):** `truncateRepetition()` in `generate-briefing.js` runs right after
+  `stripCodeFences` — it anchors on the first `*Sources:*` line and, if a second `^---\ntitle:`
+  block or a duplicate `## TLDR` heading appears after it, truncates to that line (inclusive) and
+  logs a WARN with pre/post word counts (visible in the run log). Wired in before `writeFileSync`
+  so generate-weekly.sh's snapshot/critique stages run on the cleaned output. Covered by
+  `scripts/generate-briefing.test.js` (`npm test`). No `maxOutputTokens` cap was added —
+  gemini-2.5-flash's thinking tokens share that budget, so a tight cap risks starving a real
+  briefing; the text-guard is the durable fix.
 
 - **`fetch-bookmarks.py` "New bookmarks: N" is the WHOLE-account not-recently-seen count, NOT
   this week's count.** Seen 2026-07-20: reported 2,292 "new" — it pulls the entire bookmark list

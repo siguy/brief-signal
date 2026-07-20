@@ -142,6 +142,48 @@ For each story:
 **Model-release coverage self-check:** list EVERY major model release or benchmark milestone found anywhere in the KBs, and where each landed (lead / big picture / quick hit / cut). Nothing major may be silently dropped — this is how we avoid missing a release like Kimi K3.`;
 }
 
+function countWords(text) {
+  return text.split(/\s+/).filter(Boolean).length;
+}
+
+/**
+ * Guard against a Gemini repetition loop.
+ *
+ * A single briefing is: frontmatter (`---\ntitle: ...`) -> body -> a trailing
+ * `*Sources: ...*` line. On 2026-07-20 (Edition #22) the model produced one
+ * complete briefing and then RESTARTED from the frontmatter two more times,
+ * yielding a 5,518-word file where every `## ` heading appeared 3x.
+ *
+ * Detection: anchor on the FIRST `*Sources: ...*` line (the end of the first
+ * complete copy). If a second frontmatter block (`---\ntitle:`) OR a duplicate
+ * `## TLDR` heading appears anywhere after it, the response looped — truncate
+ * to end at that first `*Sources:` line (inclusive). Logs a WARN with pre/post
+ * word counts so the loop is visible in generate-weekly.sh's run log.
+ */
+function truncateRepetition(text) {
+  // First `*Sources: ...*` line = end of the first complete briefing.
+  const sources = text.match(/^\*Sources:.*$/m);
+  if (!sources) return text; // No sources line: can't safely locate a copy boundary.
+
+  const firstCopyEnd = sources.index + sources[0].length;
+  const after = text.slice(firstCopyEnd);
+
+  const dupFrontmatter = /^---\s*\r?\ntitle:/m.test(after);
+  const dupTldr = /^##\s+TLDR\b/im.test(after);
+  if (!dupFrontmatter && !dupTldr) return text; // No duplication: leave as-is.
+
+  const truncated = text.slice(0, firstCopyEnd).replace(/\s+$/, "") + "\n";
+  const preWords = countWords(text);
+  const postWords = countWords(truncated);
+  const trigger = dupFrontmatter ? "duplicate frontmatter block" : "duplicate ## TLDR heading";
+  console.warn(
+    `WARN: Repetition loop detected (${trigger}) after the first *Sources:* line — ` +
+      `truncated to the first complete briefing. ` +
+      `Word count: ${preWords} -> ${postWords} (removed ${preWords - postWords}).`
+  );
+  return truncated;
+}
+
 async function main() {
   const apiKey = process.env.GOOGLE_API_KEY;
   if (!apiKey) {
@@ -238,6 +280,7 @@ ${kbContent}${previousContext}`;
 
   // 7. Clean up response
   text = stripCodeFences(text);
+  text = truncateRepetition(text);
 
   // 8. Save briefing
   if (!fs.existsSync(BRIEFINGS_DIR)) {
@@ -257,7 +300,11 @@ ${kbContent}${previousContext}`;
   console.log(`  Output: ${outputPath}`);
 }
 
-main().catch((err) => {
-  console.error("Fatal error:", err.message || err);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err) => {
+    console.error("Fatal error:", err.message || err);
+    process.exit(1);
+  });
+}
+
+module.exports = { stripCodeFences, truncateRepetition, countWords };
