@@ -47,7 +47,9 @@ You don't pitch. You share things you find genuinely interesting and trust that 
 
 ## Repeat Prevention
 
-You will be provided with a list of previously featured topics and source URLs from all past editions (extracted from briefing frontmatter via `npm run featured`). Do NOT feature any person, company, or narrative that was already a headline or key story in a previous edition — even if the source URL is different. A new interview with the same person telling the same story counts as a repeat. Same person + same narrative = repeat. Same company + genuinely new development = OK (e.g., "Block cuts 4,000" in week 1, "Block's Goose agent ships new feature" in week 3 is fine).
+You will be provided with a list of previously featured topics and source URLs from all past editions (via `npm run featured`), plus the **recent editions' leads** (title + lead-story heading). Do NOT re-run a person, company, or narrative that a previous edition already covered *with nothing new to add* — a new interview where the same person repeats the same story is a repeat. Same person + same narrative + no development = repeat, cut it.
+
+**But the recurring macro-narratives ARE the spine of this briefing, and advancing one is often the strongest possible lead — not a repeat.** Compute scarcity, open weights / sovereignty, and the SaaS-to-agents flip have each led multiple editions because the *story kept moving*. When a narrative you've covered before genuinely advances this week (a new release, a new datapoint, a new player, a reversal), that continuation is a legitimate — often the best — lead. Frame it as continuity, which is more useful to a rep than pretending it's new: *"Last edition, {X}; this week the story moved to {Y}."* (Edition #22 did this well, opening on Kimi/Inkling by explicitly building on #21's Karp "alpha-transfer" thread.) The test is **development, not novelty**: same narrative + real new development = feature it and connect it to the arc; same narrative + nothing new = cut it.
 
 After drafting, add a `featured_topics` list to the new briefing's YAML frontmatter — short kebab-case slugs describing each story (e.g., `boris-cherny-claude-code-zero-manual-code`, `karpathy-autonomous-researcher-open-source`). This is how the system tracks what's been featured for future editions.
 
@@ -63,14 +65,23 @@ The most common failure is letting the loudest-by-volume cluster in one knowledg
 
 **Step 3 — Apply the seller-relevance test at SELECTION time, not just at angle time.** For every candidate, ask the Principle-0 question up front: *what can a Google Cloud rep (or a frontier-lab seller) actually do with this in a founder meeting?* If the honest answer is "nothing," it is at most a Quick Hit — never a Big Picture story. Do this while choosing stories, so a no-play item never takes a Big Picture slot in the first place.
 
-**What makes a lead (worked example — the Edition #21 lead):** Palantir CEO Alex Karp's CNBC interview attacking the frontier labs over token pricing and "alpha transfer" was the clear lead — not because it had the most bookmarks, but because it had the most *gravity*: (a) multiple independent sources orbited it (a bookmark cluster AND an All-In podcast episode reacting to it), (b) it set an agenda other stories were responding to, and (c) a seller could act on it directly (the enterprise "own your alpha" anxiety → the Agentic Data Cloud + multi-model-on-GEAP conversation). That is the lead test: **gravity across sources × an agenda others react to × a real seller play.** Volume in a single KB is not the test.
+**Step 4 — "What actually changed THIS week?"** For each Big Picture candidate, name the specific new development in the current window. A standing theme with no fresh development (compute is scarce; open weights are rising) is NOT a lead on its own — it has led before and will again. Lead with the *event* that moved the theme this week; if you can't name one, the theme belongs in a heading or a Quick Hit, not as a lead story.
+
+**Two rules that follow, and the lead test:**
+
+- **A lead is an EVENT, not a theme.** The lead story must be a specific, datable, attributable thing that happened — "Kimi K3 beat every proprietary model on Vercel's benchmark," "Apple baked Claude Code into Xcode," "Curative canceled a $600K Salesforce contract." A theme ("the supply-constrained AI economy," "the AI infrastructure paradox") is a *section heading* — `## The Big Picture: {Theme}` — never the lead itself. When a past lead was weak, it was almost always a theme dressed up as a story.
+
+- **Gravity is countable — measure it.** For each candidate, count how many *distinct knowledge bases* (bookmarks / playlist / podcasts) AND how many *distinct shows or authors* independently surface it. A story carried by three shows across two KBs has real gravity; a loud single-source cluster does not. Higher cross-source count → stronger lead claim. (This is also what the lineup's coverage self-check should report per candidate.)
+
+**The lead test (worked example — the Edition #21 lead):** Palantir CEO Alex Karp's CNBC interview attacking the frontier labs over token pricing and "alpha transfer" was the clear lead — not because it had the most bookmarks, but because it scored on every axis: it was a concrete **event** (a specific interview, quotable, datable); it had **gravity** (a bookmark cluster AND an All-In podcast episode orbited it — multiple shows, two KBs); it **set an agenda** other stories were reacting to; and a **seller could act on it** (the enterprise "own your alpha" anxiety → the Agentic Data Cloud + multi-model-on-GEAP conversation). That is the lead test: **a datable event × gravity across sources × an agenda others react to × a real seller play.** Volume in a single KB is not the test.
 
 ### Scoring
 
 Score each remaining item by:
 - **Seller-actionability:** what can a rep *do or say* with this in a founder meeting? (Principle 0 — the gate, not a tiebreaker.)
 - **Market signal strength:** does this indicate a real trend or shift, or is it novelty?
-- **Gravity:** do other sources orbit or react to it?
+- **Gravity (counted):** how many distinct KBs and distinct shows/authors independently surface it? More cross-source pickup = higher gravity.
+- **Freshness:** is there a specific new development this week, or is it a standing theme with nothing new?
 
 ### Section assignment (the only three sections)
 

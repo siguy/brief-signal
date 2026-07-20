@@ -75,6 +75,28 @@ function getNextEdition(latestBriefing) {
   return match ? parseInt(match[1], 10) + 1 : 1;
 }
 
+// Compact digest of the last few editions' leads so the generator can see the
+// running macro-narrative arc (compute scarcity, open weights, SaaS→agents) and
+// deliberately ADVANCE it rather than recycle or dodge it. See Repeat Prevention.
+function getRecentLeads(n) {
+  if (!fs.existsSync(BRIEFINGS_DIR)) return "";
+  const files = fs
+    .readdirSync(BRIEFINGS_DIR)
+    .filter((f) => /^\d{4}-\d{2}-\d{2}\.md$/.test(f))
+    .sort()
+    .reverse()
+    .slice(0, n);
+  return files
+    .map((f) => {
+      const c = fs.readFileSync(path.join(BRIEFINGS_DIR, f), "utf-8");
+      const ed = (c.match(/^edition:\s*(\d+)/m) || [])[1] || "?";
+      const title = (c.match(/^title:\s*"(.+)"/m) || [])[1] || "(untitled)";
+      const lead = (c.match(/^###\s+(.+)$/m) || [])[1] || "";
+      return `- #${ed} (${f.replace(".md", "")}): ${title}${lead ? ` — lead: ${lead}` : ""}`;
+    })
+    .join("\n");
+}
+
 function getTodayDate() {
   const d = new Date();
   return d.toISOString().split("T")[0];
@@ -94,20 +116,28 @@ function lineupTask(edition) {
 
 # YOUR TASK RIGHT NOW: produce a STORY LINEUP, not the briefing prose.
 
-Apply the Lead-Story Doctrine from your instructions (model-release scan across ALL knowledge bases first; merge same-thesis items and name the tension; apply the seller-relevance test at selection time). Output ONLY the markdown below — no briefing, no preamble:
+Apply the Lead-Story Doctrine from your instructions: model-release scan across ALL knowledge bases first; a lead is a datable EVENT, not a theme; merge same-thesis items and name the tension; count gravity; apply the seller-relevance test at selection time; and check what genuinely changed this week. Output ONLY the markdown below — no briefing, no preamble:
 
 ## Proposed Lineup — Edition #${edition}
 
-**The Big Picture (exactly 2-3 stories, in the order they'll run):**
-1. {story title} — sources: {which KB items/URLs} — merges: {what's merged + the tension, or "single"} — seller play: {one line, or "context-only — no angle"}
-2. ...
-3. ...
+**The Big Picture (exactly 2-3 stories, lead first):**
+For each story:
+1. **{story title}**
+   - event: {the specific datable thing that happened this week — not a theme}
+   - gravity: {N distinct KBs × M distinct shows/authors that surface it}
+   - changed this week: {the new development, esp. vs. any prior edition on this theme}
+   - merges: {what's merged + the tension, or "single"}
+   - seller play: {one line, or "context-only — no angle"}
+
+**Why the lead beats the runner-up:** {one line}
+
+**Continuity:** {which recurring arc from the recent-edition leads this edition advances and how it moves forward — or "new thread"}
 
 **Quick Hits (3-6 candidates):**
 - {one-liner} — {source}
 
 **Considered but cut (and why):**
-- {story} — {no seller play / too old / thin / duplicate of a previous edition}
+- {story} — {no seller play / no new development / too old / thin / already led a prior edition}
 
 **Model-release coverage self-check:** list EVERY major model release or benchmark milestone found anywhere in the KBs, and where each landed (lead / big picture / quick hit / cut). Nothing major may be silently dropped — this is how we avoid missing a release like Kimi K3.`;
 }
@@ -153,9 +183,14 @@ async function main() {
   let previousContext = "";
   if (latest) {
     console.log(`Previous briefing: ${latest.name} (Edition #${edition - 1})`);
-    previousContext = `\n\n## Previous Briefing (DO NOT repeat this content)\n\n${latest.content}`;
+    previousContext = `\n\n## Previous Briefing (do not repeat a story unless it genuinely advanced)\n\n${latest.content}`;
   } else {
     console.log("No previous briefing found. This will be Edition #1.");
+  }
+
+  const recentLeads = getRecentLeads(4);
+  if (recentLeads) {
+    previousContext += `\n\n## Recent edition leads (the running arc — advance it, don't recycle or dodge it)\n\n${recentLeads}`;
   }
 
   const ai = new GoogleGenAI({ apiKey });
