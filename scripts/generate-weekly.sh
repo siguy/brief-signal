@@ -179,7 +179,7 @@ git checkout main
 git pull origin main
 git checkout -b "$BRANCH"
 
-if node scripts/generate-briefing.js >> "$LOG_FILE" 2>&1; then
+if BRIEFING_DATE="$MONDAY_DATE" node scripts/generate-briefing.js >> "$LOG_FILE" 2>&1; then
   log "Stage 4 complete: briefing generated."
 else
   log "ERROR: Stage 4 failed (briefing generation). Cleaning up."
