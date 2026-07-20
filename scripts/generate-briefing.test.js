@@ -120,6 +120,13 @@ test("lineupTask includes theme-tagging and fenced registry instructions", () =>
     task.includes("No registry provided this run"),
     "missing the conditional skip when no registry was injected"
   );
+  assert.ok(
+    task.includes("not just the theme entries") &&
+      task.includes("trailing notes/appendix section"),
+    "missing the instruction to reproduce non-theme sections verbatim " +
+      "(regression: a live dry run showed the model dropping a trailing " +
+      "'Notes & open judgment calls' section, reading 'every existing theme' too narrowly)"
+  );
 });
 
 test("extractProposedThemes pulls the fenced block on the happy path", () => {

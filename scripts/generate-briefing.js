@@ -171,7 +171,7 @@ For each story:
 - RETIRE (→ dormant): {name} — {hasn't led in ~4-5 editions}
 If nothing changed, write "No registry changes this edition."
 
-**Full proposed registry:** skip this entirely if no registry was provided above. Otherwise, immediately after, output the ENTIRE updated registry — every existing theme (edited only if it led or advanced this edition, otherwise unchanged verbatim) plus any new births — wrapped EXACTLY like this, with nothing else inside the fence:
+**Full proposed registry:** skip this entirely if no registry was provided above. Otherwise, immediately after, output the ENTIRE updated file byte-for-byte as given to you above, changed only where earned — not just the theme entries. This means: reproduce the header/intro, the discipline rules, the status legend, EVERY existing theme (edited only if it led or advanced this edition, otherwise unchanged verbatim), any new births, AND any trailing notes/appendix section (e.g. "Notes & open judgment calls") — all unchanged unless this edition's news specifically bears on them. Do not drop a section just because it isn't a theme entry. Wrap the whole thing EXACTLY like this, with nothing else inside the fence:
 
 \`\`\`themes-proposed
 <!-- PROPOSED — do not merge directly. Simon reviews and promotes this to content/themes.md on PR approval. -->
