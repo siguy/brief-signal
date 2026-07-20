@@ -274,6 +274,26 @@ async function main() {
   const latest = getLatestBriefing();
   const edition = getNextEdition(latest);
   const today = getTodayDate();
+  // Filename uses the TARGET edition date (BRIEFING_DATE — generate-weekly.sh sets it
+  // to MONDAY_DATE), not the run date, so a run never files under the wrong date.
+  const targetDate = process.env.BRIEFING_DATE || today;
+  const outputPath = path.join(BRIEFINGS_DIR, `${targetDate}.md`);
+
+  // Guard: never clobber a published edition. A stray or scheduled re-run landing on a
+  // shipped edition's date would otherwise overwrite it — as happened when a v2 re-run
+  // wrote Edition #23 over the shipped #22 in 2026-07-20.md. Fail fast, before any
+  // Gemini calls. FORCE_OVERWRITE=1 to deliberately regenerate the same edition in place.
+  if (fs.existsSync(outputPath) && !process.env.FORCE_OVERWRITE) {
+    const existingEd = (fs.readFileSync(outputPath, "utf-8").match(/^edition:\s*(\d+)/m) || [])[1];
+    console.error(
+      `ERROR: content/briefings/${targetDate}.md already exists (Edition #${existingEd || "?"}). ` +
+        `Refusing to overwrite it with Edition #${edition}.`
+    );
+    console.error(
+      `  Set BRIEFING_DATE=<target Monday date> to file this edition, or FORCE_OVERWRITE=1 to regenerate ${targetDate} in place.`
+    );
+    process.exit(1);
+  }
 
   let previousContext = "";
   if (latest) {
@@ -324,19 +344,19 @@ async function main() {
       .trimEnd();
     const draftsDir = path.join(BRIEFINGS_DIR, "drafts");
     if (!fs.existsSync(draftsDir)) fs.mkdirSync(draftsDir, { recursive: true });
-    fs.writeFileSync(path.join(draftsDir, `${today}-lineup.md`), lineup, "utf-8");
-    console.log(`  Lineup saved: content/briefings/drafts/${today}-lineup.md`);
+    fs.writeFileSync(path.join(draftsDir, `${targetDate}-lineup.md`), lineup, "utf-8");
+    console.log(`  Lineup saved: content/briefings/drafts/${targetDate}-lineup.md`);
 
     if (themeRegistry) {
       const proposedThemes = extractProposedThemes(rawLineup);
       if (proposedThemes) {
         fs.writeFileSync(
-          path.join(draftsDir, `${today}-themes-proposed.md`),
+          path.join(draftsDir, `${targetDate}-themes-proposed.md`),
           proposedThemes,
           "utf-8"
         );
         console.log(
-          `  Proposed theme registry update saved: content/briefings/drafts/${today}-themes-proposed.md`
+          `  Proposed theme registry update saved: content/briefings/drafts/${targetDate}-themes-proposed.md`
         );
       } else {
         console.warn(
@@ -371,11 +391,10 @@ ${kbContent}${previousContext}`;
   text = stripCodeFences(text);
   text = truncateRepetition(text);
 
-  // 8. Save briefing
+  // 8. Save briefing (outputPath computed above, guarded against clobbering)
   if (!fs.existsSync(BRIEFINGS_DIR)) {
     fs.mkdirSync(BRIEFINGS_DIR, { recursive: true });
   }
-  const outputPath = path.join(BRIEFINGS_DIR, `${today}.md`);
   fs.writeFileSync(outputPath, text, "utf-8");
 
   // 9. Report
