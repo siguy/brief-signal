@@ -242,6 +242,19 @@ elif [ "$CRITIQUE_STATUS" = "error" ]; then
   CRITIQUE_SECTION=$'\n\n## 🤖 Automated Quality Review\n\n_Critique pass errored — review manually against the checklist in scripts/briefing-prompt.md._'
 fi
 
+# Theme registry diff — pull the "Proposed registry update" section straight out
+# of the Stage 4a lineup file (already committed alongside the draft); no
+# separate log file to keep in sync. Missing lineup/proposed file = no section.
+THEME_SECTION=""
+LINEUP_FILE="content/briefings/drafts/${TODAY:-}-lineup.md"
+THEMES_PROPOSED_FILE="content/briefings/drafts/${TODAY:-}-themes-proposed.md"
+if [ -n "${TODAY:-}" ] && [ -f "$LINEUP_FILE" ] && [ -f "$THEMES_PROPOSED_FILE" ]; then
+  THEME_DIFF=$(awk '/^\*\*Full proposed registry:\*\*/{exit} /^\*\*Proposed registry update:\*\*/{flag=1} flag{print}' "$LINEUP_FILE")
+  if [ -n "$THEME_DIFF" ]; then
+    THEME_SECTION=$'\n\n## 🗺️ Theme Registry Update (proposed)\n\n'"$THEME_DIFF"$'\n\nFull proposed registry: `'"$THEMES_PROPOSED_FILE"$'`. On approval, copy it over `content/themes.md` — it is never auto-updated.'
+  fi
+fi
+
 PR_BODY="$(cat <<PREOF
 ## Weekly AI Market Briefing — ${MONDAY_DATE}
 
@@ -267,7 +280,7 @@ A copy of the unedited first draft is committed at \`${DRAFT_FILE}\`. After you 
 
 ### After merging
 Run \`npm run audio:pr\` to generate the audio script and open a PR.
-Subscriber email is sent when the audio PR is merged.${CRITIQUE_SECTION}
+Subscriber email is sent when the audio PR is merged.${CRITIQUE_SECTION}${THEME_SECTION}
 PREOF
 )"
 

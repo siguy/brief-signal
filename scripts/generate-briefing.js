@@ -16,6 +16,7 @@ const path = require("path");
 const SKILLS_DIR = path.join(process.env.HOME, "skills");
 const BRIEFINGS_DIR = path.join(__dirname, "..", "content", "briefings");
 const PROMPT_PATH = path.join(__dirname, "briefing-prompt.md");
+const THEMES_PATH = path.join(__dirname, "..", "content", "themes.md");
 const MAX_AGE_DAYS = 14;
 
 function findKnowledgeBaseFiles() {
@@ -97,6 +98,16 @@ function getRecentLeads(n) {
     .join("\n");
 }
 
+// Living Theme Registry (content/themes.md) — the curated set of recurring
+// macro-narrative arcs (compute scarcity, open weights, sovereignty, etc).
+// Fed to the Stage 4a lineup pass only, so the lineup can tag each candidate
+// to the arc it advances and propose registry updates. Stage 4b just expands
+// the approved lineup, so it doesn't need the raw registry itself.
+function readThemeRegistry() {
+  if (!fs.existsSync(THEMES_PATH)) return "";
+  return fs.readFileSync(THEMES_PATH, "utf-8");
+}
+
 function getTodayDate() {
   const d = new Date();
   return d.toISOString().split("T")[0];
@@ -105,6 +116,19 @@ function getTodayDate() {
 function stripCodeFences(text) {
   // Gemini sometimes wraps the whole response in ```markdown ... ```
   return text.replace(/^```(?:markdown)?\s*\n?/i, "").replace(/\n?```\s*$/, "");
+}
+
+// stripCodeFences's trailing rule is anchored to end-of-string and can't tell a
+// Gemini-added *outer* wrap apart from our own internal ```themes-proposed fence
+// — which is often the literal last thing in the lineup response. Running it
+// unconditionally silently eats that fence's closing marker (confirmed in a live
+// dry run: the saved lineup file rendered as a dangling code block). Skip the
+// trailing-strip whenever our marker is present; the leading strip (Gemini
+// sometimes wraps the whole response in ```markdown) is still safe either way.
+function stripLineupFences(rawLineup) {
+  return rawLineup.includes("```themes-proposed")
+    ? rawLineup.replace(/^```(?:markdown)?\s*\n?/i, "").trim()
+    : stripCodeFences(rawLineup).trim();
 }
 
 // Stage 4a task: ask the model to plan the lineup before writing prose. This
@@ -128,6 +152,7 @@ For each story:
    - changed this week: {the new development, esp. vs. any prior edition on this theme}
    - merges: {what's merged + the tension, or "single"}
    - seller play: {one line, or "context-only — no angle"}
+   - advances: {the Theme Registry arc this story moves forward, by name} OR NEW THREAD — candidate theme? {a name, or "one-off, no arc"}
 
 **Why the lead beats the runner-up:** {one line}
 
@@ -139,7 +164,35 @@ For each story:
 **Considered but cut (and why):**
 - {story} — {no seller play / no new development / too old / thin / already led a prior edition}
 
-**Model-release coverage self-check:** list EVERY major model release or benchmark milestone found anywhere in the KBs, and where each landed (lead / big picture / quick hit / cut). Nothing major may be silently dropped — this is how we avoid missing a release like Kimi K3.`;
+**Model-release coverage self-check:** list EVERY major model release or benchmark milestone found anywhere in the KBs, and where each landed (lead / big picture / quick hit / cut). Nothing major may be silently dropped — this is how we avoid missing a release like Kimi K3.
+
+**Proposed registry update:** if no "## Theme Registry" section was provided to you above, write "No registry provided this run" and skip straight to your Quick Hits — do not fabricate one. Otherwise: the registry informs selection — it never gates it (a new thread or standalone one-off may always lead on its own merits). For each Theme Registry arc that led or advanced this edition, one line: {theme name} — moved to: {new one-line "where it stands"}. Then, only where earned, list births and retirements:
+- NEW THEME: {name} — {why it earns a slot: gravity across ≥2 sources AND plausible staying power, not a one-off}
+- RETIRE (→ dormant): {name} — {hasn't led in ~4-5 editions}
+If nothing changed, write "No registry changes this edition."
+
+**Full proposed registry:** skip this entirely if no registry was provided above. Otherwise, immediately after, output the ENTIRE updated file byte-for-byte as given to you above, changed only where earned — not just the theme entries. This means: reproduce the header/intro, the discipline rules, the status legend, EVERY existing theme (edited only if it led or advanced this edition, otherwise unchanged verbatim), any new births, AND any trailing notes/appendix section (e.g. "Notes & open judgment calls") — all unchanged unless this edition's news specifically bears on them. Do not drop a section just because it isn't a theme entry. Wrap the whole thing EXACTLY like this, with nothing else inside the fence:
+
+\`\`\`themes-proposed
+<!-- PROPOSED — do not merge directly. Simon reviews and promotes this to content/themes.md on PR approval. -->
+{full registry markdown, same structure as the current content/themes.md}
+\`\`\``;
+}
+
+// Pulls the fenced ```themes-proposed block out of a raw Stage 4a lineup
+// response. Must run on the RAW response, before stripCodeFences — that
+// function's trailing-fence regex is anchored to end-of-string and would eat
+// this block's closing fence if it runs first, since the registry block is
+// the last thing in the lineup output.
+//
+// Returns "" (skip, non-fatal) if the fence is missing, unclosed, or looks
+// truncated (no theme heading inside) rather than writing a partial file.
+function extractProposedThemes(lineupText) {
+  const match = lineupText.match(/```themes-proposed[ \t]*\r?\n([\s\S]*?)```/);
+  if (!match) return "";
+  const content = match[1].trim();
+  if (!content || !/^##\s+/m.test(content)) return "";
+  return content;
 }
 
 function countWords(text) {
@@ -235,14 +288,28 @@ async function main() {
     previousContext += `\n\n## Recent edition leads (the running arc — advance it, don't recycle or dodge it)\n\n${recentLeads}`;
   }
 
+  // Theme Registry context is Stage 4a-only (the lineup pass), not previousContext —
+  // Stage 4b's userMessage never reads it, since it just expands the approved lineup.
+  const themeRegistry = readThemeRegistry();
+  const themeRegistryContext = themeRegistry
+    ? `\n\n## Theme Registry (long-term memory — tag each Big Picture candidate to the arc it advances, or flag NEW THREAD; propose updates)\n\n${themeRegistry}`
+    : "";
+
   const ai = new GoogleGenAI({ apiKey });
-  const kbAndContext = `Today is ${today}. Edition #${edition}.\n\n## Knowledge Base Content\n\n${kbContent}${previousContext}`;
+  const kbAndContext = `Today is ${today}. Edition #${edition}.\n\n## Knowledge Base Content\n\n${kbContent}${previousContext}${themeRegistryContext}`;
 
   // 5. Stage 4a — story lineup (planning pass). Runs the Lead-Story Doctrine as
   //    an explicit selection step and drops a lineup file in drafts/ so the PR
   //    reviewer can sanity-check the SELECTION before reading the full draft.
   //    Non-fatal: if it fails, fall back to drafting directly.
   let lineup = "";
+  // Stage 4b only needs the story selection (Big Picture / Quick Hits / cuts /
+  // coverage self-check) to expand into prose — never the registry admin footer
+  // (proposed update + the full themes.md block, which can run several KB and
+  // has its own "## " headings right before "generate a complete briefing").
+  // Derived from `lineup`, which keeps the registry block for the saved
+  // {today}-lineup.md file the PR reviewer reads.
+  let lineupForDraft = "";
   try {
     console.log(`\nStage 4a: planning story lineup for Edition #${edition}...`);
     const lineupResp = await ai.models.generateContent({
@@ -250,11 +317,33 @@ async function main() {
       contents: kbAndContext,
       config: { systemInstruction: `${systemPrompt}\n\n${lineupTask(edition)}` },
     });
-    lineup = stripCodeFences(lineupResp.text || "").trim();
+    const rawLineup = lineupResp.text || "";
+    lineup = stripLineupFences(rawLineup);
+    lineupForDraft = lineup
+      .replace(/\n\*\*Proposed registry update:\*\*[\s\S]*$/, "")
+      .trimEnd();
     const draftsDir = path.join(BRIEFINGS_DIR, "drafts");
     if (!fs.existsSync(draftsDir)) fs.mkdirSync(draftsDir, { recursive: true });
     fs.writeFileSync(path.join(draftsDir, `${today}-lineup.md`), lineup, "utf-8");
     console.log(`  Lineup saved: content/briefings/drafts/${today}-lineup.md`);
+
+    if (themeRegistry) {
+      const proposedThemes = extractProposedThemes(rawLineup);
+      if (proposedThemes) {
+        fs.writeFileSync(
+          path.join(draftsDir, `${today}-themes-proposed.md`),
+          proposedThemes,
+          "utf-8"
+        );
+        console.log(
+          `  Proposed theme registry update saved: content/briefings/drafts/${today}-themes-proposed.md`
+        );
+      } else {
+        console.warn(
+          `  WARN: lineup didn't include a valid themes-proposed block; skipping registry update proposal.`
+        );
+      }
+    }
   } catch (err) {
     console.warn(`  WARN: lineup pass failed (${err.message || err}); drafting without it.`);
   }
@@ -262,7 +351,7 @@ async function main() {
   // 6. Stage 4b — draft the briefing, expanding the approved lineup.
   const userMessage = `Today is ${today}. This is Edition #${edition}.
 
-${lineup ? `You already planned this story lineup for this edition. Expand it into the full briefing, following the template and all rules exactly. Keep the selection and merges from the lineup unless a rule forces a change.\n\n## Approved Story Lineup\n\n${lineup}\n\n` : ""}Generate a complete weekly briefing using the knowledge base content below. Follow the template and all rules from your system instructions exactly.
+${lineup ? `You already planned this story lineup for this edition. Expand it into the full briefing, following the template and all rules exactly. Keep the selection and merges from the lineup unless a rule forces a change.\n\n## Approved Story Lineup\n\n${lineupForDraft}\n\n` : ""}Generate a complete weekly briefing using the knowledge base content below. Follow the template and all rules from your system instructions exactly.
 
 ## Knowledge Base Content
 
@@ -307,4 +396,12 @@ if (require.main === module) {
   });
 }
 
-module.exports = { stripCodeFences, truncateRepetition, countWords };
+module.exports = {
+  stripCodeFences,
+  stripLineupFences,
+  truncateRepetition,
+  countWords,
+  readThemeRegistry,
+  extractProposedThemes,
+  lineupTask,
+};
