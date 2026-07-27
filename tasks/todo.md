@@ -1,112 +1,63 @@
-# Briefing generation v2 — streamline selection, better first drafts
+# Editorial hardening — approved by Simon 2026-07-26
 
-Goal: migrate 3 editions of Simon's accumulated corrections UPSTREAM into the generator,
-so first drafts are focused and match what he actually ships. Branch: `feat/briefing-prompt-v2`.
+Four workstreams approved via Q&A (session 2026-07-26). Order: A (Monday deadline) → B → C → D.
 
-## Root causes (from the #20-#22 diffs)
-1. Template mandates Builder's Corner + Founder Watch + ≤3 Quick Hits; Simon cuts/demotes them every edition.
-2. No lead-story doctrine → loudest-by-volume KB cluster wins; the sharper story (Kimi K3, in a podcast deep dive) got missed.
-3. Critique is ~50% noise (3 false-positive GCP-angle flags, 1 unsatisfiable rule, 1 URL-dedup bug) and never asks "is there a bigger story you skipped?"
-4. Word target says 800-1000; briefings actually land 1,700-2,200.
+## A. Edition #23 fixes (branch: briefing/2026-07-27) — URGENT, review is Monday
+- [ ] Fix 2 broken Quick Hit URLs (KB had no permalinks; real URLs recovered from raw JSON):
+  - gregisenberg → https://x.com/gregisenberg/status/2081088155793465783
+  - KanikaBK → https://x.com/KanikaBK/status/2080578327786746242
+- [ ] Decenter OpenAI in the Value Maxing story (BP3) so OpenAI isn't the headline
+  subject of 2 of 3 Big Picture stories (open critique hard failure). Lead with the
+  industry economics shift; OpenAI's GPT-5.6 guidance becomes evidence, not protagonist.
+- [ ] Fix Our Play bullet 2: currently recommends hosting Kimmy K3 while the story above
+  reports Treasury sanction threats against it. Reframe as model optionality/portability
+  = de-risking sanctions exposure; open-weight example → Gemma.
+- [ ] Add Seller's Edge section to #23 (new teach — all 3 founding frameworks used in
+  editions 6/08, 6/15, 6/22). This week's teach: agentic AI cost is engineered
+  (caching/routing/harness design), not just priced.
+- [ ] Re-run critique to verify; commit + push to PR #73.
 
-## Plan
-- [x] 1. briefing-prompt.md — template surgery: TLDR → Big Picture (exactly 3, arc-ordered) → Quick Hits (3-6, absorbs founder/builder one-liners, podcast sources OK) → Our Play. Remove Builder's Corner + Founder Watch as standing sections.
-- [x] 2. briefing-prompt.md — Lead-Story Doctrine in Content Curation: model-release scan first; merge same-thesis items + name the tension; seller-relevance at selection. Worked example = Alex Karp / Palantir (#21 lead).
-- [x] 3. briefing-prompt.md — word budgets (~1,700-1,800 total, ~300/story, angle ≤90 words); fix Tone/Writing word target.
-- [x] 4. briefing-prompt.md — Our Play = 1 framing sentence + exactly 3 bold named motions (play → product surface → seller move).
-- [x] 5. briefing-prompt.md — Quality Checklist: carve out the REQUIRED "Where the GCP opportunity is" angle line (kills the recurring false positive); drop "fresh GCP sources" rule; fix URL-dedup wording to "same exact URL"; add word-budget + section-shape + quick-hit-count checks.
-- [x] 6. critique-briefing.js — add a KB-index coverage check (feed compact KB headings + signal ratings; ask "top 5 KB stories NOT covered — is any bigger?"). The Kimi-catcher.
-- [x] 7. generate-briefing.js — Stage 4a story-lineup (async): generate a lineup file (candidates, proposed merges, what's cut + why), commit alongside draft; Stage 4b drafts FROM the lineup. No gating.
-- [x] 8. Verify: JS syntax; dry-run critique on shipped #22 to confirm noise is gone + coverage check works. Open PR.
+## B. Restore Seller's Edge into the process (new branch, separate PR)
+- [ ] Write Seller's Edge spec into scripts/briefing-prompt.md (template section,
+  voice guide, quality checklist item). Source: memory project_sellers_edge_section.md.
+  Spec was never in the rebuilt prompt — silently lost in the v2 rebuild (PR #63).
+- [ ] Update memory file: restoration done + all 3 founding frameworks now used.
 
-## Notes
-- Also uncommitted on main working tree: LOOKBACK_DAYS env-override in extract-podcasts.js + extract-rss-podcasts.py (separate concern).
+## C. Deterministic linter + repair loop (new branch, separate PR)
+- [ ] scripts/lint-briefing.js — mechanical checks, no LLM:
+  - no `...`/malformed URLs
+  - TLDR bullets all start with a bold hook
+  - every "Your angle" block has a "Where the GCP opportunity is" line
+  - no same-source-URL anchoring two Big Picture stories
+- [ ] Repair loop in the pipeline: on critique/linter hard failure, ONE targeted
+  Gemini revision pass with the failures as input, then re-verify, then PR.
+- [ ] Root-cause fix: bookmarks KB build must include the tweet permalink per entry
+  (raw JSON has them as keys; the KB drops them → Gemini fabricated `...` URLs).
 
----
+## D. GCP playbook — two layers
+- [ ] content/gcp-playbook.md (public-safe): differentiators GCP can honestly claim,
+  Agent Platform component glossary, approved framings. Feeds Stage 4 like themes.md.
+- [ ] Internal deeper layer: gitignored local file (repo is public) — flag backup
+  tradeoff to Simon.
+- [ ] Restructure Our Play format in prompt: Signal → Why GCP wins → The move.
 
-# Living Theme Registry — wiring (follow-up to #63/#64)
-
-`content/themes.md` is seeded (#64) but nothing reads or advances it. Wire it into the
-Stage 4a lineup pass. Full plan: `~/.claude/plans/theme-registry-wiring.md` (reviewed by
-3 parallel agents; sentinel→fence-block + dedup cuts already folded in).
-
-- [x] 1. `generate-briefing.js`: `readThemeRegistry()` + inject into Stage 4a context only
-- [x] 2. Extend `lineupTask`: per-candidate theme tag (or NEW THREAD) + proposed registry
-      update summary + full proposed `themes.md` in a `themes-proposed` fenced block
-- [x] 3. `extractProposedThemes(lineupText)` → write `drafts/{date}-themes-proposed.md`
-      only (no separate diff file); never touch canonical `content/themes.md`
-- [x] 4. `briefing-prompt.md`: short Living Theme Registry note (informs, never gates)
-- [x] 5. `generate-weekly.sh`: PR body reads the update summary from the lineup file
-- [x] 6. Add new fns to existing `module.exports`; inline verification (no new test file)
-- [x] 7. Dry-run validation without touching a shipped briefing
-- [ ] 8. Flag to Simon, open PR, hold merge (pipeline code)
-
-## Review
-- Caught a real bug during validation: `stripCodeFences`'s trailing-fence regex is
-  anchored to end-of-string, and since the new `themes-proposed` fence is the LAST
-  thing in the Stage 4a lineup response, running `stripCodeFences` before extraction
-  would have silently eaten the closing fence and broken extraction on every real run.
-  Fixed by extracting from the raw response before `stripCodeFences` runs. Verified
-  with a side-by-side repro (see conversation) — confirmed the bug exists in the wrong
-  order and is absent in the shipped order.
-- Diff stat matches the plan exactly (4 files, no unplanned files touched):
-  `scripts/generate-briefing.js`, `scripts/briefing-prompt.md`, `scripts/generate-weekly.sh`.
-- All dry-run checks passed with no API key / network: registry read, `lineupTask`
-  content, extraction happy-path + 3 negative cases (missing fence, unclosed fence,
-  no-heading truncation heuristic), and the `generate-weekly.sh` awk extraction
-  against a sample lineup file.
-
-### Post-PR review fixes (PR #68 review)
-- **HIGH, fixed:** the full proposed registry (and its "Proposed registry update"
-  summary) was leaking into Stage 4b's drafting prompt via the shared `lineup`
-  variable — Stage 4b has no use for it and it's pure token bloat + a plausible
-  confusion risk next to the existing repetition-loop bug. Added `lineupForDraft`,
-  truncated at the `**Proposed registry update:**` marker, used only in Stage 4b's
-  `userMessage`; the full `lineup` (registry included) is still what's saved to
-  `{today}-lineup.md` for the PR reviewer. Verified with a side-by-side transform test.
-- **MEDIUM, fixed:** `extractProposedThemes`'s fence-open regex required the newline
-  immediately after `` ```themes-proposed `` with no tolerance for trailing
-  whitespace — widened to `[ \t]*\r?\n`. Verified against a trailing-space sample.
-- **MEDIUM, fixed:** the registry-update/full-registry prompt instructions were
-  unconditional even when no registry was actually injected into context — added
-  an explicit "if no Theme Registry section was provided above, write 'No registry
-  provided this run' / skip this entirely" branch so the model doesn't fabricate one.
-- LOW items (unguarded `readThemeRegistry` file read; case-sensitive PR-body awk
-  extraction) left as-is — consistent with existing sibling-function style and
-  non-fatal by design; not fixed in this pass.
-
-### Live dry-run validation (isolated copy, real gemini-2.5-flash call)
-- Ran the full new-rules pipeline end-to-end in a directory isolated from the real
-  repo (real code + registry, copied history, real KB files, no risk to the
-  published Edition #22). Produced a real Edition #23 lineup + drafted briefing.
-- Model correctly tagged each Big Picture story with `advances:`, produced a
-  well-formed proposed registry update, and did NOT fabricate any new themes —
-  all 8 headings in the proposed registry matched the original file's headings
-  exactly, confirming the "rare and earned" bar held on a real run.
-- **Found and fixed a real bug this way, not catchable by hand-written test
-  strings:** the raw lineup response ends in our internal `themes-proposed`
-  fence, and the existing `stripCodeFences(rawLineup)` call — used to save
-  `{today}-lineup.md` — silently ate that fence's closing marker (same
-  end-of-string-anchor issue as before, but on the *saved* file this time, not
-  the extraction path). Confirmed via byte inspection of the actual file the
-  pipeline wrote. Fixed by extracting the trailing-strip guard into a named
-  `stripLineupFences()` function that skips the trailing rule whenever the
-  internal marker is present; added 2 more committed tests reproducing the
-  exact failure and confirming the fallback path is unchanged (16 tests total).
-- ~~One non-bug observation: the model's proposed registry correctly dropped the
-  original file's non-theme "Notes & open judgment calls" section~~ — fixed in
-  a follow-up commit: the lineup prompt now explicitly instructs reproducing the
-  whole registry file (header, discipline rules, legend, every theme, AND any
-  trailing notes/appendix section), not just theme entries. Test added.
-- **Merged.** PR #68 squash-merged to `main` as `4ac8f76` after 3 rounds of
-  fixes (code review + a live dry run against a real Gemini call).
+## Review notes
+(fill in as completed)
 
 ---
+
+# ARCHIVE — Briefing generation v2 (shipped, PR #63/#68)
+
+Goal: migrate 3 editions of Simon's accumulated corrections UPSTREAM into the generator.
+All items complete and merged; details preserved in git history of this file and in
+PR #63 / #68 descriptions. Key outcomes:
+- Template surgery (TLDR → Big Picture ×3 → Quick Hits → Our Play); Lead-Story Doctrine;
+  word budgets; Our Play = 3 named motions; critique coverage check (the Kimi-catcher);
+  Stage 4a lineup pass.
+- Living Theme Registry wired into Stage 4a (PR #68, squash-merged as 4ac8f76) after
+  3 rounds of fixes incl. two real fence-stripping bugs found via live dry-run.
+- Item 8 of registry wiring ("flag to Simon, open PR, hold merge") — done, merged.
 
 # Backlog (not started)
 
-- [x] ~~**Analytics performance report**~~ — done. Turned out to already exist as
-      [PR #67](https://github.com/siguy/brief-signal/pull/67)
-      (`scripts/fetch-analytics.js`, `npm run analytics` → `logs/analytics-signal.md`,
-      per-edition read/scroll/audio signal mapped to themes) — merged to `main`
-      while this doc-update work was in flight.
+- (empty — analytics report shipped as PR #67)
