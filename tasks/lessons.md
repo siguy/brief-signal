@@ -286,3 +286,26 @@ Concrete rules:
   unattended pipeline.** Unit tests with fixtures could never have caught the
   URL fabrication — only a real model call did. Same lesson as the PR #68
   fence-stripping bug: the failure modes worth catching live in real responses.
+
+### From Edition #23 post-publish fixes (2026-07-27)
+
+- **A silent fallback that fabricates a stand-in artifact is a failure-masking
+  device.** fetch-og's placeholder wrote SVG markup into the .jpg path when a
+  fetch failed — the file "existed," nothing complained, and the live site
+  served a broken image. Rule: fallbacks must fail loudly (stderr + missing
+  artifact that a check catches), and validation must check artifact CONTENTS
+  (magic bytes, size), never just existence. Same family as the URL-fabrication
+  lesson: the system must make failure visible, not paper over it.
+- **Never feed disk-level failures to an LLM repair pass.** An image-file
+  failure fed to the repair model invites it to "fix" the text by deleting the
+  image reference. Failures are routed by what can fix them: text failures →
+  repair pass; file failures → surfaced for humans/scripts.
+- **Audio-script proofread must verify speaker attributions, not just
+  pronunciation.** The generated script called Lin Qiao a "venture capitalist"
+  (KB shows an operator) and assigned an unsourced pronoun. Rule: before
+  audio:generate, check every named person's title/role against the KB and
+  drop any pronoun the sources don't establish.
+- **Check for a `require.main` guard before require()-ing a script to test
+  it.** Loading fetch-og.js for a smoke test executed its full main pass
+  (harmless only because every image already existed). Test guarded modules
+  via require; unguarded scripts via a stub or subprocess.
