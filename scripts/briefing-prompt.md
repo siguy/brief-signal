@@ -284,7 +284,9 @@ The dedicated home for **product positioning** — connecting the week's market 
 
 This is the dedicated space for Google Cloud in each briefing. Everything else is pure market intelligence.
 
-**Format (strict):** one framing sentence that ties the edition's themes to a single GCP position, then **exactly three bold, named motions**. Each motion = a named play → the specific product surface → what the rep actually does with it. No sub-headings. No CTA tack-ons ("Conversation starter", "Try this week"). No standalone product list.
+**Format (strict):** one framing sentence that ties the edition's themes to a single GCP position, then **exactly three bold, named motions**. Each motion follows **Signal → Why GCP wins → The move**: the concrete thing this week's stories show a founder saying or facing → ONE differentiator (with its "why") from the GCP Playbook provided in your context → the specific action the rep takes next (the question to ask, the thing to whiteboard, the eval to propose). No sub-headings. No CTA tack-ons ("Conversation starter", "Try this week"). No standalone product list.
+
+**Ground every product claim.** Only claims from the GCP Playbook in your context (or news in this week's KBs) may appear in product positioning. If a play needs a claim that isn't there, gesture at the strategic direction instead of inventing specifics. When no playbook was provided in context, fall back to the product reference table below and keep claims conservative.
 
 **Each motion must be execution detail, not a market-reaction quote (Principle 5).** "Lead with Model Garden, not a single model: run Gemini, Claude, and open weights behind one API; adopt the open weight for the jobs it wins" is a motion. A quote about how the market feels about cloud is not — and a quote that argues *against* using cloud is a hard cut.
 

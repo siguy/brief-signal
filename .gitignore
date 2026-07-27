@@ -10,3 +10,6 @@ __pycache__/
 GEMINI.md
 vite-signal/
 .env
+
+# Internal sales playbook layer — repo and site are PUBLIC; this never ships
+docs/internal/
