@@ -176,10 +176,50 @@ def has_media_type(tweet, media_type: str) -> bool:
     return False
 
 
+def extract_x_article(tweet) -> dict:
+    """Extract an X Article (the long-form article product) from the raw
+    GraphQL payload, if this tweet carries one.
+
+    twikit 2.3.3 doesn't parse articles — full_text only holds the short
+    preview — but the raw payload is kept on tweet._data. The body lives in
+    article.article_results.result.content_state as rich-text blocks; joining
+    the blocks' text yields the full plaintext. Everything here is defensive
+    (.get chains, broad except): X reshapes this payload without notice, and
+    a failed article extraction must never break the bookmark fetch — worst
+    case we keep the preview text exactly as before.
+    Returns {"title": str, "body": str} with empty strings when absent.
+    """
+    try:
+        raw = getattr(tweet, "_data", None) or {}
+        result = (
+            raw.get("article", {})
+            .get("article_results", {})
+            .get("result", {})
+        )
+        if not result:
+            return {"title": "", "body": ""}
+        title = result.get("title", "") or ""
+        blocks = (result.get("content_state", {}) or {}).get("blocks", []) or []
+        body = "\n\n".join(
+            b.get("text", "") for b in blocks if b.get("text")
+        ).strip()
+        return {"title": title, "body": body}
+    except Exception as e:  # noqa: BLE001 — never let article parsing kill the fetch
+        log(f"  WARN: X-article extraction failed for a tweet, keeping preview text: {e}")
+        return {"title": "", "body": ""}
+
+
 def tweet_to_record(tweet) -> dict:
     """Convert a twikit Tweet to the downstream JSON format."""
     text = tweet.full_text or tweet.text or ""
     external_links = extract_external_links(tweet)
+
+    # X Articles: the raw payload carries the full article body that
+    # full_text only previews. Prefer it whenever it's longer.
+    article = extract_x_article(tweet)
+    if article["body"] and len(article["body"]) > len(text):
+        header = f"[X Article] {article['title']}\n\n" if article["title"] else "[X Article]\n\n"
+        text = header + article["body"]
 
     # Date: twikit provides created_at_datetime as a datetime object
     if tweet.created_at_datetime:
