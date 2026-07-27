@@ -164,6 +164,7 @@ For each story:
    - merges: {what's merged + the tension, or "single"}
    - seller play: {one line, or "context-only — no angle"}
    - advances: {the Theme Registry arc this story moves forward, by name} OR NEW THREAD — candidate theme? {a name, or "one-off, no arc"}
+   - braids in: {the bookmark handles/items from the X KB this story will weave in alongside its podcast anchors — or "none available in KB"}
 
 **Why the lead beats the runner-up:** {one line}
 

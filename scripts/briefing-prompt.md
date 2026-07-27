@@ -97,7 +97,7 @@ Score each remaining item by:
 ### Section assignment (the only three sections)
 
 Assign each surviving item to ONE of exactly three homes:
-- **The Big Picture** = the 2-3 stories with the most gravity and the clearest seller play. This is the spine of the briefing. Order them as a narrative arc — put stories that share a thread adjacent so the edition reads as a connected story, not a list.
+- **The Big Picture** = the 2-3 stories with the most gravity and the clearest seller play. This is the spine of the briefing. Order them as a narrative arc — put stories that share a thread adjacent so the edition reads as a connected story, not a list. **Braid sources:** a Big Picture story is theme-led, never single-source — weave at least one bookmark voice (a quote, stat, or builder reaction from the X KB) alongside its podcast anchors whenever the KB has relevant material, targeting 2-3 bookmark citations per story. The bookmarks KB routinely holds 100+ posts a week, many of them full-length essays; a story citing only one podcast is leaving its richest texture unused.
 - **Quick Hits** = everything else worth a mention: a notable founder/company move, a builder pattern, a smaller release, a sharp stat. Condense each to ONE linked sentence. (This is where former "Founder Watch" and "Builder's Corner" material now lives — as one-liners, not standing sections.) Podcast-sourced items are allowed here. **Prefer HIGH-rated episodes:** when a HIGH-signal podcast episode or deep dive isn't a Big Picture story, it is the presumptive first claim on a Quick Hit slot — a MEDIUM/LOW novelty item only displaces it with an explicit reason (fresher, more seller-relevant, or the HIGH episode's substance already appears in a Big Picture story). The extraction pipeline already did the signal-rating work; selection should spend it, not ignore it.
 - **Our Play** = Google Cloud positioning only (see the dedicated rules below).
 
@@ -180,7 +180,7 @@ Everything else worth a mention — smaller releases, a founder/company move, a 
 
 ## Seller's Edge: {The Teach, as a Short Declarative Title}
 
-ONE teachable mental model that upgrades how a rep *thinks* about selling into the AI market — not what happened this week. ~150-200 words, two paragraphs: the model (grounded in this week's signal, with continuity to a prior edition's teach when it connects), then **the behavior change** — what the rep does differently in the next meeting. See the dedicated rules in the Section Voice Guide.
+ONE teachable mental model that upgrades how a rep *thinks* about selling into the AI market — not what happened this week. ~300-350 words, three beats: (1) the model, grounded in this week's signal with citations (and continuity to a prior edition's teach when it connects); (2) a **worked example** — the model applied to one of this edition's actual stories, concrete enough to replay in a meeting; (3) **the behavior change** — what the rep does differently in the next meeting. See the dedicated rules in the Section Voice Guide.
 
 ## Our Play
 
@@ -273,7 +273,7 @@ The briefing's **compounding layer**: one teachable mental model per edition tha
 - **Build continuity:** when the teach extends a prior edition's teach, say so explicitly ("Edition #19 taught X; this week adds Y"). The section compounds only if it references its own history.
 - **Never build the teach on a strawman of how GCP reps actually sell.** (Documented correction: "stop competing on cluster size" was a caricature — reps never did that. Describe the real levers, not a cartoon to knock down.)
 
-**Format:** `## Seller's Edge: {Short Declarative Title}` — ~150-200 words, two paragraphs: (1) the model, grounded in this week's signal; (2) **the behavior change** — the concrete thing the rep does differently in the next founder meeting.
+**Format:** `## Seller's Edge: {Short Declarative Title}` — ~300-350 words, three beats: (1) the model, grounded in this week's signal; (2) a **worked example** applying the model to one of this edition's stories — concrete enough that a rep can replay it in a meeting; (3) **the behavior change** — the concrete thing the rep does differently in the next founder meeting. (Depth upgraded from ~150-200 words at Simon's request, 2026-07-27 — this is the briefing's compounding layer and it earns the space. Every teach also lands on the cumulative /sellers-edge page, so write it to stand alone there.)
 
 **Teaches used so far (do not repeat; extend or add):**
 - #17 — *Don't sell the model, sell the substrate* (models commoditize; durable value is beneath and above them)
@@ -388,7 +388,7 @@ When in doubt: every hyperscaler is squeezed. The GCP story is about *workload m
 - **Opinionated** — Take a stance on what matters and what's noise
 - **Connective** — Link patterns across items. "This reminds me of..." energy.
 - **Action-oriented** — Every section should make the reader want to do something
-- **Concise** — Target **~1,850-2,000 words total** (hard ceiling ~2,200). Big Picture stories ~250-300 words each; the angle block ~90 words; Quick Hits one sentence each; Seller's Edge ~150-200 words; Our Play ~150 words. If you're over, cut a Quick Hit or tighten a story — never pad.
+- **Concise** — Target **~2,000-2,150 words total** (hard ceiling ~2,350). Big Picture stories ~250-300 words each; the angle block ~90 words; Quick Hits one sentence each; Seller's Edge ~300-350 words; Our Play ~150 words. If you're over, cut a Quick Hit or tighten a story — never pad.
 
 ## Writing Pattern
 
@@ -407,12 +407,12 @@ Before finalizing, verify:
 
 **Structure & length**
 - [ ] Exactly five parts: TLDR → The Big Picture → Quick Hits → Seller's Edge → Our Play. **No Builder's Corner, no Founder Watch section.**
-- [ ] Seller's Edge is ONE teach (~150-200 words) ending in a concrete behavior change; it does not repeat a prior edition's teach (see the used-so-far list) and contains no product positioning
+- [ ] Seller's Edge is ONE teach (~300-350 words: model + worked example from this edition's stories + behavior change); it does not repeat a prior edition's teach (see the used-so-far list) and contains no product positioning
 - [ ] The Big Picture has **exactly 2-3 stories**, each with a themed heading and (one) image
 - [ ] Quick Hits has **3-6 bullets**, each ONE linked sentence with a time label
 - [ ] Our Play is **one framing sentence + exactly three named motions** (no sub-headings, no CTA tack-ons)
 - [ ] **TLDR is 4-5 bullets with bold hooks, never prose; each bullet is one scannable sentence**
-- [ ] Length is tight — roughly **1,350-1,650 words of prose** (≈1,850-2,200 counting links/markdown). Being OVER is the failure to catch; shorter is fine as long as the 2-3 lead stories are complete. Never flag "too short" as a reason to pad.
+- [ ] Length is tight — roughly **1,500-1,800 words of prose** (≈2,000-2,350 counting links/markdown). Being OVER is the failure to catch; shorter is fine as long as the 2-3 lead stories are complete. Never flag "too short" as a reason to pad.
 
 **Selection**
 - [ ] The lead story passes the lead test (gravity across sources × sets an agenda × a real seller play) — not just "most bookmarked"
