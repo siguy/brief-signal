@@ -205,21 +205,41 @@ async function processBriefing(filepath) {
     console.log(`  Fetching OG from ${img.sourceUrl}...`);
     const ogImageUrl = await fetchOGImage(img.sourceUrl);
 
-    if (!ogImageUrl) {
+    let ok = false;
+    if (ogImageUrl) {
+      console.log(`  Downloading ${ogImageUrl}...`);
+      ok = await downloadImage(ogImageUrl, destPath);
+    } else {
       console.log(`  [no og:image] ${img.sourceUrl}`);
-      // Create a placeholder SVG
-      createPlaceholder(destPath, img.alt);
-      continue;
     }
 
-    console.log(`  Downloading ${ogImageUrl}...`);
-    const ok = await downloadImage(ogImageUrl, destPath);
+    // Fallback: most briefing sources are YouTube episodes — the thumbnail
+    // is a real, on-topic image and practically never 404s at hqdefault.
+    if (!ok) {
+      for (const thumb of youtubeThumbUrls(img.sourceUrl)) {
+        console.log(`  Trying YouTube thumbnail ${thumb}...`);
+        ok = await downloadImage(thumb, destPath);
+        if (ok) break;
+      }
+    }
+
     if (!ok) {
       createPlaceholder(destPath, img.alt);
     } else {
       console.log(`  [ok] ${img.filename}`);
     }
   }
+}
+
+// For a YouTube source URL, candidate thumbnail URLs (best-res first).
+// Returns [] for non-YouTube sources.
+function youtubeThumbUrls(sourceUrl) {
+  const m = (sourceUrl || '').match(/(?:youtube\.com\/watch\?[^)\s]*v=|youtu\.be\/)([A-Za-z0-9_-]{6,})/);
+  if (!m) return [];
+  return [
+    `https://img.youtube.com/vi/${m[1]}/maxresdefault.jpg`,
+    `https://img.youtube.com/vi/${m[1]}/hqdefault.jpg`,
+  ];
 }
 
 function createPlaceholder(destPath, alt) {
@@ -229,13 +249,14 @@ function createPlaceholder(destPath, alt) {
   <text x="600" y="300" font-family="system-ui, sans-serif" font-size="32" fill="#8b949e" text-anchor="middle" dominant-baseline="middle">${alt.replace(/[<>&"']/g, '')}</text>
   <text x="600" y="360" font-family="system-ui, sans-serif" font-size="18" fill="#555" text-anchor="middle" dominant-baseline="middle">Image unavailable</text>
 </svg>`;
-  // Save as .jpg extension but SVG content — we'll handle in build
-  // Actually save as SVG with correct extension
+  // Write ONLY the .svg diagnostic — never SVG bytes into the raster path.
+  // (That exact bug shipped a broken image in Edition #23: Pages served
+  // image/jpeg headers with SVG bytes. The missing .jpg now fails loudly in
+  // lint-briefing.js's image check instead of silently rendering broken.)
   const svgPath = destPath.replace(/\.(jpg|png|jpeg)$/, '.svg');
   fs.writeFileSync(svgPath, svg);
   // Also copy to .jpg path so markdown references work
-  fs.writeFileSync(destPath, svg);
-  console.log(`  [placeholder] ${path.basename(destPath)}`);
+  console.error(`  [PLACEHOLDER ONLY — no real image] ${path.basename(destPath)} missing; wrote diagnostic ${path.basename(svgPath)}. Fix the source or drop the image before merge.`);
 }
 
 async function main() {

@@ -146,3 +146,35 @@ One position. Motions.
 }
 
 console.log("lint-briefing.test.js: all 12 tests passed");
+
+// 13. Image checks: missing, svg-in-jpg, tiny placeholder, valid JPEG
+{
+  const os = require("os");
+  const fs = require("fs");
+  const path = require("path");
+  const { checkImages } = require("./lint-briefing.js");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "lint-img-"));
+  fs.mkdirSync(path.join(dir, "images"));
+  // valid jpeg: FFD8 header padded past size threshold
+  const jpeg = Buffer.concat([Buffer.from([0xff, 0xd8, 0xff, 0xe0]), Buffer.alloc(4096, 1)]);
+  fs.writeFileSync(path.join(dir, "images", "good.jpg"), jpeg);
+  // svg-in-jpg (the Edition #23 bug), padded past the size threshold so the
+  // magic-byte check (not the size check) is what catches it
+  fs.writeFileSync(path.join(dir, "images", "fake.jpg"), "<svg xmlns='x'>" + "a".repeat(4096) + "</svg>");
+  // tiny placeholder
+  fs.writeFileSync(path.join(dir, "images", "tiny.jpg"), Buffer.from([0xff, 0xd8, 0x00]));
+
+  const md = [
+    "![a](./images/good.jpg)",
+    "![b](./images/fake.jpg)",
+    "![c](./images/tiny.jpg)",
+    "![d](./images/absent.jpg)",
+  ].join("\n\n");
+  const r = checkImages(md, dir);
+  assert.strictEqual(r.hard.length, 3, JSON.stringify(r.hard));
+  assert.ok(r.hard.some((m) => m.includes("fake.jpg") && m.includes("SVG/HTML")));
+  assert.ok(r.hard.some((m) => m.includes("tiny.jpg") && m.includes("small")));
+  assert.ok(r.hard.some((m) => m.includes("absent.jpg") && m.includes("missing")));
+}
+
+console.log("image checks: 4 sub-cases pass");

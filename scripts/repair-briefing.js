@@ -70,6 +70,11 @@ function collectFailures(date, briefingMd) {
     log(`WARN: no critique JSON found at ${path.basename(critiqueJson)} — repairing from linter findings only.`);
   }
   for (const h of lint(briefingMd).hard) {
+    // Image-file failures are fixed on disk (re-fetch or replace the file),
+    // never by editing the markdown — feeding them to the LLM invites it to
+    // "fix" the failure by deleting the image reference. Surface them in the
+    // PR instead.
+    if (h.startsWith("[images]")) continue;
     failures.push(`- LINTER: ${h}`);
   }
   return failures;

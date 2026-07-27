@@ -207,6 +207,41 @@ function checkNaming(md) {
   return { hard, warn: [] };
 }
 
+// Image references must point at real, valid raster files. Catches the
+// Edition #23 failure class: fetch-og's old placeholder fallback wrote SVG
+// markup into the .jpg path, which Pages served as image/jpeg -> broken
+// image on the live site. Magic-byte + size checks are the only reliable
+// tell (the file "existed" and had the right extension).
+function checkImages(md, baseDir = BRIEFINGS_DIR) {
+  const hard = [];
+  const re = /!\[[^\]]*\]\((\.\/[^)]+)\)/g;
+  let m;
+  while ((m = re.exec(md)) !== null) {
+    const rel = m[1];
+    const file = path.join(baseDir, rel);
+    if (!fs.existsSync(file)) {
+      hard.push(`Referenced image missing: ${rel} (fetch-og failed? fix the source or drop the image)`);
+      continue;
+    }
+    const buf = fs.readFileSync(file);
+    const ext = path.extname(file).toLowerCase();
+    if (buf.length < 2048) {
+      hard.push(`Image suspiciously small (${buf.length} bytes — placeholder?): ${rel}`);
+      continue;
+    }
+    const head = buf.slice(0, 8);
+    const isJpg = head[0] === 0xff && head[1] === 0xd8;
+    const isPng = head[0] === 0x89 && head[1] === 0x50 && head[2] === 0x4e && head[3] === 0x47;
+    const looksText = head.toString("utf8").trimStart().startsWith("<");
+    if ((ext === ".jpg" || ext === ".jpeg") && !isJpg) {
+      hard.push(`Not JPEG data in ${rel}${looksText ? " (SVG/HTML markup in a .jpg — the fetch-og placeholder bug)" : ""}`);
+    } else if (ext === ".png" && !isPng) {
+      hard.push(`Not PNG data in ${rel}`);
+    }
+  }
+  return { hard, warn: [] };
+}
+
 // --- main ------------------------------------------------------------------
 
 function lint(md) {
@@ -217,6 +252,7 @@ function lint(md) {
     ["source-overlap", checkSourceOverlap],
     ["banned-words", checkBannedWords],
     ["naming", checkNaming],
+    ["images", checkImages],
   ];
   const hard = [];
   const warn = [];
@@ -269,4 +305,5 @@ module.exports = {
   checkSourceOverlap,
   checkBannedWords,
   checkNaming,
+  checkImages,
 };

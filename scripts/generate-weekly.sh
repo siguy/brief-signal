@@ -282,6 +282,11 @@ run_lint() {
   [ "$LINT_STATUS" = "pass" ] && log "Lint: clean."
 }
 
+# Fetch story images BEFORE lint so the image validity checks (magic bytes,
+# size, existence) run against real files — and a failed fetch surfaces as a
+# lint hard failure instead of a silently broken image on the live site.
+npm run fetch-images >> "$LOG_FILE" 2>&1 || log "WARN: Some OG images failed to fetch."
+
 log "Stage 4b: critique + lint..."
 run_critique
 run_lint
@@ -304,7 +309,6 @@ fi
 # Stage 5: Fetch OG images, commit, push, open PR
 # ---------------------------------------------------------------------------
 log "--- Stage 5: Committing and opening PR ---"
-npm run fetch-images >> "$LOG_FILE" 2>&1 || log "WARN: Some OG images failed to fetch."
 
 git add content/briefings/
 git commit -m "Add briefing: ${MONDAY_DATE}"
