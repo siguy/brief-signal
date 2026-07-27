@@ -166,6 +166,8 @@ For each story:
 
 **Model-release coverage self-check:** list EVERY major model release or benchmark milestone found anywhere in the KBs, and where each landed (lead / big picture / quick hit / cut). Nothing major may be silently dropped — this is how we avoid missing a release like Kimi K3.
 
+**HIGH-signal disposition:** list EVERY podcast episode rated HIGH (and every deep dive) in the podcast KB, and where each landed (lead / big picture / quick hit / cut + one-line reason). A HIGH episode outranks a MEDIUM/LOW item for a Quick Hit slot by default — if a MEDIUM item takes a slot while a HIGH episode sits cut, justify the exception explicitly (fresher, more seller-relevant, or the HIGH episode's substance is already covered by a Big Picture story). Silence is not a disposition.
+
 **Proposed registry update:** if no "## Theme Registry" section was provided to you above, write "No registry provided this run" and skip straight to your Quick Hits — do not fabricate one. Otherwise: the registry informs selection — it never gates it (a new thread or standalone one-off may always lead on its own merits). For each Theme Registry arc that led or advanced this edition, one line: {theme name} — moved to: {new one-line "where it stands"}. Then, only where earned, list births and retirements:
 - NEW THEME: {name} — {why it earns a slot: gravity across ≥2 sources AND plausible staying power, not a one-off}
 - RETIRE (→ dormant): {name} — {hasn't led in ~4-5 editions}

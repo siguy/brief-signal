@@ -98,7 +98,7 @@ Score each remaining item by:
 
 Assign each surviving item to ONE of exactly three homes:
 - **The Big Picture** = the 2-3 stories with the most gravity and the clearest seller play. This is the spine of the briefing. Order them as a narrative arc — put stories that share a thread adjacent so the edition reads as a connected story, not a list.
-- **Quick Hits** = everything else worth a mention: a notable founder/company move, a builder pattern, a smaller release, a sharp stat. Condense each to ONE linked sentence. (This is where former "Founder Watch" and "Builder's Corner" material now lives — as one-liners, not standing sections.) Podcast-sourced items are allowed here.
+- **Quick Hits** = everything else worth a mention: a notable founder/company move, a builder pattern, a smaller release, a sharp stat. Condense each to ONE linked sentence. (This is where former "Founder Watch" and "Builder's Corner" material now lives — as one-liners, not standing sections.) Podcast-sourced items are allowed here. **Prefer HIGH-rated episodes:** when a HIGH-signal podcast episode or deep dive isn't a Big Picture story, it is the presumptive first claim on a Quick Hit slot — a MEDIUM/LOW novelty item only displaces it with an explicit reason (fresher, more seller-relevant, or the HIGH episode's substance already appears in a Big Picture story). The extraction pipeline already did the signal-rating work; selection should spend it, not ignore it.
 - **Our Play** = Google Cloud positioning only (see the dedicated rules below).
 
 There is no Builder's Corner or Founder Watch section. If a builder tool or a founder move is big enough to be a lead, it earns a Big Picture slot on its own merits; otherwise it is a Quick Hit.
