@@ -171,6 +171,34 @@ if [ -n "$STALE_KBS" ]; then
 fi
 
 # ---------------------------------------------------------------------------
+# GCP playbook staleness check (warn-only). The playbook is Stage 4b's ground
+# truth for product positioning; its claims go stale on a ~quarterly clock
+# (Cloud Next renames, earnings-call proof stats). Parses the "Last verified:
+# YYYY-MM-DD" line in content/gcp-playbook.md. Refresh procedure:
+# ~/.claude/skills/refresh-gcp-playbook/SKILL.md (run /refresh-gcp-playbook).
+# ---------------------------------------------------------------------------
+PLAYBOOK_FILE="$BRIEF_SIGNAL_DIR/content/gcp-playbook.md"
+PLAYBOOK_MAX_AGE_DAYS=90
+if [ -f "$PLAYBOOK_FILE" ]; then
+  PLAYBOOK_VERIFIED=$(grep -o 'Last verified: [0-9]\{4\}-[0-9]\{2\}-[0-9]\{2\}' "$PLAYBOOK_FILE" | head -1 | cut -d' ' -f3 || true)
+  if [ -n "$PLAYBOOK_VERIFIED" ]; then
+    VERIFIED_EPOCH=$(date -j -f %Y-%m-%d "$PLAYBOOK_VERIFIED" +%s 2>/dev/null || echo 0)
+    AGE_DAYS=$(( ( $(date +%s) - VERIFIED_EPOCH ) / 86400 ))
+    if [ "$VERIFIED_EPOCH" -eq 0 ]; then
+      log "WARN: Could not parse playbook 'Last verified' date ('$PLAYBOOK_VERIFIED')."
+    elif [ "$AGE_DAYS" -gt "$PLAYBOOK_MAX_AGE_DAYS" ]; then
+      log "WARN: GCP playbook last verified ${AGE_DAYS} days ago (>${PLAYBOOK_MAX_AGE_DAYS}) — product claims may be stale. Run /refresh-gcp-playbook."
+    else
+      log "Playbook freshness OK: verified ${AGE_DAYS} days ago (${PLAYBOOK_VERIFIED})."
+    fi
+  else
+    log "WARN: content/gcp-playbook.md has no 'Last verified: YYYY-MM-DD' line — staleness unknown. Run /refresh-gcp-playbook."
+  fi
+else
+  log "WARN: content/gcp-playbook.md not found — Stage 4b will draft Our Play without ground truth."
+fi
+
+# ---------------------------------------------------------------------------
 # Stage 4: Generate briefing (~5-10 min)
 # ---------------------------------------------------------------------------
 log "--- Stage 4: Generating briefing ---"
