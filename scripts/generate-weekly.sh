@@ -217,18 +217,58 @@ fi
 # which is what we want — avoids the UTC-midnight date-race that broke this
 # in a previous run.
 CRITIQUE_MD="scripts/logs/critique-${TODAY:-latest}.md"
-CRITIQUE_STATUS="unknown"
-if node scripts/critique-briefing.js >> "$LOG_FILE" 2>&1; then
-  CRITIQUE_STATUS="pass"
-  log "Stage 4b critique: no hard failures."
-else
-  CRITIQUE_EXIT=$?
-  if [ $CRITIQUE_EXIT -eq 2 ]; then
-    CRITIQUE_STATUS="hard_failures"
-    log "Stage 4b critique: HARD failures detected — see $CRITIQUE_MD"
+
+# Runs the critique and sets CRITIQUE_STATUS (pass / hard_failures / error).
+# A function because the repair loop below re-runs it after a repair pass.
+run_critique() {
+  CRITIQUE_STATUS="unknown"
+  if node scripts/critique-briefing.js >> "$LOG_FILE" 2>&1; then
+    CRITIQUE_STATUS="pass"
+    log "Critique: no hard failures."
   else
-    CRITIQUE_STATUS="error"
-    log "WARN: Critique pass errored (exit $CRITIQUE_EXIT). Continuing without quality review."
+    local exit_code=$?
+    if [ $exit_code -eq 2 ]; then
+      CRITIQUE_STATUS="hard_failures"
+      log "Critique: HARD failures detected — see $CRITIQUE_MD"
+    else
+      CRITIQUE_STATUS="error"
+      log "WARN: Critique pass errored (exit $exit_code). Continuing without quality review."
+    fi
+  fi
+}
+
+# Runs the deterministic linter (mechanical rules, no LLM) and sets
+# LINT_STATUS (pass / hard_failures / error).
+run_lint() {
+  LINT_STATUS="pass"
+  node scripts/lint-briefing.js "${TODAY:-}" >> "$LOG_FILE" 2>&1 || {
+    local exit_code=$?
+    if [ $exit_code -eq 2 ]; then
+      LINT_STATUS="hard_failures"
+      log "Lint: HARD failures detected — see scripts/logs/lint-briefing.log"
+    else
+      LINT_STATUS="error"
+      log "WARN: Linter errored (exit $exit_code). Continuing without lint."
+    fi
+  }
+  [ "$LINT_STATUS" = "pass" ] && log "Lint: clean."
+}
+
+log "Stage 4b: critique + lint..."
+run_critique
+run_lint
+
+# Stage 4c: ONE repair pass when anything hard-failed, then re-verify.
+# Deliberately not a loop — repeated LLM rewrites drift from the reviewed
+# draft; whatever survives one repair goes to the human via the PR body.
+if [ "$CRITIQUE_STATUS" = "hard_failures" ] || [ "$LINT_STATUS" = "hard_failures" ]; then
+  log "Stage 4c: repair pass (one shot)..."
+  if node scripts/repair-briefing.js "${TODAY:-}" >> "$LOG_FILE" 2>&1; then
+    log "Stage 4c repair applied. Re-verifying..."
+    run_critique
+    run_lint
+  else
+    log "WARN: Repair pass failed or was skipped — shipping draft with failures surfaced in PR."
   fi
 fi
 

@@ -271,3 +271,18 @@ Concrete rules:
   (default 7).** For gap-recovery (a skipped week) run both with `LOOKBACK_DAYS=14` so the podcast
   pull covers the full span. Change was minimal + backward-compatible; left uncommitted 2026-07-20
   pending Simon's review.
+
+### From the repair-loop live test (2026-07-26)
+
+- **An LLM repair pass asked to fix a broken URL will fabricate a plausible one.**
+  In the isolated live test, Gemini was told to fix `status/...` and minted a
+  syntactically-valid fake tweet ID that sailed through the linter. Rule: any
+  automated rewrite step must carry a deterministic fabrication guard — the
+  repaired text may never contain a URL that wasn't in the input (removing
+  links is fine; minting them is not). Enforced in scripts/repair-briefing.js;
+  prompt instructions alone are not sufficient (belt AND suspenders — the
+  guard rejects the repair even if the instruction is ignored).
+- **Live-test LLM-calling code in an isolated sandbox before wiring it into the
+  unattended pipeline.** Unit tests with fixtures could never have caught the
+  URL fabrication — only a real model call did. Same lesson as the PR #68
+  fence-stripping bug: the failure modes worth catching live in real responses.
