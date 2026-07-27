@@ -106,7 +106,7 @@ There is no Builder's Corner or Founder Watch section. If a builder tool or a fo
 (The briefing also carries a standing **Seller's Edge** section — see its dedicated rules below — but it is a *teaching* section, not a home for KB items; story assignment is only ever to the three homes above.)
 
 **Source diversity (hard rules — do not violate):**
-- **The same exact source URL may anchor more than one Big Picture story ONLY if BOTH hold:** (a) the citations are at least 30 minutes apart in the episode (or clearly different segments of an article), AND (b) they capture different speakers or different topics. A 90-minute podcast can legitimately anchor two distinct stories; lazy duplication of the same point (same speaker, adjacent timestamps) is forbidden. Two *different* episodes from the same show/host are different URLs and are fine.
+- **The same exact source URL may anchor more than one Big Picture story ONLY if BOTH hold:** (a) the citations are at least 30 minutes apart in the episode (or clearly different segments of an article), AND (b) they capture different speakers or different topics. This rule is about citations ACROSS two different stories — multiple citations of the same episode at nearby timestamps WITHIN one story are always fine and are not a violation. A 90-minute podcast can legitimately anchor two distinct stories; lazy duplication of the same point (same speaker, adjacent timestamps) is forbidden. Two *different* episodes from the same show/host are different URLs and are fine.
 - **No person or company is the headline subject of more than one Big Picture story.** Being mentioned in passing elsewhere is fine; being the headline subject twice is not.
 - **No statistic, quote, or dollar figure is repeated anywhere in the briefing.** If a figure appears in the TLDR or a Big Picture story, don't restate it in a Quick Hit or Our Play. Pick the spot it lands hardest.
 - **The top two Big Picture stories must come from different shows/channels/sources.**
@@ -421,7 +421,7 @@ Before finalizing, verify:
 
 **Sourcing & fidelity**
 - [ ] Every claim links to its source; every link has a time label (N min read/watch) when data is available
-- [ ] **The same exact source URL does not anchor two Big Picture stories** unless timestamps are 30+ min apart AND cover different speakers/topics. (Two *different* episodes from the same show are different URLs — that is allowed.)
+- [ ] **The same exact source URL does not anchor two Big Picture stories** unless timestamps are 30+ min apart AND cover different speakers/topics. (Two *different* episodes from the same show are different URLs — that is allowed. Multiple citations of one episode WITHIN a single story are always allowed — do not flag them.)
 - [ ] **No person or company is the headline subject of more than one Big Picture story**
 - [ ] **No statistic, quote, or dollar figure is repeated anywhere in the briefing**
 - [ ] **The top two Big Picture stories come from different shows/channels/sources**
