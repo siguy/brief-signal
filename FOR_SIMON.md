@@ -305,3 +305,55 @@ Build this when you notice you're consistently missing signal from audio-only so
 - **Repetition-loop guard — ✅ BUILT.** `truncateRepetition()` in `generate-briefing.js` now catches the Edition #22 triplication bug automatically and truncates to the first complete copy, with tests in `scripts/generate-briefing.test.js`.
 - **Web analytics — ✅ BUILT (2026-07-20).** GoatCounter is live: pageviews + scroll-depth + audio-play events on the deployed site, plus `npm run analytics` to pull a per-edition read-signal. See "Watching What Gets Read" above. Next optional step (your call): wire the signal into the generator's story selection, and/or add scroll-depth heatmaps or traffic-source tracking.
 - **Maybe Vercel.** Worth considering not for analytics alone but for **PR preview deployments** — every briefing PR would get a live rendered URL, so Monday review happens on the real page instead of raw markdown. ~1-2 hours, low risk. On hold.
+
+---
+
+## The Day the Briefing Learned to Check Its Own Work (2026-07-26)
+
+This was the biggest single-day upgrade since the v2 rebuild, and it started
+with an embarrassing discovery: **the Seller's Edge section had been dead for
+five editions and nobody noticed.** You approved it in June, it ran three
+times, and then the v2 prompt rebuild silently dropped it — because the spec
+only ever lived in project memory, not in the prompt file the generator
+actually reads. The lesson a senior engineer would frame on the wall: *a
+commitment that isn't encoded in the artifact the machine consumes will not
+survive a rewrite of that artifact.* Now every editorial commitment has a
+file the pipeline reads: the prompt carries the Seller's Edge spec and a
+used-so-far ledger, themes live in themes.md, and product truth lives in
+gcp-playbook.md.
+
+**The linter and the repair loop (PR #75).** The LLM critique kept scoring
+the same mechanical defect "soft" one run and "hard" the next — so string
+rules now get string checks (`lint-briefing.js`, 12 tests), and hard failures
+trigger ONE targeted Gemini repair pass before the PR opens. The war story:
+in the live sandbox test, the repair model was asked to fix a truncated URL
+and **invented a plausible fake tweet ID** that sailed through the linter.
+Prompt instructions didn't stop it; a deterministic guard did — the repaired
+text may never contain a URL the draft didn't have. Two lessons worth
+keeping: (1) never trust an instruction where you can enforce an invariant,
+and (2) unit tests with fixtures could never have caught this — only a live
+model call did. Test LLM code against the real thing before it runs
+unattended.
+
+**The playbook and the research sweep (PRs #76, #78).** "Our Play" had been
+generated from Gemini's training data — which is how a draft recommended
+hosting a model two paragraphs after reporting it faced sanctions. Six
+parallel research agents (official docs, exec interviews, Reddit/HN
+practitioners, analysts, AWS/Azure cross-check, pricing/tuning docs) built a
+verified ground-truth file instead. The competitive check was the humbling
+part: two of our six "differentiators" were already parity — AWS and Azure
+both carry multiple frontier labs and both ship open agent frameworks with
+A2A. What's actually distinct: Google is the only cloud whose *own* frontier
+lab is on-platform. And the docs check caught the community quoting a stale
+grounding price ($35/1K; it's been $14/1K + 5K free since January). The
+refresh process is now standing machinery: `/refresh-gcp-playbook` after
+Cloud Next, I/O, or earnings, with a 90-day staleness warning in the weekly
+pipeline.
+
+**The signal-rating lesson (PR #77).** You asked why the Quick Hits pointed
+at novelty items while HIGH-rated episodes sat unused. Root cause: the
+extraction pipeline rates every episode, but selection never *spent* those
+ratings. Now the lineup must disposition every HIGH episode explicitly —
+"silence is not a disposition." The general principle: **if one stage of a
+pipeline computes a signal, a later stage must consume it, or it's
+decoration.**
