@@ -288,6 +288,43 @@ function build() {
   });
   fs.writeFileSync(path.join(DIST_DIR, 'subscribe', 'index.html'), subscribePage);
 
+  // Build Seller's Edge library page — every edition's teach, compiled
+  // newest-first, so the section compounds into a field guide instead of
+  // scrolling away with each week's edition.
+  ensureDir(path.join(DIST_DIR, 'sellers-edge'));
+  const teaches = briefings
+    .map(b => {
+      const m = b.body.match(/^## (Seller(?:'|’)s Edge[^\n]*)\n([\s\S]*?)(?=^## |(?![\s\S]))/m);
+      if (!m) return null;
+      return { briefing: b, heading: m[1].trim(), md: m[2].trim() };
+    })
+    .filter(Boolean);
+  const editionBase = BASE_PATH ? `${BASE_PATH}/briefings` : '../briefings';
+  const teachSections = teaches.map(t => {
+    const ed = t.briefing.edition ? `Edition #${t.briefing.edition}` : t.briefing.slug;
+    return `<section class="our-play-section">
+      <h2>${t.heading}</h2>
+      <p class="archive-date"><a href="${editionBase}/${t.briefing.slug}/">${ed} — ${t.briefing.date || t.briefing.slug}</a></p>
+      ${renderMarkdown(t.md)}
+    </section>`;
+  }).join('\n');
+  const sellersEdgeContent = `<article>
+    <p class="subtitle">One durable mental model per edition — how to think about selling into the AI market, not just what happened this week. Newest first.</p>
+    ${teachSections}
+  </article>`;
+  const sellersEdgePage = render(template, {
+    title: "Seller's Edge",
+    subtitle: 'The compounding field guide',
+    url: '/sellers-edge/',
+    audio_player: '',
+    feedback_cta: '',
+    sources: '',
+    base: getBase(1), // dist/sellers-edge/ → 1 level deep
+    content: sellersEdgeContent,
+  });
+  fs.writeFileSync(path.join(DIST_DIR, 'sellers-edge', 'index.html'), sellersEdgePage);
+  console.log(`Built Seller's Edge page (${teaches.length} teach(es))`);
+
   console.log(`Built ${briefings.length} briefing(s):`);
   for (const b of briefings) {
     console.log(`  - ${b.slug}: ${b.title || '(untitled)'}`);
