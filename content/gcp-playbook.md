@@ -50,9 +50,25 @@ gesture at the strategic direction instead of inventing specifics.
   Ironwood** (Google's claim), TPU 8t for training. Lead inference-economics
   conversations with 8i; Ironwood is what customers run today.
 - **Provisioned Throughput (PT)** — fixed-cost, fixed-term reserved model
-  capacity; a 1-year PT commitment is priced ~26% below the 1-month rate.
-  (This — not "CUDs" — is the commitment vehicle for model serving.) Batch is
-  ~50% below standard pay-as-you-go.
+  capacity in 1-week / 1-month / 3-month / 1-year plans; a 1-year commitment
+  is priced 26% below the 1-month rate. (This — not "CUDs" — is the
+  commitment vehicle for model serving.) Covers Gemini and Claude (Claude PT
+  is ordered through the account rep — a built-in reason to get the rep in
+  the room).
+- **Current Gemini pricing** (Standard tier, global, per 1M tokens, verified
+  2026-07-26): Gemini 3.1 Pro $2 in / $12 out (≤200K context; higher beyond,
+  and >200K context bills ALL input at the long-context rate); 3.6 Flash
+  $1.50 / $7.50; 3.5 Flash-Lite $0.30 / $2.50. Tier levers: Priority = 1.8x
+  Standard; **Flex and Batch = 50% off Standard**; tuned-model inference =
+  1.5x base. Claude on-platform per-token prices are not published on
+  Google's pricing page — quote via Anthropic's pricing or the account rep.
+- **Tuning & distillation** — supervised fine-tuning (LoRA/QLoRA adapters)
+  covers Gemini 3.5 Flash, 3.1 Flash-Lite, and the 2.5 family — **not 3.1
+  Pro**; RL fine-tuning and preference tuning also offered. For open-weight
+  students (the house Gemma path) the vehicle is **"distillation fine-tuning
+  for open models"** (GenAI SDK: Gemini teacher → Gemma/Llama student); the
+  managed "Gemini Distillation Service" is Gemini→Gemini only (early access)
+  — don't cite it for the Gemma story. No Claude tuning exists.
 - **Context caching** — implicit, on by default, 90% discount on cached input
   tokens (Gemini 2.5+). Table stakes, not a differentiator: Bedrock offers the
   same 90%. Cache and batch discounts don't stack.
@@ -88,9 +104,11 @@ MCP+A2A frameworks. The honest distinctions are below.)*
 4. **Search-grounded verifiability, framed on index and coverage.** All three
    clouds now ship "web grounding with citations" — but AWS's works only on
    its Nova models and Azure grounds on Bing. Google grounds every first-party
-   model on the Google Search index. Concede the limits: community reports
-   inconsistent grounding behavior, and at ~$35 per 1,000 grounded requests it
-   is priced for high-stakes verification, not high-volume agent traffic.
+   model on the Google Search index, with 5,000 free grounded queries/month
+   and $14 per 1,000 after (verified 2026-07-26 — down sharply from the
+   legacy ~$35 figure still circulating in community threads; correcting a
+   founder's stale price objection is itself a credibility move). Concede the
+   limit: community reports of inconsistent grounding behavior are real.
 5. **Data gravity with an anti-lock-in twist.** BigQuery-native grounding
    keeps agents, data, and governance in one platform ("fewer moving parts" —
    not "only we can"), and Cross-Cloud Lakehouse inverts the lock-in
@@ -117,7 +135,7 @@ MCP+A2A frameworks. The honest distinctions are below.)*
 | The founder says | The architecture conversation | Surfaces |
 |---|---|---|
 | "Agent costs are exploding" | Decompose the bill: cache hit rate, model turns that could be code, frontier tokens doing small-model work. Route by step difficulty. | Model Garden routing, context caching, Flash tier, TPU 8i at scale |
-| "We can't trust the outputs" | Ground answers in the live web or their own corpus; make citations part of the product. Watch grounding cost at volume. | Grounding with Google Search, Agent Search / RAG |
+| "We can't trust the outputs" | Ground answers in the live web or their own corpus; make citations part of the product. 5K free queries/month, $14/1K after. | Grounding with Google Search, Agent Search / RAG |
 | "We're dependent on one model" (incl. sanction/deprecation risk) | Side-by-side eval + swap path; own the harness so the model is a part, not the foundation. | Model Garden, ADK, A2A |
 | "Prototype works, production doesn't" | Managed runtime with sessions, memory, evals, and observability instead of hand-rolled infra. | Agent Runtime, Agent Evaluation/Simulation |
 | "Our data is siloed / lives on another cloud" | Put the agents where the data lives — or query it where it is, zero-copy. | BigQuery, Cross-Cloud Lakehouse, Knowledge Catalog |
