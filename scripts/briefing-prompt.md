@@ -311,7 +311,9 @@ The dedicated home for **product positioning** — connecting the week's market 
 
 This is the dedicated space for Google Cloud in each briefing. Everything else is pure market intelligence.
 
-**Format (strict):** one framing sentence that ties the edition's themes to a single GCP position, then **exactly three bold, named motions**. Each motion = a named play → the specific product surface → what the rep actually does with it. No sub-headings. No CTA tack-ons ("Conversation starter", "Try this week"). No standalone product list.
+**Format (strict):** one framing sentence that ties the edition's themes to a single GCP position, then **exactly three bold, named motions**. Each motion follows **Signal → Why GCP wins → The move**: the concrete thing this week's stories show a founder saying or facing → ONE differentiator (with its "why") from the GCP Playbook provided in your context → the specific action the rep takes next (the question to ask, the thing to whiteboard, the eval to propose). No sub-headings. No CTA tack-ons ("Conversation starter", "Try this week"). No standalone product list.
+
+**Ground every product claim.** Only claims from the GCP Playbook in your context (or news in this week's KBs) may appear in product positioning. If a play needs a claim that isn't there, gesture at the strategic direction instead of inventing specifics. When no playbook was provided in context, fall back to the product reference table below and keep claims conservative.
 
 **Each motion must be execution detail, not a market-reaction quote (Principle 5).** "Lead with Model Garden, not a single model: run Gemini, Claude, and open weights behind one API; adopt the open weight for the jobs it wins" is a motion. A quote about how the market feels about cloud is not — and a quote that argues *against* using cloud is a hard cut.
 
@@ -328,11 +330,11 @@ This is the dedicated space for Google Cloud in each briefing. Everything else i
 | Category | Products | Good trigger |
 |----------|----------|--------------|
 | AI Platform | **Gemini Enterprise Agent Platform (FKA Vertex AI)** — "Agent Platform" for short, Model Garden (200+ models) | AI infrastructure themes |
-| Models | Gemini family (2.5 Pro, 2.5 Flash), Anthropic Claude (available on the Agent Platform) | Model comparison discussions |
+| Models | Gemini family (3.x Pro/Flash), Anthropic Claude (Fable 5 + Opus on the Agent Platform), Gemma (open) | Model comparison discussions |
 | Code | Gemini Code Assist, **Antigravity** (agentic IDE), Gemini CLI + Agent Skills | Developer productivity themes |
-| Agents | Agent Builder, Agent Development Kit (ADK), A2A protocol | Agentic AI patterns |
+| Agents | Agent Studio / Agent Designer (FKA Agent Builder), **Agent Runtime** (FKA Agent Engine), Agent Development Kit (ADK), A2A protocol | Agentic AI patterns |
 | Security | Security Command Center, Mandiant threat intelligence | Security/defense themes |
-| Compute | Cloud Run, GKE, **TPUs (Ironwood, 7th-gen)** | Deployment/scaling themes |
+| Compute | Cloud Run, GKE, **TPUs (Ironwood GA; TPU 8i inference / 8t training announced Next '26)** | Deployment/scaling themes |
 | Data | BigQuery, AlloyDB, Spanner, Cloud SQL, Looker, Dataplex, **Agentic Data Cloud** (unified for agents, Knowledge Catalog, Data Agent Kit, zero-ETL via Iceberg REST + Cross-Cloud Interconnect), **Gemini Embedding 2** (multimodal embeddings) | Data pipeline / RAG / siloed-data themes |
 | App Platform | Firebase, Cloud Functions | Mobile/web/serverless themes |
 | Program | Google for Startups Cloud ($200K-$350K credits) | Cost/getting-started themes |
