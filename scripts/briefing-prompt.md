@@ -103,6 +103,8 @@ Assign each surviving item to ONE of exactly three homes:
 
 There is no Builder's Corner or Founder Watch section. If a builder tool or a founder move is big enough to be a lead, it earns a Big Picture slot on its own merits; otherwise it is a Quick Hit.
 
+(The briefing also carries a standing **Seller's Edge** section — see its dedicated rules below — but it is a *teaching* section, not a home for KB items; story assignment is only ever to the three homes above.)
+
 **Source diversity (hard rules — do not violate):**
 - **The same exact source URL may anchor more than one Big Picture story ONLY if BOTH hold:** (a) the citations are at least 30 minutes apart in the episode (or clearly different segments of an article), AND (b) they capture different speakers or different topics. A 90-minute podcast can legitimately anchor two distinct stories; lazy duplication of the same point (same speaker, adjacent timestamps) is forbidden. Two *different* episodes from the same show/host are different URLs and are fine.
 - **No person or company is the headline subject of more than one Big Picture story.** Being mentioned in passing elsewhere is fine; being the headline subject twice is not.
@@ -135,7 +137,7 @@ Podcast sources provide opinion, analysis, and predictions — not news. Handle 
 
 ## Briefing Template
 
-The briefing has exactly four parts, in this order: **TLDR → The Big Picture → Quick Hits → Our Play.** There is no Builder's Corner and no Founder Watch. Use this exact frontmatter and structure:
+The briefing has exactly five parts, in this order: **TLDR → The Big Picture → Quick Hits → Seller's Edge → Our Play.** There is no Builder's Corner and no Founder Watch. Use this exact frontmatter and structure:
 
 ```markdown
 ---
@@ -175,6 +177,10 @@ Everything else worth a mention — smaller releases, a founder/company move, a 
 
 - **[{Bold claim} (2 min read)](source-url)** — one sentence expanding on it.
 - **[{Bold claim} (26 min watch)](source-url)** — one sentence, attributed to the speaker if it's a podcast take.
+
+## Seller's Edge: {The Teach, as a Short Declarative Title}
+
+ONE teachable mental model that upgrades how a rep *thinks* about selling into the AI market — not what happened this week. ~150-200 words, two paragraphs: the model (grounded in this week's signal, with continuity to a prior edition's teach when it connects), then **the behavior change** — what the rep does differently in the next meeting. See the dedicated rules in the Section Voice Guide.
 
 ## Our Play
 
@@ -255,6 +261,27 @@ Every conversation-starter, follow-up question, and "Your angle" bullet must use
 - "Which workload would hurt most to lose?"
 
 The test for every question line: could a sales rep say this verbatim in a customer meeting and the customer would answer with a concrete fact? If the customer would have to ask "what do you mean?", the question is fuzzy — rewrite it.
+
+### "Seller's Edge" (dedicated section)
+
+The briefing's **compounding layer**: one teachable mental model per edition that makes a rep *smarter about selling into the AI market*, not just more current. A rep who reads ten editions should think differently in meetings — that's the differentiator vs. a generic "what happened in AI this week" newsletter. It sits between Quick Hits and Our Play.
+
+**What it is / is not:**
+- It teaches a durable model of how this market works — distinct from "Your angle" (situational talking points) and "Our Play" (product positioning). No product pitches here.
+- The best teach is **a belief founders already operate by that sellers usually don't.** Meet the founder's mental model, don't sell against it.
+- **Prefer a teach tied to this week's source signal** — ground it in the edition's stories with citations, so it reads as earned insight, not a lecture.
+- **Build continuity:** when the teach extends a prior edition's teach, say so explicitly ("Edition #19 taught X; this week adds Y"). The section compounds only if it references its own history.
+- **Never build the teach on a strawman of how GCP reps actually sell.** (Documented correction: "stop competing on cluster size" was a caricature — reps never did that. Describe the real levers, not a cartoon to knock down.)
+
+**Format:** `## Seller's Edge: {Short Declarative Title}` — ~150-200 words, two paragraphs: (1) the model, grounded in this week's signal; (2) **the behavior change** — the concrete thing the rep does differently in the next founder meeting.
+
+**Teaches used so far (do not repeat; extend or add):**
+- #17 — *Don't sell the model, sell the substrate* (models commoditize; durable value is beneath and above them)
+- #18 — *When everyone is supply-constrained, compete on availability, price, flexibility, and ease* (the scarce good is dependable, usable access — never a raw-capacity overclaim)
+- #19 — *Two-layer pricing: intelligence-per-dollar vs. dollars-per-outcome* (diagnose which layer the founder competes on)
+- #23 — *The invoice is an architecture decision* (agentic cost is engineered via harness design, not just priced)
+
+Candidate future teaches: reference-architecture literacy (whiteboard the agent stack: context layer + skill registry + private evals + sandboxes — advisor, not vendor). Add new teaches to this list as editions ship.
 
 ### "Our Play" (dedicated section)
 The dedicated home for **product positioning** — connecting the week's market themes to what Google shipped, announced, or signaled, with a clear "here's the angle for founders" frame.
@@ -359,7 +386,7 @@ When in doubt: every hyperscaler is squeezed. The GCP story is about *workload m
 - **Opinionated** — Take a stance on what matters and what's noise
 - **Connective** — Link patterns across items. "This reminds me of..." energy.
 - **Action-oriented** — Every section should make the reader want to do something
-- **Concise** — Target **~1,700-1,800 words total** (hard ceiling ~2,000). Big Picture stories ~250-300 words each; the angle block ~90 words; Quick Hits one sentence each; Our Play ~150 words. If you're over, cut a Quick Hit or tighten a story — never pad.
+- **Concise** — Target **~1,850-2,000 words total** (hard ceiling ~2,200). Big Picture stories ~250-300 words each; the angle block ~90 words; Quick Hits one sentence each; Seller's Edge ~150-200 words; Our Play ~150 words. If you're over, cut a Quick Hit or tighten a story — never pad.
 
 ## Writing Pattern
 
@@ -377,12 +404,13 @@ Readers are sales reps scanning on Monday morning — they need the "so what" in
 Before finalizing, verify:
 
 **Structure & length**
-- [ ] Exactly four parts: TLDR → The Big Picture → Quick Hits → Our Play. **No Builder's Corner, no Founder Watch section.**
+- [ ] Exactly five parts: TLDR → The Big Picture → Quick Hits → Seller's Edge → Our Play. **No Builder's Corner, no Founder Watch section.**
+- [ ] Seller's Edge is ONE teach (~150-200 words) ending in a concrete behavior change; it does not repeat a prior edition's teach (see the used-so-far list) and contains no product positioning
 - [ ] The Big Picture has **exactly 2-3 stories**, each with a themed heading and (one) image
 - [ ] Quick Hits has **3-6 bullets**, each ONE linked sentence with a time label
 - [ ] Our Play is **one framing sentence + exactly three named motions** (no sub-headings, no CTA tack-ons)
 - [ ] **TLDR is 4-5 bullets with bold hooks, never prose; each bullet is one scannable sentence**
-- [ ] Length is tight — roughly **1,200-1,500 words of prose** (≈1,700-2,000 counting links/markdown). Being OVER is the failure to catch; shorter is fine as long as the 2-3 lead stories are complete. Never flag "too short" as a reason to pad.
+- [ ] Length is tight — roughly **1,350-1,650 words of prose** (≈1,850-2,200 counting links/markdown). Being OVER is the failure to catch; shorter is fine as long as the 2-3 lead stories are complete. Never flag "too short" as a reason to pad.
 
 **Selection**
 - [ ] The lead story passes the lead test (gravity across sources × sets an agenda × a real seller play) — not just "most bookmarked"
