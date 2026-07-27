@@ -108,6 +108,17 @@ function readThemeRegistry() {
   return fs.readFileSync(THEMES_PATH, "utf-8");
 }
 
+// Ground truth for product positioning ("Our Play" + "Where the GCP
+// opportunity is" lines). Stage 4b-only, like the registry is 4a-only:
+// the lineup pass writes rough seller-play one-liners that 4b re-derives,
+// so feeding the playbook twice would just double the token cost.
+const PLAYBOOK_PATH = path.join(__dirname, "..", "content", "gcp-playbook.md");
+
+function readGcpPlaybook() {
+  if (!fs.existsSync(PLAYBOOK_PATH)) return "";
+  return fs.readFileSync(PLAYBOOK_PATH, "utf-8");
+}
+
 function getTodayDate() {
   const d = new Date();
   return d.toISOString().split("T")[0];
@@ -380,11 +391,15 @@ ${lineup ? `You already planned this story lineup for this edition. Expand it in
 ${kbContent}${previousContext}`;
 
   console.log(`\nStage 4b: drafting Edition #${edition} (gemini-2.5-flash)...`);
+  const gcpPlaybook = readGcpPlaybook();
+  const stage4bSystem = gcpPlaybook
+    ? `${systemPrompt}\n\n## GCP Playbook (ground truth for "Our Play" and "Where the GCP opportunity is" — only claims from this playbook or the week's KBs may appear in product positioning)\n\n${gcpPlaybook}`
+    : systemPrompt;
   const response = await ai.models.generateContent({
     model: "gemini-2.5-flash",
     contents: userMessage,
     config: {
-      systemInstruction: systemPrompt,
+      systemInstruction: stage4bSystem,
     },
   });
   let text = response.text;
@@ -423,6 +438,7 @@ module.exports = {
   truncateRepetition,
   countWords,
   readThemeRegistry,
+  readGcpPlaybook,
   extractProposedThemes,
   lineupTask,
 };
