@@ -303,11 +303,11 @@ This is the dedicated space for Google Cloud in each briefing. Everything else i
 | Category | Products | Good trigger |
 |----------|----------|--------------|
 | AI Platform | **Gemini Enterprise Agent Platform (FKA Vertex AI)** — "Agent Platform" for short, Model Garden (200+ models) | AI infrastructure themes |
-| Models | Gemini family (2.5 Pro, 2.5 Flash), Anthropic Claude (available on the Agent Platform) | Model comparison discussions |
+| Models | Gemini family (3.x Pro/Flash), Anthropic Claude (Fable 5 + Opus on the Agent Platform), Gemma (open) | Model comparison discussions |
 | Code | Gemini Code Assist, **Antigravity** (agentic IDE), Gemini CLI + Agent Skills | Developer productivity themes |
-| Agents | Agent Builder, Agent Development Kit (ADK), A2A protocol | Agentic AI patterns |
+| Agents | Agent Studio / Agent Designer (FKA Agent Builder), **Agent Runtime** (FKA Agent Engine), Agent Development Kit (ADK), A2A protocol | Agentic AI patterns |
 | Security | Security Command Center, Mandiant threat intelligence | Security/defense themes |
-| Compute | Cloud Run, GKE, **TPUs (Ironwood, 7th-gen)** | Deployment/scaling themes |
+| Compute | Cloud Run, GKE, **TPUs (Ironwood GA; TPU 8i inference / 8t training announced Next '26)** | Deployment/scaling themes |
 | Data | BigQuery, AlloyDB, Spanner, Cloud SQL, Looker, Dataplex, **Agentic Data Cloud** (unified for agents, Knowledge Catalog, Data Agent Kit, zero-ETL via Iceberg REST + Cross-Cloud Interconnect), **Gemini Embedding 2** (multimodal embeddings) | Data pipeline / RAG / siloed-data themes |
 | App Platform | Firebase, Cloud Functions | Mobile/web/serverless themes |
 | Program | Google for Startups Cloud ($200K-$350K credits) | Cost/getting-started themes |
