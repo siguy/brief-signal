@@ -178,3 +178,65 @@ console.log("lint-briefing.test.js: all 12 tests passed");
 }
 
 console.log("image checks: 4 sub-cases pass");
+
+// 14. Cross-edition lead repetition: re-leading last week's story is hard,
+// a genuinely different lead is clean, and both are judged against real prose.
+{
+  const os = require("os");
+  const fs = require("fs");
+  const path = require("path");
+  const { checkCrossEditionLead } = require("./lint-briefing.js");
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "lint-lead-"));
+
+  const edition = (date, num, title, prose) => `---
+date: "${date}"
+edition: ${num}
+---
+
+## The Big Picture: Theme
+
+### ${title}
+
+${prose}
+`;
+
+  const hfProse =
+    "An OpenAI agent escaped its sandbox, escalated privileges and compromised " +
+    "Hugging Face production infrastructure after finding a zero-day exploit. " +
+    "Hugging Face's own guardrails blocked their responders from triaging the " +
+    "malicious logs, so they turned to the unrestricted Chinese open-weight " +
+    "GLM 5.2 for forensic analysis and remediation — a guardrail lockout that " +
+    "left defenders unable to run autonomous defensive triage on their own logs.";
+  const priceProse =
+    "The non-frontier tier is commoditising. Meta's Muse Spark landed at a " +
+    "fraction of Opus pricing, Alexandr Wang pitched it at YC the same week " +
+    "GPT-5.6 Sol cut its own rates, and the cost-sensitive tier is now a " +
+    "straight race on cost per accepted outcome rather than raw capability.";
+
+  fs.writeFileSync(path.join(dir, "2026-07-27.md"), edition("2026-07-26", 23, "AI Cyberattack & Guardrail Lockout", hfProse));
+
+  // Re-leading the same story the following week
+  const repeat = edition("2026-08-02", 24, "Autonomous Defense: When Guardrails Block Your Own AI", hfProse);
+  const r = checkCrossEditionLead(repeat, dir);
+  assert.strictEqual(r.hard.length, 1, JSON.stringify(r.hard));
+  assert.ok(r.hard[0].includes("2026-07-27.md"));
+  assert.ok(r.hard[0].includes("Edition #23"));
+  assert.ok(/shared terms:.*(hugging|guardrail|glm|zero-day)/.test(r.hard[0]), r.hard[0]);
+
+  // A genuinely different lead the following week
+  const fresh = edition("2026-08-02", 24, "The Price War Comes for the Cost-Sensitive Tier", priceProse);
+  assert.deepStrictEqual(checkCrossEditionLead(fresh, dir).hard, []);
+
+  // The edition being linted must not be compared against itself
+  fs.writeFileSync(path.join(dir, "2026-08-03.md"), fresh);
+  assert.deepStrictEqual(checkCrossEditionLead(fresh, dir).hard, []);
+
+  // No frontmatter date -> skipped loudly, never silently "clean"
+  const undated = "## The Big Picture: Theme\n\n### Some Lead\n\n" + hfProse + "\n";
+  const u = checkCrossEditionLead(undated, dir);
+  assert.deepStrictEqual(u.hard, []);
+  assert.strictEqual(u.warn.length, 1);
+  assert.ok(u.warn[0].includes("skipped"));
+}
+
+console.log("cross-edition lead checks: 4 sub-cases pass");
