@@ -130,13 +130,29 @@ function checkTldrHooks(md) {
   return { hard, warn: [] };
 }
 
+// An angle block must close with the one line where GCP positioning is allowed.
+//
+// The heading matched with a trailing colon only, which silently disabled this
+// entire check the moment the format changed: Edition #23 shipped
+// "**Your angle with founders:**" and was checked; Edition #24 shipped
+// "**Your angle with founders**" (no colon) and was NOT — nothing verified its
+// closing line. Match the heading with the colon optional so a punctuation
+// change can never switch a lint rule off again.
+//
+// Both labels are accepted: "Where GCP wins:" is the current format (see the
+// Section Voice Guide), "Where the GCP opportunity is" is what editions up to
+// #23 used. Either satisfies the rule — what matters is that the block ends by
+// naming the deal motion, not which words introduce it.
+const ANGLE_HEADING = /\*\*Your angle with founders:?\*\*/;
+const ANGLE_CLOSER = /Where GCP wins|Where the GCP opportunity is/;
+
 function checkAngleBlocks(md) {
   const hard = [];
   for (const s of bigPictureStories(md)) {
-    if (s.body.includes("**Your angle with founders:**")) {
-      if (!s.body.includes("Where the GCP opportunity is")) {
+    if (ANGLE_HEADING.test(s.body)) {
+      if (!ANGLE_CLOSER.test(s.body)) {
         hard.push(
-          `Story "${s.title}" has a "Your angle" block but no "Where the GCP opportunity is" line`
+          `Story "${s.title}" has a "Your angle" block but no closing "Where GCP wins:" line`
         );
       }
     }

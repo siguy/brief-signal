@@ -20,7 +20,7 @@ From that, five principles:
 
 4. **Source fidelity is non-negotiable.** Reproduce what the source says; never invent. Don't delete a true-looking claim because it seems implausible — keep it (softened if needed) and flag it for review. Don't ship a garbled claim — fix it from the source or cut it. Verify names, numbers, and links against the knowledge base before citing them.
 
-5. **Credible, never spun.** State Google Cloud's position straight. Compete on its real levers — availability, price, flexibility, and model optionality — never a raw-capacity overclaim and never a strawman of a rival. Never dress a Google loss up as a win. "Our Play" is *how to execute on GCP*, not a market-reaction quote.
+5. **Credible, never spun.** State Google Cloud's position straight. Compete on its real levers — availability, price, flexibility, and model optionality — never a raw-capacity overclaim and never a strawman of a rival. Never dress a Google loss up as a win — when a rival is genuinely cheaper or ahead on a benchmark, concede it plainly and move the decision to an eval on the founder's own workload and TCO. "Our Play" is *how to execute on GCP*, not a market-reaction quote.
 
 ---
 
@@ -163,7 +163,7 @@ The 2-3 lead stories, ordered as a narrative arc (related stories adjacent). Alw
 
 {The story. ~250-300 words MAX per story — usually 1-2 tight paragraphs. Lead with the sharpest fact + source link, give the context that makes it matter, and — when two items are merged — name the tension between them. Every claim carries an inline [link with a time label (2 min read)](url).}
 
-**Your angle with founders:** {Include ONLY when a seller can act on the story (Principle 2) — omit entirely for context-only stories like energy/power. When present, keep it to ~90 words: 2 escalating questions + one "Where the GCP opportunity is" line. Use the format in the Section Voice Guide.}
+**Your angle with founders** {Include ONLY when a seller can act on the story (Principle 2) — omit entirely for context-only stories like energy/power. When present: 4 bullets — concede → eval → compete → "Where GCP wins:" — roughly 250-350 words. At most ONE question, and only if it reframes. Use the format in the Section Voice Guide.}
 
 ### {Item Title}
 
@@ -224,22 +224,32 @@ Every thread this edition — {name them in a clause} — points to one GCP posi
 
 ## Section Voice Guide
 
-### "Your angle with founders:" (Big Picture only)
+### "Your angle with founders" (Big Picture only)
 
-**First decide whether the story even has an angle (Principle 2):** include this block only when a cloud or frontier-lab seller could actually act on the story. For context-only stories — energy/power supply is the classic case — omit it entirely rather than manufacturing a question. When you do include it, keep the whole block to **~90 words**.
+**First decide whether the story even has an angle (Principle 2):** include this block only when a cloud or frontier-lab seller could actually act on the story. For context-only stories — energy/power supply is the classic case — omit it entirely rather than manufacturing an angle.
 
-A short discovery sequence, not a one-line question. Sales reps need a *flow*: surface the pain → test how the customer is responding → land on a specific opportunity. Structure each "Your angle" as **2 escalating questions** (a 3rd only if it genuinely adds a step), then one **"Where the GCP opportunity is"** line naming a concrete deal motion.
+This block is a **rep's toolkit for a real conversation**, not a list of questions. It is four bullets, each with a bolded lead-in, roughly 250-350 words total. Use **at most ONE question in the whole block, and only if it reframes the decision** — a question the founder can answer about something they control. Questions are not the unit of value here; the argument is.
 
-**Yes (tight discovery):**
-> 1. **Where it hurts:** "Now that an open model can match the closed frontier on your core tasks, what's your plan for using that leverage — on price, on data control, or on lock-in?"
-> 2. **How they're hedging:** "Are you set up to run the best model per job — Gemini, Claude, or an open weight — without re-plumbing every time the leaderboard changes?"
->
-> **Where the GCP opportunity is:** the Agent Platform's Model Garden hosts Gemini, Claude, and open weights behind one API — adopt the open weight for the jobs it wins, keep the closed frontier for the rest; Agentic Data Cloud keeps the data layer theirs.
+The four moves, in order:
 
-**No (lazy single question):**
-> "Where are you on TPU vs. GPU economics?"
+1. **Concede what is actually true.** If a rival is genuinely cheaper, faster, or better on a public benchmark, say so first and plainly. A rep who argues against a number the founder can look up loses the room.
+2. **Move the decision to an eval on their workload.** A leaderboard is not their workload; a token price is not their bill. Push toward measuring cost per accepted outcome on their own data — counting egress, grounding, latency to where the data sits, governance, and commitments they already hold. Say explicitly that if the rival still wins, they should use it.
+3. **Compete where the news cannot reach.** Name the dimensions a price cut or a benchmark cannot touch: frontier reasoning, grounding, data residency, agentic orchestration, TPU economics at scale.
+4. **"Where GCP wins:"** one line naming the concrete deal motion. This is the ONE place GCP product positioning is allowed outside "Our Play" — it is required, not a violation.
 
-The discovery sequence forces the rep to listen first; the "Where the opportunity is" line tells them what to *do* with what they hear. Single-question angles fail both tests. This "Where the GCP opportunity is" line is the ONE place GCP product positioning is allowed outside "Our Play" — it is required, not a violation.
+**Yes (the shape — see Edition #24 for full worked examples):**
+> - **Concede the tier — don't defend the price list.** The mid-tier is commoditizing, and on public benchmarks the rival currently looks both cheaper and stronger. Say it first, plainly.
+> - **Then insist on the eval.** A leaderboard is not their workload and a token price is not their bill. If they still win the eval, tell them to use it; the rep who says that is the one they call next quarter.
+> - **Compete where a price cut cannot reach.** Frontier reasoning, grounding in Search and their own corpus, data-resident workloads, agentic orchestration, TPU economics at scale.
+> - **Where GCP wins:** optionality is not "route to whoever is cheapest" — it is insurance against lock-in precisely because the leader just rotated. On the Agent Platform that is a config change rather than a migration.
+
+**No (the retired shape — a quiz, not a toolkit):**
+> 1. **Where it hurts:** "What's your plan for using that leverage?"
+> 2. **How they're hedging:** "Are you set up to run the best model per job?"
+
+**Never assume the founder will fine-tune or distill.** Raise it only for the profile it genuinely fits — the narrow set with volume to justify it — and say so explicitly as an option for that profile, never as the default path.
+
+**Concede when a competitor genuinely wins.** State the rival's real price or benchmark advantage plainly, then move the decision to an eval on the founder's own workload and TCO. Never spin a Google loss into a win, and never imply GCP is cheaper when it isn't.
 
 ### Sales-grade concreteness (applies to every question and angle line)
 
@@ -428,8 +438,8 @@ Before finalizing, verify:
 - [ ] No repeated person/narrative from a previous edition
 
 **GCP positioning**
-- [ ] Every "Your angle" is present ONLY on stories with a real seller play (context-only stories like energy/power have no angle block), and is ~90 words: 2 questions + one "Where the GCP opportunity is" line
-- [ ] **GCP product positioning appears only in three allowed places: (a) "Our Play", (b) the "Where the GCP opportunity is" line inside a Big Picture angle block, and (c) the optional single "GCP plays this week" TLDR summary bullet. (b) and (c) are permitted features, NOT violations.** Elsewhere, *news* about Google releases is fine, but a pitch/"use this" line is not. Test: would this read as sales copy in TechCrunch?
+- [ ] Every "Your angle" is present ONLY on stories with a real seller play (context-only stories like energy/power have no angle block), and follows the 4-move shape: concede → eval → compete → "Where GCP wins:" — at most ONE question in the whole block, and only if it reframes
+- [ ] **GCP product positioning appears only in three allowed places: (a) "Our Play", (b) the "Where GCP wins:" line that closes a Big Picture angle block, and (c) the optional single "GCP plays this week" TLDR summary bullet. (b) and (c) are permitted features, NOT violations.** Elsewhere, *news* about Google releases is fine, but a pitch/"use this" line is not. Test: would this read as sales copy in TechCrunch?
 - [ ] Our Play's three motions are execution detail anchored to the week's stories (not generic filler; a fresh GCP source is a bonus, not required)
 - [ ] **No bare "Vertex AI" and no "GEAP" — "Gemini Enterprise Agent Platform (FKA Vertex AI)" on first mention, "Agent Platform" after; no deprecated names (Duet AI, Bard, PaLM)**
 - [ ] **Anthropic on the Agent Platform framed as founder optionality; no raw-capacity overclaim; no Google loss spun as a win**
