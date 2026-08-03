@@ -87,6 +87,39 @@ One position. Motions.
   assert.ok(r.hard[0].includes("Story One"));
 }
 
+// 5b. REGRESSION: the heading matched with a trailing colon only, so the moment
+// the format dropped the colon (Edition #24) this whole check silently stopped
+// running. Both punctuations must be caught, and both closing labels accepted.
+{
+  const noColonMissingCloser = `## The Big Picture
+
+### A Story
+
+Body text.
+
+**Your angle with founders**
+
+-   **Concede the tier.** They are genuinely cheaper right now.
+-   **Then insist on the eval.** Measure cost per accepted outcome.
+`;
+  const r = checkAngleBlocks(noColonMissingCloser);
+  assert.strictEqual(r.hard.length, 1, "colon-less angle block missing its closer must hard-fail");
+
+  const noColonWithCloser = noColonMissingCloser + "-   **Where GCP wins:** one config change, not a migration.\n";
+  assert.strictEqual(
+    checkAngleBlocks(noColonWithCloser).hard.length, 0,
+    "current format (no colon + 'Where GCP wins') must pass"
+  );
+
+  const legacy = noColonMissingCloser.replace("founders**", "founders:**") +
+    "**Where the GCP opportunity is:** Model Garden behind one API.\n";
+  assert.strictEqual(
+    checkAngleBlocks(legacy).hard.length, 0,
+    "legacy format (colon + 'Where the GCP opportunity is') must still pass"
+  );
+  console.log("  \u2713 angle heading matches with or without the colon; both closers accepted");
+}
+
 // 6. Story with NO angle block is fine (context-only stories are allowed)
 {
   const noAngle = CLEAN.replace(
