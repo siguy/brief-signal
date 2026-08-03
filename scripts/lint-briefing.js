@@ -77,6 +77,13 @@ function bigPictureStories(md) {
   return stories;
 }
 
+// Frontmatter date ("2026-07-26"), falling back to the filename stem.
+function briefingDate(md, file) {
+  const m = md.match(/^date:\s*"?(\d{4}-\d{2}-\d{2})"?/m);
+  if (m) return m[1];
+  return file ? path.basename(file, ".md") : null;
+}
+
 // Parse "16:15" / "0:37:25" out of a link label into minutes (float), or null.
 function labelTimestamps(label) {
   const out = [];
@@ -242,6 +249,129 @@ function checkImages(md, baseDir = BRIEFINGS_DIR) {
   return { hard, warn: [] };
 }
 
+// Cross-edition repetition of the LEAD story. Edition #24's first draft re-led
+// with Edition #23's lead (OpenAI's agent hacking Hugging Face / the "guardrail
+// lockout" / GLM 5.2 forensics) and nothing caught it: every other rule only
+// looks inside a single edition. A lead may only repeat if the story genuinely
+// advanced — a verbatim re-lead is a wasted week for the reader.
+//
+// Signal: Jaccard overlap of distinctive terms (unigrams + adjacent-pair
+// bigrams) between the current lead and each recent prior lead. Full-text
+// diffing is useless here — consecutive editions always share AI vocabulary —
+// so the stoplist below strips both ordinary English and the industry nouns
+// that appear in every edition, leaving the entities and phrases that actually
+// identify a story ("hugging face", "guardrail lockout", "glm 5.2").
+const LEAD_LOOKBACK_EDITIONS = 3;
+const LEAD_OVERLAP_THRESHOLD = 0.15;
+// Below this many shared terms, Jaccard is too jumpy on short leads to trust.
+const LEAD_OVERLAP_MIN_SHARED = 8;
+
+const LEAD_STOPWORDS = new Set(
+  `a about above after again against all also am an and any are as at
+   be because been before being below between both but by can cannot could did
+   do does doing down during each few for from further had has have having he
+   her here hers him his how i if in into is it its itself just me more most my
+   no nor not now of off on once only or other our ours out over own same she
+   should so some such than that the their theirs them then there these they
+   this those through to too under until up very was we were what when where
+   which while who whom why will with would you your yours
+   already another around back become becomes becoming best better big bring
+   build building built call called come comes coming day days early even ever
+   every first get gets getting give gives go goes going good great half hand
+   help high keep keeps kind know known large last late later least less let
+   like likely little long look looks made make makes making many may mean
+   means might much must near need needs never new next old one part parts past
+   place put real really right run runs running said say says see seen set sets
+   show shows side since small start started still take takes taking tell thing
+   things think three time times today two use used uses using want way week
+   weeks well went whether within without work working world year years yet
+   ai model models ml llm llms frontier lab labs open source open-weight weights
+   compute inference training token tokens agentic agent agents enterprise
+   enterprises founder founders customer customers seller sellers team teams
+   startup startups company companies market markets industry price pricing
+   cost costs cheap cheaper data platform platforms cloud clouds infra
+   infrastructure stack workload workloads api apis chip chips gpu gpus system
+   systems tech technology product products developer developers user users
+   google gcp openai anthropic gemini claude meta microsoft aws azure nvidia
+   deepmind capability capabilities performance benchmark benchmarks scale
+   scaling shift shifts shifting question questions answer answers control
+   access story briefing edition angle opportunity
+   hurts hedging`
+    .split(/\s+/)
+    .filter(Boolean)
+);
+
+function isLeadTerm(t) {
+  return t.length >= 3 && !LEAD_STOPWORDS.has(t) && !/^\d+$/.test(t);
+}
+
+// Distinctive terms in a lead story: link labels are stripped (they are source
+// names like "AI Daily Brief", which recur every week regardless of topic).
+function leadTerms(storyBody) {
+  const prose = storyBody
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/\[[^\]]*\]\([^)]*\)/g, " ")
+    .replace(/[^A-Za-z0-9.\-]+/g, " ")
+    .toLowerCase();
+  const tokens = (prose.match(/[a-z0-9][a-z0-9.\-]*/g) || []).map((t) =>
+    t.replace(/[.\-]+$/, "")
+  );
+  const terms = new Set();
+  for (let i = 0; i < tokens.length; i++) {
+    if (!isLeadTerm(tokens[i])) continue;
+    terms.add(tokens[i]);
+    if (isLeadTerm(tokens[i + 1] || "")) terms.add(`${tokens[i]} ${tokens[i + 1]}`);
+  }
+  return terms;
+}
+
+function leadOverlap(a, b) {
+  const shared = [...a].filter((t) => b.has(t));
+  const union = a.size + b.size - shared.length;
+  return { shared, score: union === 0 ? 0 : shared.length / union };
+}
+
+function checkCrossEditionLead(md, baseDir = BRIEFINGS_DIR) {
+  const hard = [];
+  const warn = [];
+  const stories = bigPictureStories(md);
+  if (!stories.length) return { hard, warn };
+  const current = leadTerms(stories[0].body);
+  const date = briefingDate(md);
+  // Never fail silently: without a date we cannot tell which editions precede
+  // this one, so say the check was skipped rather than reporting it clean.
+  if (!date) {
+    warn.push("No frontmatter date — cannot order editions, cross-edition lead check skipped");
+    return { hard, warn };
+  }
+
+  const priors = fs
+    .readdirSync(baseDir)
+    .filter((f) => /^\d{4}-\d{2}-\d{2}\.md$/.test(f))
+    .map((f) => {
+      const prior = fs.readFileSync(path.join(baseDir, f), "utf-8");
+      return { file: f, date: briefingDate(prior, f), md: prior };
+    })
+    .filter((p) => p.date && p.date < date)
+    .sort((a, b) => a.date.localeCompare(b.date))
+    .slice(-LEAD_LOOKBACK_EDITIONS);
+
+  for (const prior of priors) {
+    const priorStories = bigPictureStories(prior.md);
+    if (!priorStories.length) continue;
+    const { shared, score } = leadOverlap(current, leadTerms(priorStories[0].body));
+    if (score < LEAD_OVERLAP_THRESHOLD || shared.length < LEAD_OVERLAP_MIN_SHARED) continue;
+    const edition = (prior.md.match(/^edition:\s*(\d+)/m) || [])[1];
+    hard.push(
+      `Lead story "${stories[0].title}" strongly overlaps the lead of ${prior.file}` +
+        `${edition ? ` (Edition #${edition})` : ""} (overlap ${score.toFixed(2)}, threshold ${LEAD_OVERLAP_THRESHOLD}): ` +
+        `shared terms: ${shared.slice(0, 10).join(", ")}. ` +
+        `A lead may only repeat if it genuinely advanced — otherwise demote it.`
+    );
+  }
+  return { hard, warn };
+}
+
 // --- main ------------------------------------------------------------------
 
 function lint(md) {
@@ -253,6 +383,7 @@ function lint(md) {
     ["banned-words", checkBannedWords],
     ["naming", checkNaming],
     ["images", checkImages],
+    ["cross-edition-lead", checkCrossEditionLead],
   ];
   const hard = [];
   const warn = [];
@@ -298,7 +429,10 @@ module.exports = {
   lint,
   extractLinks,
   bigPictureStories,
+  briefingDate,
   labelTimestamps,
+  leadTerms,
+  leadOverlap,
   checkUrls,
   checkTldrHooks,
   checkAngleBlocks,
@@ -306,4 +440,5 @@ module.exports = {
   checkBannedWords,
   checkNaming,
   checkImages,
+  checkCrossEditionLead,
 };

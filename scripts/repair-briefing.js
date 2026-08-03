@@ -75,6 +75,11 @@ function collectFailures(date, briefingMd) {
     // "fix" the failure by deleting the image reference. Surface them in the
     // PR instead.
     if (h.startsWith("[images]")) continue;
+    // A repeated lead is an editorial call — demote the story and promote
+    // another. The LLM can't make that call from the draft alone, so it would
+    // reword the lead just enough to drop below the overlap threshold while
+    // still running last week's story. Surface it in the PR instead.
+    if (h.startsWith("[cross-edition-lead]")) continue;
     failures.push(`- LINTER: ${h}`);
   }
   return failures;
