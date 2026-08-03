@@ -1,0 +1,161 @@
+#!/usr/bin/env node
+
+/**
+ * Tests for the signal digest (Tier 0 — Google & competitors).
+ *
+ * Run: node scripts/signal-digest.test.js
+ * (Plain Node assertions — no test framework dependency.)
+ */
+
+const assert = require("assert");
+const {
+  splitEntries,
+  normalizeUrl,
+  parseArgs,
+  FIRST_PARTY_HANDLE,
+  FIRST_PARTY_DOMAIN,
+  GOOGLE_MENTION,
+  COMPETITOR_MENTION,
+} = require("./signal-digest.js");
+
+let passed = 0;
+let failed = 0;
+function test(name, fn) {
+  try {
+    fn();
+    passed += 1;
+    console.log(`  ✓ ${name}`);
+  } catch (err) {
+    failed += 1;
+    console.error(`  ✗ ${name}`);
+    console.error(`    ${err.message}`);
+    process.exitCode = 1;
+  }
+}
+
+// --- normalizeUrl: the bug that made every YouTube link look cited ----------
+
+test("normalizeUrl keeps the YouTube video id", () => {
+  // Regression: an earlier version did .split("?")[0], collapsing every watch
+  // URL to https://www.youtube.com/watch — so one cited video marked all of
+  // them cited, and LOW podcasts showed as covered when they weren't.
+  const a = normalizeUrl("https://www.youtube.com/watch?v=wWbX3NL6_Uo");
+  const b = normalizeUrl("https://www.youtube.com/watch?v=0cDd5tPdTJ4");
+  assert.notStrictEqual(a, b, "two different videos must not normalize alike");
+  assert.ok(a.includes("wwbx3nl6_uo"), "video id must survive normalization");
+});
+
+test("normalizeUrl strips tracking params but keeps the rest", () => {
+  assert.strictEqual(
+    normalizeUrl("https://www.youtube.com/watch?v=abc123&utm_source=x&si=zz"),
+    "https://www.youtube.com/watch?v=abc123"
+  );
+});
+
+test("normalizeUrl is order-insensitive across equivalent links", () => {
+  assert.strictEqual(
+    normalizeUrl("https://ex.com/a?b=2&a=1"),
+    normalizeUrl("https://ex.com/a?a=1&b=2")
+  );
+});
+
+test("normalizeUrl trims trailing punctuation and slashes", () => {
+  assert.strictEqual(normalizeUrl("https://openai.com/news/."), "https://openai.com/news");
+  assert.strictEqual(normalizeUrl("https://x.com/a/status/1)"), "https://x.com/a/status/1");
+});
+
+// --- Tier 0 lane matching ---------------------------------------------------
+
+test("lane A matches a first-party @Google post", () => {
+  const entry = '**[@Google (2026-07-30) — Gemini Robotics 2](https://x.com/Google/status/2082861483055075450)** (1 min)';
+  assert.ok(FIRST_PARTY_HANDLE.test(entry));
+});
+
+test("lane A matches every named competitor handle", () => {
+  for (const h of ["OpenAI", "AnthropicAI", "Microsoft", "AWS", "MistralAI", "xai", "AIatMeta", "deepseek_ai", "Kimi_Moonshot"]) {
+    assert.ok(FIRST_PARTY_HANDLE.test(`**[@${h} (2026-07-30) — x](https://x.com/${h}/status/1)**`), `${h} should match`);
+  }
+});
+
+test("lane A does not match a third party merely discussing Google", () => {
+  const entry = '**[@somepundit (2026-07-30) — Why Google is losing](https://x.com/somepundit/status/1)** (1 min)';
+  assert.ok(!FIRST_PARTY_HANDLE.test(entry));
+});
+
+test("lane A matches a first-party domain even without a handle", () => {
+  // This is how the breach that Edition #24 missed would surface once the lab
+  // news watcher lands: no X handle, just an anthropic.com permalink.
+  assert.ok(FIRST_PARTY_DOMAIN.test("see https://www.anthropic.com/news/disclosure"));
+  assert.ok(FIRST_PARTY_DOMAIN.test("https://blog.google/technology/ai/thing/"));
+  assert.ok(!FIRST_PARTY_DOMAIN.test("https://techcrunch.com/google-thing"));
+});
+
+test("Google lane matches product surface area, not the word Google alone", () => {
+  assert.ok(GOOGLE_MENTION.test("running on TPU v5e"));
+  assert.ok(GOOGLE_MENTION.test("moved to the Agent Platform"));
+  assert.ok(GOOGLE_MENTION.test("Gemini 3.1 Flash"));
+  assert.ok(!GOOGLE_MENTION.test("an ex-Googler wrote a memoir"));
+});
+
+test("competitor lane covers the agreed list", () => {
+  for (const p of ["Claude Opus 5", "GPT-5.6", "Llama 4", "Mistral Large", "Grok 3", "DeepSeek V4", "Qwen3.7", "Kimi K3", "Azure OpenAI", "Bedrock"]) {
+    assert.ok(COMPETITOR_MENTION.test(p), `${p} should match`);
+  }
+});
+
+// --- entry splitting per KB format ------------------------------------------
+
+test("splitEntries parses bookmark entries with handle, url and no grade", () => {
+  const kb = {
+    label: "Bookmarks",
+    kind: "bookmarks",
+    content:
+      "# KB\n\n## Topic\n\n" +
+      '**[@Google (2026-07-30) — Gemini Robotics 2](https://x.com/Google/status/208)** (1 min)\n> body text\n\n' +
+      '**[@other (2026-07-29) — Something else](https://x.com/other/status/209)** (2 min)\n> more\n',
+  };
+  const entries = splitEntries(kb);
+  assert.strictEqual(entries.length, 2);
+  assert.strictEqual(entries[0].url, "https://x.com/Google/status/208");
+  assert.strictEqual(entries[0].grade, null, "bookmarks carry no grade until Step 3a");
+  assert.ok(entries[0].header.includes("Gemini Robotics 2"));
+});
+
+test("splitEntries reads the GCP Relevance grade on podcast entries", () => {
+  const kb = {
+    label: "Podcasts",
+    kind: "podcasts",
+    content:
+      "# KB\n\n## Table of Contents\n\nsome toc\n\n" +
+      '## AI Daily Brief (2026-07-31) — "Hedge Fund Implosion"\n' +
+      "https://www.youtube.com/watch?v=abc\n" +
+      "- **Intent Signal:** OpenAI cutting prices\n" +
+      "- **GCP Relevance:** HIGH — direct cloud buying signal\n",
+  };
+  const entries = splitEntries(kb);
+  assert.strictEqual(entries.length, 1, "the Table of Contents heading must not count as an entry");
+  assert.strictEqual(entries[0].grade, "HIGH");
+});
+
+test("splitEntries handles the playlist's numbered-heading format", () => {
+  const kb = {
+    label: "Playlist",
+    kind: "playlist",
+    content: "# KB\n\n## AI Economy\n\n### #1 — Stanford MS&E435\nhttps://youtu.be/x\n\n### #2 — Another\nhttps://youtu.be/y\n",
+  };
+  assert.strictEqual(splitEntries(kb).length, 2);
+});
+
+test("parseArgs reads --date", () => {
+  assert.strictEqual(parseArgs(["--date", "2026-08-03"]).date, "2026-08-03");
+  assert.strictEqual(parseArgs([]).date, null);
+});
+
+// Report failures honestly. A summary that says "all passed" while a test
+// failed is the same class of silent-success bug this pipeline keeps getting
+// bitten by — see tasks/lessons.md on silent fallbacks.
+if (failed > 0) {
+  console.error(`\n${failed} test(s) FAILED, ${passed} passed.`);
+} else {
+  console.log(`\nAll ${passed} tests passed.`);
+}
