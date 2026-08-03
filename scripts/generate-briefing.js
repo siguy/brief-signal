@@ -86,6 +86,16 @@ function targetDateFromLineup(lineupPath) {
   return match ? match[1] : null;
 }
 
+// Written into a KB header by an extractor that ran successfully and found
+// nothing (see EMPTY_MARKER in extract-podcasts.js / extract-rss-podcasts.py).
+// A quiet source is not a failed source: the run proceeds with N-1, but the
+// briefing must not imply it drew on a source that had nothing in it.
+const EMPTY_MARKER_RE = /^>\s*\*\*Status:\*\*\s*EMPTY\b/m;
+
+function isEmptyKb(content) {
+  return EMPTY_MARKER_RE.test(content);
+}
+
 // excludeName skips one filename — used in redraft mode so the edition being
 // rewritten isn't treated as its own predecessor.
 function getLatestBriefing(excludeName) {
@@ -321,16 +331,38 @@ async function main() {
     );
     process.exit(1);
   }
-  console.log(`Found ${kbFiles.length} knowledge base file(s):`);
-  kbFiles.forEach((f) => console.log(`  - ${f}`));
+  // 3. Read knowledge base content, separating sources that ran but found
+  //    nothing. Those still count as healthy — the run proceeds with N-1 —
+  //    but the briefing must not imply it drew on an empty source.
+  const kbRead = kbFiles.map((f) => {
+    const content = fs.readFileSync(path.join(SKILLS_DIR, f), "utf-8");
+    return { name: f, content, empty: isEmptyKb(content) };
+  });
+  const emptyKbs = kbRead.filter((k) => k.empty).map((k) => k.name);
+  const liveKbs = kbRead.filter((k) => !k.empty);
 
-  // 3. Read knowledge base content
-  const kbContent = kbFiles
-    .map((f) => {
-      const content = fs.readFileSync(path.join(SKILLS_DIR, f), "utf-8");
-      return `## Source: ${f}\n\n${content}`;
-    })
+  console.log(`Found ${kbFiles.length} knowledge base file(s):`);
+  kbRead.forEach((k) => console.log(`  - ${k.name}${k.empty ? "  (EMPTY — ran, nothing new)" : ""}`));
+  if (emptyKbs.length) {
+    console.log(
+      `NOTE: ${emptyKbs.length} source(s) ran with nothing new; drafting from ${liveKbs.length}.`
+    );
+  }
+  if (liveKbs.length === 0) {
+    console.error("ERROR: Every knowledge base is empty — nothing to write a briefing from.");
+    process.exit(1);
+  }
+
+  const kbContent = liveKbs
+    .map((k) => `## Source: ${k.name}\n\n${k.content}`)
     .join("\n\n---\n\n");
+
+  // Named in the Stage 4b user message so the trailing *Sources:* line the
+  // model writes (parsed by build.js into the site footer) reflects the
+  // sources that actually contributed, not the ones that merely ran.
+  const emptySourceNote = emptyKbs.length
+    ? `\n\n## Sources with nothing new this week\n\nThese ran successfully but had no new items, so nothing below draws on them. Do NOT list them in the trailing *Sources:* line:\n${emptyKbs.map((f) => `- ${f}`).join("\n")}`
+    : "";
 
   // 4. Get previous briefing for context
   const today = getTodayDate();
@@ -403,7 +435,7 @@ async function main() {
     : "";
 
   const ai = new GoogleGenAI({ apiKey });
-  const kbAndContext = `Today is ${today}. Edition #${edition}.\n\n## Knowledge Base Content\n\n${kbContent}${previousContext}${themeRegistryContext}`;
+  const kbAndContext = `Today is ${today}. Edition #${edition}.\n\n## Knowledge Base Content\n\n${kbContent}${emptySourceNote}${previousContext}${themeRegistryContext}`;
 
   // 5. Stage 4a — story lineup (planning pass). Runs the Lead-Story Doctrine as
   //    an explicit selection step and drops a lineup file in drafts/ so the PR
@@ -476,7 +508,7 @@ ${lineup ? `You already planned this story lineup for this edition. Expand it in
 
 ## Knowledge Base Content
 
-${kbContent}${previousContext}`;
+${kbContent}${emptySourceNote}${previousContext}`;
 
   console.log(`\nStage 4b: drafting Edition #${edition} (gemini-2.5-flash)...`);
   const gcpPlaybook = readGcpPlaybook();
@@ -548,4 +580,5 @@ module.exports = {
   lineupTask,
   parseArgs,
   targetDateFromLineup,
+  isEmptyKb,
 };

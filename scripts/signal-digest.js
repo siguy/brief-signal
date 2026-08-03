@@ -29,6 +29,10 @@ const SKILLS_DIR = path.join(process.env.HOME, "skills");
 const BRIEFINGS_DIR = path.join(__dirname, "..", "content", "briefings");
 const MAX_AGE_DAYS = 14;
 
+// Must match EMPTY_MARKER in the extractors and EMPTY_MARKER_RE in
+// generate-briefing.js — one convention, read by every consumer.
+const EMPTY_MARKER_RE = /^>\s*\*\*Status:\*\*\s*EMPTY\b/m;
+
 const KB_KINDS = [
   { prefix: "bookmarks-knowledge-base-", label: "Bookmarks", kind: "bookmarks" },
   { prefix: "podcasts-knowledge-base-", label: "Podcasts", kind: "podcasts" },
@@ -187,7 +191,14 @@ function main() {
     const graded = mine.filter((e) => e.grade).length;
     const high = mine.filter((e) => e.grade === "HIGH").length;
     const gradeNote = graded ? `${graded} graded, ${high} HIGH` : "**ungraded**";
-    out.push(`- ${kb.label}: \`${kb.name}\` — ${mine.length} entries, ${gradeNote}`);
+    // A source that ran and found nothing is healthy. Say so explicitly —
+    // otherwise "0 entries" reads identically to a stale or failed extraction,
+    // which is the ambiguity that let a dry playlist masquerade as a failure.
+    if (EMPTY_MARKER_RE.test(kb.content)) {
+      out.push(`- ${kb.label}: \`${kb.name}\` — _ran, no new items this week_`);
+    } else {
+      out.push(`- ${kb.label}: \`${kb.name}\` — ${mine.length} entries, ${gradeNote}`);
+    }
   }
   if (!urls) {
     out.push("");
@@ -240,6 +251,7 @@ if (require.main === module) main();
 
 module.exports = {
   splitEntries,
+  EMPTY_MARKER_RE,
   normalizeUrl,
   parseArgs,
   FIRST_PARTY_HANDLE,
