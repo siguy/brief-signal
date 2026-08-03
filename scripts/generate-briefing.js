@@ -56,11 +56,43 @@ function findKnowledgeBaseFiles() {
   return selected;
 }
 
-function getLatestBriefing() {
+// `--from-lineup <file>` runs Stage 4b ONLY, expanding a lineup you have already
+// reviewed — and possibly edited by hand — into prose. This is the editorial
+// approval gate: the lineup IS the decision, the draft is only its execution.
+// Stage 4b already treats the lineup as an "Approved Story Lineup"; this flag is
+// what finally lets a human do the approving.
+function parseArgs(argv) {
+  const args = { fromLineup: null };
+  const i = argv.indexOf("--from-lineup");
+  if (i !== -1) {
+    const value = argv[i + 1];
+    if (!value || value.startsWith("--")) {
+      console.error("ERROR: --from-lineup requires a path to a lineup file.");
+      console.error("  Usage: npm run redraft -- content/briefings/drafts/YYYY-MM-DD-lineup.md");
+      process.exit(1);
+    }
+    args.fromLineup = value;
+  }
+  return args;
+}
+
+// A lineup filename carries the edition date it belongs to
+// (content/briefings/drafts/2026-08-03-lineup.md -> 2026-08-03). Deriving the
+// target from the file itself — rather than from today's date or an env var — is
+// what makes a redraft safe: it can only ever land on the edition its lineup
+// names, so a stray re-run cannot overwrite a different week's briefing.
+function targetDateFromLineup(lineupPath) {
+  const match = path.basename(lineupPath).match(/^(\d{4}-\d{2}-\d{2})/);
+  return match ? match[1] : null;
+}
+
+// excludeName skips one filename — used in redraft mode so the edition being
+// rewritten isn't treated as its own predecessor.
+function getLatestBriefing(excludeName) {
   if (!fs.existsSync(BRIEFINGS_DIR)) return null;
   const files = fs
     .readdirSync(BRIEFINGS_DIR)
-    .filter((f) => /^\d{4}-\d{2}-\d{2}\.md$/.test(f))
+    .filter((f) => /^\d{4}-\d{2}-\d{2}\.md$/.test(f) && f !== excludeName)
     .sort()
     .reverse();
   if (files.length === 0) return null;
@@ -79,11 +111,11 @@ function getNextEdition(latestBriefing) {
 // Compact digest of the last few editions' leads so the generator can see the
 // running macro-narrative arc (compute scarcity, open weights, SaaS→agents) and
 // deliberately ADVANCE it rather than recycle or dodge it. See Repeat Prevention.
-function getRecentLeads(n) {
+function getRecentLeads(n, excludeName) {
   if (!fs.existsSync(BRIEFINGS_DIR)) return "";
   const files = fs
     .readdirSync(BRIEFINGS_DIR)
-    .filter((f) => /^\d{4}-\d{2}-\d{2}\.md$/.test(f))
+    .filter((f) => /^\d{4}-\d{2}-\d{2}\.md$/.test(f) && f !== excludeName)
     .sort()
     .reverse()
     .slice(0, n);
@@ -193,6 +225,14 @@ If nothing changed, write "No registry changes this edition."
 \`\`\``;
 }
 
+// Stage 4b only needs the story selection to expand into prose — never the
+// registry admin footer (proposed update + the full themes.md block, which can
+// run several KB and has its own "## " headings right before "generate a
+// complete briefing"). The saved lineup file keeps the footer for the reviewer.
+function stripRegistryFooter(lineupText) {
+  return lineupText.replace(/\n\*\*Proposed registry update:\*\*[\s\S]*$/, "").trimEnd();
+}
+
 // Pulls the fenced ```themes-proposed block out of a raw Stage 4a lineup
 // response. Must run on the RAW response, before stripCodeFences — that
 // function's trailing-fence regex is anchored to end-of-string and would eat
@@ -252,9 +292,17 @@ function truncateRepetition(text) {
 }
 
 async function main() {
+  const args = parseArgs(process.argv.slice(2));
+  const redraft = Boolean(args.fromLineup);
+
   const apiKey = process.env.GOOGLE_API_KEY;
   if (!apiKey) {
     console.error("ERROR: GOOGLE_API_KEY environment variable is not set.");
+    process.exit(1);
+  }
+
+  if (redraft && !fs.existsSync(args.fromLineup)) {
+    console.error(`ERROR: Lineup file not found: ${args.fromLineup}`);
     process.exit(1);
   }
 
@@ -285,22 +333,46 @@ async function main() {
     .join("\n\n---\n\n");
 
   // 4. Get previous briefing for context
-  const latest = getLatestBriefing();
-  const edition = getNextEdition(latest);
   const today = getTodayDate();
   // Filename uses the TARGET edition date (BRIEFING_DATE — generate-weekly.sh sets it
   // to MONDAY_DATE), not the run date, so a run never files under the wrong date.
-  const targetDate = process.env.BRIEFING_DATE || today;
-  const outputPath = path.join(BRIEFINGS_DIR, `${targetDate}.md`);
+  // In redraft mode the date comes from the lineup filename instead, so a redraft
+  // can only ever land on the edition its own lineup names.
+  const targetDate = redraft
+    ? targetDateFromLineup(args.fromLineup) || process.env.BRIEFING_DATE
+    : process.env.BRIEFING_DATE || today;
+  if (!targetDate) {
+    console.error(
+      `ERROR: Could not determine the target date. Lineup filename must start with YYYY-MM-DD ` +
+        `(got "${path.basename(args.fromLineup)}"), or set BRIEFING_DATE explicitly.`
+    );
+    process.exit(1);
+  }
+  const targetName = `${targetDate}.md`;
+  const outputPath = path.join(BRIEFINGS_DIR, targetName);
+
+  // A redraft regenerates an edition that already exists, so that edition must be
+  // EXCLUDED from "previous briefing" context — otherwise the model is told not to
+  // repeat the very edition it is rewriting, and the edition counter advances. That
+  // is exactly how the 2026-08-03 re-run produced a lineup headed "Edition #25" for
+  // the briefing shipped as #24.
+  const latest = getLatestBriefing(redraft ? targetName : null);
+  const existingEdition = fs.existsSync(outputPath)
+    ? (fs.readFileSync(outputPath, "utf-8").match(/^edition:\s*(\d+)/m) || [])[1]
+    : null;
+  const edition =
+    redraft && existingEdition ? parseInt(existingEdition, 10) : getNextEdition(latest);
 
   // Guard: never clobber a published edition. A stray or scheduled re-run landing on a
   // shipped edition's date would otherwise overwrite it — as happened when a v2 re-run
   // wrote Edition #23 over the shipped #22 in 2026-07-20.md. Fail fast, before any
   // Gemini calls. FORCE_OVERWRITE=1 to deliberately regenerate the same edition in place.
-  if (fs.existsSync(outputPath) && !process.env.FORCE_OVERWRITE) {
-    const existingEd = (fs.readFileSync(outputPath, "utf-8").match(/^edition:\s*(\d+)/m) || [])[1];
+  // A redraft is exempt because replacing that exact edition is its whole purpose — and
+  // it is safe for a different reason: its target comes from the lineup filename, not
+  // from today's date, and the version it replaces is preserved in drafts/ (step 8).
+  if (fs.existsSync(outputPath) && !redraft && !process.env.FORCE_OVERWRITE) {
     console.error(
-      `ERROR: content/briefings/${targetDate}.md already exists (Edition #${existingEd || "?"}). ` +
+      `ERROR: content/briefings/${targetDate}.md already exists (Edition #${existingEdition || "?"}). ` +
         `Refusing to overwrite it with Edition #${edition}.`
     );
     console.error(
@@ -317,14 +389,15 @@ async function main() {
     console.log("No previous briefing found. This will be Edition #1.");
   }
 
-  const recentLeads = getRecentLeads(4);
+  const recentLeads = getRecentLeads(4, redraft ? targetName : null);
   if (recentLeads) {
     previousContext += `\n\n## Recent edition leads (the running arc — advance it, don't recycle or dodge it)\n\n${recentLeads}`;
   }
 
   // Theme Registry context is Stage 4a-only (the lineup pass), not previousContext —
   // Stage 4b's userMessage never reads it, since it just expands the approved lineup.
-  const themeRegistry = readThemeRegistry();
+  // A redraft skips 4a entirely, so there is nothing to feed it.
+  const themeRegistry = redraft ? "" : readThemeRegistry();
   const themeRegistryContext = themeRegistry
     ? `\n\n## Theme Registry (long-term memory — tag each Big Picture candidate to the arc it advances, or flag NEW THREAD; propose updates)\n\n${themeRegistry}`
     : "";
@@ -344,42 +417,56 @@ async function main() {
   // Derived from `lineup`, which keeps the registry block for the saved
   // {today}-lineup.md file the PR reviewer reads.
   let lineupForDraft = "";
-  try {
-    console.log(`\nStage 4a: planning story lineup for Edition #${edition}...`);
-    const lineupResp = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: kbAndContext,
-      config: { systemInstruction: `${systemPrompt}\n\n${lineupTask(edition)}` },
-    });
-    const rawLineup = lineupResp.text || "";
-    lineup = stripLineupFences(rawLineup);
-    lineupForDraft = lineup
-      .replace(/\n\*\*Proposed registry update:\*\*[\s\S]*$/, "")
-      .trimEnd();
-    const draftsDir = path.join(BRIEFINGS_DIR, "drafts");
-    if (!fs.existsSync(draftsDir)) fs.mkdirSync(draftsDir, { recursive: true });
-    fs.writeFileSync(path.join(draftsDir, `${targetDate}-lineup.md`), lineup, "utf-8");
-    console.log(`  Lineup saved: content/briefings/drafts/${targetDate}-lineup.md`);
 
-    if (themeRegistry) {
-      const proposedThemes = extractProposedThemes(rawLineup);
-      if (proposedThemes) {
-        fs.writeFileSync(
-          path.join(draftsDir, `${targetDate}-themes-proposed.md`),
-          proposedThemes,
-          "utf-8"
-        );
-        console.log(
-          `  Proposed theme registry update saved: content/briefings/drafts/${targetDate}-themes-proposed.md`
-        );
-      } else {
-        console.warn(
-          `  WARN: lineup didn't include a valid themes-proposed block; skipping registry update proposal.`
-        );
-      }
+  // Redraft: the lineup already exists and has been approved (and possibly edited)
+  // by a human. Skip the planning pass entirely and expand what's on disk — that is
+  // the entire point of the gate. Everything downstream is identical to a normal run.
+  if (redraft) {
+    lineup = stripLineupFences(fs.readFileSync(args.fromLineup, "utf-8"));
+    lineupForDraft = stripRegistryFooter(lineup);
+    if (!lineupForDraft.trim()) {
+      console.error(`ERROR: Lineup file is empty: ${args.fromLineup}`);
+      process.exit(1);
     }
-  } catch (err) {
-    console.warn(`  WARN: lineup pass failed (${err.message || err}); drafting without it.`);
+    console.log(`\nRedraft mode — skipping Stage 4a.`);
+    console.log(`  Approved lineup: ${args.fromLineup}`);
+    console.log(`  Target: ${targetName} (Edition #${edition})`);
+  } else {
+    try {
+      console.log(`\nStage 4a: planning story lineup for Edition #${edition}...`);
+      const lineupResp = await ai.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: kbAndContext,
+        config: { systemInstruction: `${systemPrompt}\n\n${lineupTask(edition)}` },
+      });
+      const rawLineup = lineupResp.text || "";
+      lineup = stripLineupFences(rawLineup);
+      lineupForDraft = stripRegistryFooter(lineup);
+      const draftsDir = path.join(BRIEFINGS_DIR, "drafts");
+      if (!fs.existsSync(draftsDir)) fs.mkdirSync(draftsDir, { recursive: true });
+      fs.writeFileSync(path.join(draftsDir, `${targetDate}-lineup.md`), lineup, "utf-8");
+      console.log(`  Lineup saved: content/briefings/drafts/${targetDate}-lineup.md`);
+
+      if (themeRegistry) {
+        const proposedThemes = extractProposedThemes(rawLineup);
+        if (proposedThemes) {
+          fs.writeFileSync(
+            path.join(draftsDir, `${targetDate}-themes-proposed.md`),
+            proposedThemes,
+            "utf-8"
+          );
+          console.log(
+            `  Proposed theme registry update saved: content/briefings/drafts/${targetDate}-themes-proposed.md`
+          );
+        } else {
+          console.warn(
+            `  WARN: lineup didn't include a valid themes-proposed block; skipping registry update proposal.`
+          );
+        }
+      }
+    } catch (err) {
+      console.warn(`  WARN: lineup pass failed (${err.message || err}); drafting without it.`);
+    }
   }
 
   // 6. Stage 4b — draft the briefing, expanding the approved lineup.
@@ -413,6 +500,22 @@ ${kbContent}${previousContext}`;
   if (!fs.existsSync(BRIEFINGS_DIR)) {
     fs.mkdirSync(BRIEFINGS_DIR, { recursive: true });
   }
+  // A redraft deliberately replaces an existing edition, so keep the version it
+  // replaces. Without this the only copy of what the pipeline originally produced
+  // is lost — which is exactly how the evidence for the Edition #24 post-mortem
+  // disappeared when Stage 4 was re-run over its own output.
+  if (redraft && fs.existsSync(outputPath)) {
+    const draftsDir = path.join(BRIEFINGS_DIR, "drafts");
+    if (!fs.existsSync(draftsDir)) fs.mkdirSync(draftsDir, { recursive: true });
+    let n = 1;
+    let backupPath;
+    do {
+      backupPath = path.join(draftsDir, `${targetDate}-pre-redraft-${n}.md`);
+      n += 1;
+    } while (fs.existsSync(backupPath));
+    fs.copyFileSync(outputPath, backupPath);
+    console.log(`  Replaced draft preserved: content/briefings/drafts/${path.basename(backupPath)}`);
+  }
   fs.writeFileSync(outputPath, text, "utf-8");
 
   // 9. Report
@@ -436,10 +539,13 @@ if (require.main === module) {
 module.exports = {
   stripCodeFences,
   stripLineupFences,
+  stripRegistryFooter,
   truncateRepetition,
   countWords,
   readThemeRegistry,
   readGcpPlaybook,
   extractProposedThemes,
   lineupTask,
+  parseArgs,
+  targetDateFromLineup,
 };

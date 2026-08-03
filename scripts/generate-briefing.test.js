@@ -15,6 +15,9 @@ const {
   extractProposedThemes,
   lineupTask,
   stripLineupFences,
+  stripRegistryFooter,
+  parseArgs,
+  targetDateFromLineup,
 } = require("./generate-briefing.js");
 
 // One complete, well-formed briefing copy: frontmatter -> body -> Sources line.
@@ -208,6 +211,52 @@ test("stripLineupFences preserves the internal themes-proposed fence (regression
 test("stripLineupFences still strips a Gemini outer-wrap when no internal fence is present", () => {
   const wrapped = "```markdown\n## Some Lineup\nno theme fence here\n```";
   assert.strictEqual(stripLineupFences(wrapped), "## Some Lineup\nno theme fence here");
+});
+
+// --- Redraft mode (--from-lineup): the editorial approval gate ---------------
+
+test("parseArgs returns null fromLineup for a normal run", () => {
+  assert.strictEqual(parseArgs([]).fromLineup, null);
+});
+
+test("parseArgs picks up the lineup path", () => {
+  const args = parseArgs(["--from-lineup", "content/briefings/drafts/2026-08-03-lineup.md"]);
+  assert.strictEqual(args.fromLineup, "content/briefings/drafts/2026-08-03-lineup.md");
+});
+
+test("targetDateFromLineup derives the edition date from the filename", () => {
+  // This is the safety property: a redraft can only land on the edition its own
+  // lineup names, never on today's date or a neighbouring week.
+  assert.strictEqual(
+    targetDateFromLineup("content/briefings/drafts/2026-08-03-lineup.md"),
+    "2026-08-03"
+  );
+  assert.strictEqual(targetDateFromLineup("/abs/path/2026-07-27-lineup-r2.md"), "2026-07-27");
+});
+
+test("targetDateFromLineup returns null for an undated filename", () => {
+  // Falls back to BRIEFING_DATE, and errors out if that is unset too — better
+  // than silently writing over whatever today happens to be.
+  assert.strictEqual(targetDateFromLineup("my-lineup.md"), null);
+});
+
+test("stripRegistryFooter removes the admin block Stage 4b must not see", () => {
+  const lineup =
+    "## Proposed Lineup\n\n1. Lead story\n\n**Quick Hits:** things\n\n" +
+    "**Proposed registry update:** add a theme\n\n**Full proposed registry:**\n\n" +
+    "```themes-proposed\n## Compute Scarcity\n```";
+  const result = stripRegistryFooter(lineup);
+  assert.ok(result.includes("Lead story"), "story selection must survive");
+  assert.ok(result.includes("Quick Hits"), "Quick Hits must survive");
+  assert.ok(!result.includes("Proposed registry update"), "registry footer must be stripped");
+  assert.ok(!result.includes("themes-proposed"), "registry fence must be stripped");
+});
+
+test("stripRegistryFooter leaves a hand-edited lineup with no footer untouched", () => {
+  // A lineup you edited by hand won't have the registry block — stripping must
+  // be a no-op rather than eating the last section.
+  const edited = "## Proposed Lineup\n\n1. OpenAI price cuts (promoted to lead by hand)\n";
+  assert.strictEqual(stripRegistryFooter(edited), edited.trimEnd());
 });
 
 console.log(`\nAll ${passed} tests passed.`);
