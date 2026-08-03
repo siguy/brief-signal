@@ -1,15 +1,18 @@
 # Brief Signal — Pipeline Hardening Plan (v2)
 
-**Overall Progress:** `~25%` — Step 2a, Step 2c Tier 0, and Step 3a built and verified 2026-08-03.
+**Overall Progress:** `~70%` — Steps 0 (partial), 1, 2a, 2c Tier 0, 3a, 4, 5, 6 shipped and merged 2026-08-03 (PRs #97-#101). Remaining: 3b (inject grades), 7 (lab news), 8 (images), plus 2b (steering file) and Tiers 1-3 of the digest.
 
-## Shipped this session
+## Shipped this session (PRs #97-#101, all merged 2026-08-03)
 
-- **Step 2a — `npm run redraft`** (`--from-lineup`). Verified: targets Edition **#24 not #25** (the edition-counter bug is fixed as a side effect), excludes the edition being rewritten from its own context, preserves the replaced draft to `drafts/{date}-pre-redraft-N.md`. Published file untouched in testing. *Live Gemini round-trip still unproven — ran with a dummy key to avoid regenerating a shipped edition.*
-- **Step 2c Tier 0 — `npm run signal`** (`scripts/signal-digest.js`, ~200 lines, no deps, no LLM). On Edition #24 it surfaces **3 first-party announcements, all uncited**: @Google Gemini Robotics 2, and both @AnthropicAI open-weights items (= missed story #6 in the appendix).
-- **Step 3a — grading rubrics** in `~/.claude/skills/extract-bookmarks/SKILL.md` and `extract-playlist/SKILL.md`. **Live-verified** via `claude -p`: @Google Gemini Robotics 2 → HIGH, both @AnthropicAI → HIGH, @jaltucher Kimi analysis → MEDIUM, politics → LOW.
-- **Test wiring** — `npm test` now runs all three suites (46 tests). `lint-briefing.test.js` had never run.
+- **Step 2a — `npm run redraft`** (`--from-lineup`). Live Gemini round trip **proven** on a scratch date: promoting the third Big Picture story to lead in the lineup produced a draft that led with it, reused edition #25 (not #26), and left the published edition byte-identical. Fixes the edition-counter bug as a side effect and preserves the replaced draft to `drafts/{date}-pre-redraft-N.md`.
+- **Step 2c Tier 0 — `npm run signal`** (`scripts/signal-digest.js`, no deps, no LLM). On Edition #24 it surfaces **3 first-party announcements, all uncited**: @Google Gemini Robotics 2 and both @AnthropicAI open-weights items (= missed story #6 in the appendix).
+- **Step 3a — grading rubrics** in `~/.claude/skills/extract-bookmarks/SKILL.md` and `extract-playlist/SKILL.md`. Live-verified via `claude -p`: @Google Gemini Robotics 2 → HIGH, both @AnthropicAI → HIGH, @jaltucher Kimi analysis → MEDIUM, politics → LOW.
+- **Step 1 — empty ≠ failed.** Both podcast extractors always leave a dated KB behind (create-if-missing, touch-if-present, since they share one file); consumers exclude empty sources and keep them out of the `*Sources:*` footer. `check_kb_fresh` unchanged — a missing file still blocks. **Root cause found in the instructions:** `extract-playlist` said, verbatim, *"if it's zero, log a warning and stop — don't generate an empty KB."*
+- **Step 4 — "Your angle" as a 4-move rep toolkit.** Live A/B against Edition #24's own lineup so only the prompt differed: 3/3 blocks in the new shape, 208-285 words, **zero** questions, zero uses of the retired label.
+- **Step 6 — critique demoted to advisory.** Repair fires on deterministic lint only. Justification re-cited: the plan's "flip-flopping" claim is **not** in the logs; the real evidence is six critiques recommending the lint-banned "GEAP", one flagging a required feature as a violation, and four demanding a retired section.
+- **Test wiring** — `npm test` runs all three suites (49 tests). `lint-briefing.test.js` had never run.
 
-Two bugs found and fixed while testing: `normalizeUrl` stripped query strings (collapsing every YouTube link to one key, so a single cited video marked them all cited), and the digest test summary printed "all passed" while a test failed. **`scripts/generate-briefing.test.js` still has that second flaw** — exit code is correct, the message lies.
+**Four dead or broken things surfaced along the way**, all invisible before this session: `lint-briefing.test.js` (12 tests wired into nothing); `checkAngleBlocks` (silently disabled when Edition #24's heading dropped its colon); `normalizeUrl` (stripped query strings, so one cited YouTube link marked every video cited); and `dotenv` (required by `fetch-analytics.js`, declared nowhere, surviving as an orphan in `node_modules`). **`scripts/generate-briefing.test.js` still prints "All N tests passed" when a test fails** — exit code is correct, the message lies.
 
 Measured caveat on Tier 0 lane B: grading trims it from 8 entries to ~6, not to 3. Two "noise" entries grade MEDIUM and stay (a Demis Hassabis quote, a TPU-vs-GPU thread) — defensible, but lane B stays chattier than lane A.
 

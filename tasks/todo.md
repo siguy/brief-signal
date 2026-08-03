@@ -1,78 +1,54 @@
-# Editorial hardening — approved by Simon 2026-07-26
+# Brief Signal — open work
 
-Four workstreams approved via Q&A (session 2026-07-26). Order: A (Monday deadline) → B → C → D.
+Last updated 2026-08-03. The previous contents (Edition #23 fixes, 2026-07-26)
+are complete and were removed; see git history if you need them.
 
-## A. Edition #23 fixes (branch: briefing/2026-07-27) — URGENT, review is Monday
-- [x] Fix 2 broken Quick Hit URLs (KB had no permalinks; real URLs recovered from raw JSON):
-  - gregisenberg → https://x.com/gregisenberg/status/2081088155793465783
-  - KanikaBK → https://x.com/KanikaBK/status/2080578327786746242
-- [x] Decenter OpenAI in the Value Maxing story (BP3) so OpenAI isn't the headline
-  subject of 2 of 3 Big Picture stories (open critique hard failure). Lead with the
-  industry economics shift; OpenAI's GPT-5.6 guidance becomes evidence, not protagonist.
-- [x] Fix Our Play bullet 2: currently recommends hosting Kimmy K3 while the story above
-  reports Treasury sanction threats against it. Reframe as model optionality/portability
-  = de-risking sanctions exposure; open-weight example → Gemma.
-- [x] Add Seller's Edge section to #23 (new teach — all 3 founding frameworks used in
-  editions 6/08, 6/15, 6/22). This week's teach: agentic AI cost is engineered
-  (caching/routing/harness design), not just priced.
-- [x] Re-run critique to verify; commit + push to PR #73.
+**Full detail and rationale:** `docs/plans/2026-08-03-pipeline-hardening-plan.md`
+— this file is just the short list.
 
-## B. Restore Seller's Edge into the process (new branch, separate PR)
-- [x] Write Seller's Edge spec into scripts/briefing-prompt.md (template section,
-  voice guide, quality checklist item). Source: memory project_sellers_edge_section.md.
-  Spec was never in the rebuilt prompt — silently lost in the v2 rebuild (PR #63).
-- [x] Update memory file: restoration done + all 3 founding frameworks now used.
+## Shipped 2026-08-03 (PRs #97-#101, all merged)
 
-## C. Deterministic linter + repair loop (new branch, separate PR)
-- [x] scripts/lint-briefing.js — mechanical checks, no LLM:
-  - no `...`/malformed URLs
-  - TLDR bullets all start with a bold hook
-  - every "Your angle" block has a "Where the GCP opportunity is" line
-  - no same-source-URL anchoring two Big Picture stories
-- [x] Repair loop in the pipeline: on critique/linter hard failure, ONE targeted
-  Gemini revision pass with the failures as input, then re-verify, then PR.
-- [x] Root-cause fix: bookmarks KB build must include the tweet permalink per entry
-  (raw JSON has them as keys; the KB drops them → Gemini fabricated `...` URLs).
+- [x] Editorial gate — `npm run redraft` rebuilds prose from an edited lineup
+- [x] Signal digest — `npm run signal`, Tier 0 Google/competitor lane
+- [x] Grading rubrics for bookmarks + playlist (in `~/.claude/skills/`, not this repo)
+- [x] Empty ≠ failed — a quiet source no longer blocks the run
+- [x] LLM critique demoted to advisory; only lint can trigger a repair
+- [x] "Your angle" rewritten as a 4-move rep toolkit
+- [x] 15 Dependabot alerts closed; `dotenv` declared
+- [x] Two dead checks revived: `lint-briefing.test.js` (never ran), angle-block lint
 
-## D. GCP playbook — two layers
-- [x] content/gcp-playbook.md (public-safe): differentiators GCP can honestly claim,
-  Agent Platform component glossary, approved framings. Feeds Stage 4 like themes.md.
-- [x] Internal deeper layer: gitignored local file (repo is public) — flag backup
-  tradeoff to Simon.
-- [x] Restructure Our Play format in prompt: Signal → Why GCP wins → The move.
+## Next up — hardening plan
 
-## Review notes (session 2026-07-26, all merged)
+- [ ] **Step 3b — inject grades into Stage 4a.** Build the disposition table in
+  JS from the KBs and hand it to the model so it fills in only "where it landed."
+  It currently *generates* the ratings and gets them wrong — five LOW episodes
+  appeared as MEDIUM in Edition #24's lineup. Highest remaining value.
+- [ ] **Step 7 — lab-news watcher.** ~40 lines, 4 RSS feeds (anthropic.com/news,
+  openai.com/news, blog.google/…/deepmind, cloud.google.com/blog). Closes the one
+  verified source gap: the Anthropic breach had zero hits across all KBs.
+- [ ] **Step 8 — image fetching.** `downloadImage` (`fetch-og.js:141`) writes
+  response bytes with no content-type or magic-byte check, so an SVG or PNG lands
+  at a `.jpg` path. Also `findImageSources` takes only the *first* nearby URL, so
+  the YouTube-thumbnail fallback often never fires.
 
-- ALL DONE and merged: PRs #73 (Edition #23), #74 (Seller's Edge spec), #75
-  (linter + repair loop), #76 (GCP playbook v2, research-verified), #77
-  (HIGH-signal disposition), #78 (playbook staleness check), #79 (within-story
-  citation clarification).
-- Also shipped beyond the original plan: 6-agent research sweep verifying the
-  playbook (official/execs/community/analysts/competitive/pricing-tuning);
-  /refresh-gcp-playbook skill + 90-day staleness warning as the standing
-  refresh process; HIGH-episode Quick Hit swaps in #23 (Open Code, Lin Qiao,
-  Dark Factory); grounding price corrected to $14/1K + 5K free (community's
-  $35 figure was legacy).
-- Key lesson captured in tasks/lessons.md: LLM repair passes fabricate URLs —
-  deterministic fabrication guard required; live-test LLM code in a sandbox.
-- Follow-ups for Simon: verify playbook claims flagged VERIFY-BEFORE-USE
-  (internal file); fill internal playbook TODOs + keep Drive master copy;
-  Monday: npm run audio:pr for Edition #23 audio.
+## Next up — other
 
----
+- [ ] **Dependabot recurrence.** No `.github/dependabot.yml` exists, so alerts
+  accumulate with nothing driving them down. Decide whether you want automated PRs.
+- [ ] **Remove the npm overrides** once `google-gax` and `@google/genai` raise
+  their own protobufjs floor past 7.6.5. Carrying a pin forever is how they rot.
+- [ ] **`generate-briefing.test.js` prints "All N tests passed" even when a test
+  failed.** Exit code is correct so CI is safe, but the message lies.
+  `signal-digest.test.js` was fixed; this one wasn't.
 
-# ARCHIVE — Briefing generation v2 (shipped, PR #63/#68)
+## Watch on the next live run (Sunday 2026-08-09)
 
-Goal: migrate 3 editions of Simon's accumulated corrections UPSTREAM into the generator.
-All items complete and merged; details preserved in git history of this file and in
-PR #63 / #68 descriptions. Key outcomes:
-- Template surgery (TLDR → Big Picture ×3 → Quick Hits → Our Play); Lead-Story Doctrine;
-  word budgets; Our Play = 3 named motions; critique coverage check (the Kimi-catcher);
-  Stage 4a lineup pass.
-- Living Theme Registry wired into Stage 4a (PR #68, squash-merged as 4ac8f76) after
-  3 rounds of fixes incl. two real fence-stripping bugs found via live dry-run.
-- Item 8 of registry wiring ("flag to Simon, open PR, hold merge") — done, merged.
+Three changes are *prompt instructions*, provable only by a real run:
 
-# Backlog (not started)
+- [ ] Bookmarks show as **graded** in `npm run signal` (currently "ungraded" —
+  the rubric only applies to a fresh extraction)
+- [ ] A quiet playlist reports "ran, no new items" and the run **completes**
+- [ ] Angle blocks come out in the 4-move shape with ≤1 question
 
-- (empty — analytics report shipped as PR #67)
+If any of those look wrong, the change is one `git revert` away and
+`npm run redraft` rebuilds the edition from a corrected lineup in ~60s.
