@@ -27,27 +27,28 @@ merits; a strong new thread with staying power earns its way into a *new* theme.
 ## Compute Scarcity & the Physical Buildout
 - **Status:** 🟢 active
 - **Led editions:** #7, #10, #12, #16 · **First seen:** #7 · **Last led:** #16
-- **Where it stands:** The shift to local and specialized inference is reshaping compute demand beyond raw capacity, driving new hardware and data center investments for cost and performance optimization.
+- **Where it stands:** Compute optimization is shifting to interconnects for sparse models, specialized inference hardware (TPUs), and local/edge deployments for cost and latency efficiency.
 
 ## Sovereignty / Who Owns the Model & the Alpha
 - **Status:** 🟢 hot
 - **Led editions:** #18, #19, #21, #22 · **First seen:** #18 · **Last led:** #22
-- **Where it stands:** Frontier model releases like Claude Opus 5 highlight critical tensions between benchmarks and practical utility, especially regarding data retention and enterprise control over AI applications.
+- **Where it stands:** Model selection extends beyond benchmarks to real-world performance, personality, and data retention policies, driven by enterprise desire for control and practical utility.
 
 ## Open Weights Closing / Leapfrogging the Frontier
 - **Status:** 🟢 hot, accelerating
 - **Led editions:** #19, #22 · **First seen:** #19 · **Last led:** #22
-- **Where it stands:** Open models are driving the shift to local and specialized inference, pushing for efficiency in hardware and architecture while new closed models face scrutiny on real-world performance.
+- **Where it stands:** Open-source models, when fine-tuned, are demonstrating performance, latency, and cost advantages over frontier models, while major labs compete on price for their secondary models.
 
 ## Token / AI-Spend Economics (cost & value migration)
 - **Status:** 🟢 active
 - **Led editions:** #5, #15, #17, #20 · **First seen:** #5 · **Last led:** #20
-- **Where it stands:** Enterprises are confronting escalating AI costs by shifting to local inference, specialized hardware, and optimizing for 'cost per accepted task' over raw price-per-token.
+- **Where it stands:** Frontier labs are actively competing on price-performance, using self-optimization to fund aggressive cuts; "cost per accepted task" is replacing "dollar per token" as the key operating metric, forcing enterprises to rethink AI spend.
 
 ## Agent Infrastructure Maturing (harnesses, stateful agents, reliability)
-- **Status:** 🟢 active
+- **Status:** 🟡 active but quiet
 - **Led editions:** #1, #2, #4, #8, #14 · **First seen:** #1 · **Last led:** #14
-- **Where it stands:** Autonomous agent attacks now necessitate autonomous AI-driven defense, pushing the frontier of agent governance, sandboxing, and control over defensive AI systems.
+- **Where it stands:** The memory / long-context problem; durable agents; agent sandboxes; MCP interop.
+  Hasn't *led* since #14 but recurs as supporting signal.
 
 ## SaaS → Agent-Native Flip (build-vs-buy)
 - **Status:** 🟢 active
