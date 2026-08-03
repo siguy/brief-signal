@@ -294,6 +294,13 @@ ${transcript}`;
   }
 }
 
+// A source with legitimately nothing new is NOT a failed source. The weekly
+// freshness guard (check_kb_fresh in generate-weekly.sh) proves an extractor
+// ran by checking the KB file's mtime — so an extractor that exits early
+// without writing is indistinguishable from one that crashed, and blocks the
+// whole run. See EMPTY_MARKER's use: we always write the file, and say so.
+const EMPTY_MARKER = "> **Status:** EMPTY — no new items this week.";
+
 function formatKnowledgeBase(extractions, deepDives, today) {
   let md = `# Podcast Intelligence Knowledge Base
 
@@ -301,7 +308,7 @@ function formatKnowledgeBase(extractions, deepDives, today) {
 > **Episodes processed:** ${extractions.length}
 > **HIGH signal episodes:** ${extractions.filter((e) => e.signal_rating === "HIGH").length}
 > **Deep dives:** ${Object.keys(deepDives).length}
-
+${extractions.length === 0 ? EMPTY_MARKER + "\n" : ""}
 ---
 
 `;
@@ -497,7 +504,21 @@ async function main() {
   log(`Total new episodes to process: ${allEpisodes.length}`);
 
   if (allEpisodes.length === 0) {
-    log("No new episodes found. Exiting.");
+    // Still write the KB. A quiet week is a successful run with nothing in it,
+    // and the freshness guard can only tell the two apart if the file exists
+    // and is fresh. Writing nothing here is what blocked the 2026-08-02 run.
+    const emptyKb = path.join(SKILLS_DIR, `podcasts-knowledge-base-${today}.md`);
+    if (fs.existsSync(emptyKb)) {
+      // The RSS stage shares this file and may have written entries already —
+      // never clobber them; touch it so freshness still sees this run.
+      const now = new Date();
+      fs.utimesSync(emptyKb, now, now);
+      log(`No new YouTube episodes. Existing KB left intact: ${emptyKb}`);
+    } else {
+      fs.mkdirSync(SKILLS_DIR, { recursive: true });
+      fs.writeFileSync(emptyKb, formatKnowledgeBase([], {}, today), "utf-8");
+      log(`No new YouTube episodes. Wrote empty KB: ${emptyKb}`);
+    }
     process.exit(0);
   }
 

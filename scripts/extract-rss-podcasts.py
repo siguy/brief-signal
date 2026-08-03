@@ -418,15 +418,21 @@ def format_knowledge_base_entries(extractions: list[dict], deep_dives: dict[str,
     return md
 
 
+# Kept byte-identical to EMPTY_MARKER in scripts/extract-podcasts.js so one
+# regex in generate-briefing.js and signal-digest.js reads every source.
+EMPTY_MARKER = "> **Status:** EMPTY — no new items this week."
+
+
 def format_knowledge_base_header(total: int, high: int, deep_dive_count: int, today: str) -> str:
     """Format the knowledge base file header."""
+    empty = f"{EMPTY_MARKER}\n" if total == 0 else ""
     return f"""# Podcast Intelligence Knowledge Base
 
 > **Extracted:** {today}
 > **Episodes processed:** {total}
 > **HIGH signal episodes:** {high}
 > **Deep dives:** {deep_dive_count}
-
+{empty}
 ---
 
 """
@@ -493,6 +499,26 @@ def merge_raw_json(new_entries: list[dict], today: str) -> None:
     combined = existing + new_entries
     raw_path.write_text(json.dumps(combined, indent=2), encoding="utf-8")
     log(f"Raw JSON: {raw_path} ({len(new_entries)} new, {len(combined)} total)")
+
+
+def ensure_knowledge_base_exists(today: str) -> None:
+    """Guarantee a fresh KB file even when this stage found nothing.
+
+    The YouTube stage (extract-podcasts.js) writes the same dated file, so if it
+    already produced entries we must NOT overwrite them — just touch the file so
+    the freshness guard sees this run. Only when no file exists do we create an
+    empty one, marked so downstream stages can tell "ran, nothing new" apart
+    from "never ran".
+    """
+    SKILLS_DIR.mkdir(parents=True, exist_ok=True)
+    kb_path = SKILLS_DIR / f"podcasts-knowledge-base-{today}.md"
+    if kb_path.exists():
+        kb_path.touch()
+        log(f"Knowledge base: left intact, touched {kb_path}")
+    else:
+        header = format_knowledge_base_header(0, 0, 0, today)
+        kb_path.write_text(header, encoding="utf-8")
+        log(f"Knowledge base: wrote empty {kb_path}")
 
 
 def merge_knowledge_base(entries_md: str, extractions: list[dict], deep_dives: dict, today: str) -> None:
@@ -574,7 +600,13 @@ def main() -> None:
 
     log(f"Total new episodes to process: {len(all_episodes)}")
     if not all_episodes:
-        log("No new episodes found. Exiting.")
+        # A quiet week is a successful run with nothing in it. The freshness
+        # guard (check_kb_fresh in generate-weekly.sh) proves an extractor ran
+        # by the KB file's mtime, so returning without writing looks identical
+        # to a crash and blocks the whole pipeline — which is what happened on
+        # 2026-08-02. Always leave a fresh file behind.
+        ensure_knowledge_base_exists(today)
+        log("No new episodes found.")
         return
 
     # Process each episode

@@ -18,6 +18,7 @@ const {
   stripRegistryFooter,
   parseArgs,
   targetDateFromLineup,
+  isEmptyKb,
 } = require("./generate-briefing.js");
 
 // One complete, well-formed briefing copy: frontmatter -> body -> Sources line.
@@ -257,6 +258,33 @@ test("stripRegistryFooter leaves a hand-edited lineup with no footer untouched",
   // be a no-op rather than eating the last section.
   const edited = "## Proposed Lineup\n\n1. OpenAI price cuts (promoted to lead by hand)\n";
   assert.strictEqual(stripRegistryFooter(edited), edited.trimEnd());
+});
+
+// --- Empty KB detection (a quiet source is not a failed source) -------------
+
+test("isEmptyKb detects the marker an extractor writes on a quiet week", () => {
+  const kb = [
+    "# Podcast Intelligence Knowledge Base",
+    "",
+    "> **Extracted:** 2026-08-10",
+    "> **Episodes processed:** 0",
+    "> **Status:** EMPTY — no new items this week.",
+    "",
+    "---",
+  ].join("\n");
+  assert.ok(isEmptyKb(kb));
+});
+
+test("isEmptyKb is false for a KB with real content", () => {
+  const kb = "# KB\n\n> **Extracted:** 2026-08-10\n> **Episodes processed:** 12\n\n---\n\n## Show (2026-08-09) — \"Title\"\n";
+  assert.ok(!isEmptyKb(kb));
+});
+
+test("isEmptyKb does not fire on the word EMPTY appearing in an entry", () => {
+  // The marker is anchored to a blockquote line at line start, so ordinary
+  // prose mentioning an empty queue must not mark the whole source dead.
+  const kb = "# KB\n\n---\n\n## Show (2026-08-09)\n- The status was EMPTY when they checked the queue.\n";
+  assert.ok(!isEmptyKb(kb));
 });
 
 console.log(`\nAll ${passed} tests passed.`);
