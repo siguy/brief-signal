@@ -484,3 +484,25 @@ we'd missed.
   the original plan were already implemented, and one had already failed in
   production. Reading the code first would have saved the effort.
 - **When a check and its subject share a brain, it isn't a check.**
+
+### What actually shipped (2026-08-03)
+
+Five pull requests, in the order they mattered:
+
+1. **`npm run redraft`** — the door in the gate. Edit the lineup's bullets, run
+   one command, get fresh prose from *your* selection in about a minute.
+2. **`npm run signal`** — a deterministic digest of what the week's sources held,
+   with a lane that flags first-party Google and competitor announcements the
+   draft never cited. Pure `grep`; nothing in it can rationalise.
+3. **Grading for bookmarks and the playlist** — so a Google announcement arrives
+   with a signal attached instead of competing naked on narrative interest.
+4. **Empty ≠ failed** — a quiet week no longer reads as a crash.
+5. **The critique demoted, the angle format rewritten** — the reviewer stopped
+   being able to rewrite the briefing, and "Your angle" became a rep's argument
+   instead of a quiz.
+
+Two dead things turned up along the way and are worth remembering as a *category*:
+a test suite (`lint-briefing.test.js`) with 12 passing tests that was wired into
+nothing, and a lint rule that switched itself off when a heading lost its colon.
+Both had been silently useless for weeks. **Code that isn't run is not code —
+it's a comment that costs you confidence.** Check that your checks still run.
