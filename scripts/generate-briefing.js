@@ -188,6 +188,19 @@ function stripLineupFences(rawLineup) {
 // forces the Lead-Story Doctrine to run as an explicit selection step, and the
 // lineup file that lands in the PR lets the reviewer check "is this the right
 // set of stories?" before line-editing.
+//
+// REMOVED (2026-08-03): a "**HIGH-signal disposition:**" instruction that asked
+// the model to list every HIGH podcast episode and where it landed. Do not
+// reinstate it. A model auditing its own selection is not a check — in the
+// 2026-08-03 baseline it listed 19 of the KB's 20 HIGH episodes and nothing
+// caught the gap. It also cost ~35 lines per run TWICE over: stripRegistryFooter
+// only strips from "**Proposed registry update:**" onward, so the block rode
+// into Stage 4b as input as well.
+//
+// `npm run signal` now answers the same question deterministically — it reads
+// the KB's grades and the draft's URLs and reports HIGH episodes that never got
+// cited. generate-weekly.sh puts that output in the PR body, which is where the
+// reviewer actually reads it.
 function lineupTask(edition) {
   return `---
 
@@ -219,8 +232,6 @@ For each story:
 - {story} — {no seller play / no new development / too old / thin / already led a prior edition}
 
 **Model-release coverage self-check:** list EVERY major model release or benchmark milestone found anywhere in the KBs, and where each landed (lead / big picture / quick hit / cut). Nothing major may be silently dropped — this is how we avoid missing a release like Kimi K3.
-
-**HIGH-signal disposition:** list EVERY podcast episode rated HIGH (and every deep dive) in the podcast KB, and where each landed (lead / big picture / quick hit / cut + one-line reason). A HIGH episode outranks a MEDIUM/LOW item for a Quick Hit slot by default — if a MEDIUM item takes a slot while a HIGH episode sits cut, justify the exception explicitly (fresher, more seller-relevant, or the HIGH episode's substance is already covered by a Big Picture story). Silence is not a disposition.
 
 **Proposed registry update:** if no "## Theme Registry" section was provided to you above, write "No registry provided this run" and skip straight to your Quick Hits — do not fabricate one. Otherwise: the registry informs selection — it never gates it (a new thread or standalone one-off may always lead on its own merits). For each Theme Registry arc that led or advanced this edition, one line: {theme name} — moved to: {new one-line "where it stands"}. Then, only where earned, list births and retirements:
 - NEW THEME: {name} — {why it earns a slot: gravity across ≥2 sources AND plausible staying power, not a one-off}
