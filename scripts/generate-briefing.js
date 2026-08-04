@@ -12,6 +12,10 @@
 const { GoogleGenAI } = require("@google/genai");
 const fs = require("fs");
 const path = require("path");
+// One list of KB kinds, shared with the digest. Previously the prefixes were
+// hardcoded in three places in this file alone, so adding a source meant three
+// edits and missing one meant the file was filtered in but never selected.
+const { KB_KINDS } = require("./signal-digest.js");
 
 const SKILLS_DIR = path.join(process.env.HOME, "skills");
 const BRIEFINGS_DIR = path.join(__dirname, "..", "content", "briefings");
@@ -19,41 +23,26 @@ const PROMPT_PATH = path.join(__dirname, "briefing-prompt.md");
 const THEMES_PATH = path.join(__dirname, "..", "content", "themes.md");
 const MAX_AGE_DAYS = 14;
 
+// Newest file of each kind within the freshness window.
+//
+// Return ORDER is prompt order (see the KB concatenation in buildPrompt), and
+// KB_KINDS puts lab news first deliberately: it is by far the smallest KB and
+// the only one whose entire justification is "this must get noticed". Last
+// position in a ~136k-token prompt is the worst place for recall.
 function findKnowledgeBaseFiles() {
   const cutoff = Date.now() - MAX_AGE_DAYS * 24 * 60 * 60 * 1000;
-  const files = fs.readdirSync(SKILLS_DIR).filter((f) => {
-    const match =
-      f.startsWith("bookmarks-knowledge-base-") ||
-      f.startsWith("playlist-knowledge-base-") ||
-      f.startsWith("podcasts-knowledge-base-");
-    if (!match) return false;
-    const stat = fs.statSync(path.join(SKILLS_DIR, f));
-    return stat.mtimeMs >= cutoff;
-  });
+  const files = fs
+    .readdirSync(SKILLS_DIR)
+    .filter((f) => KB_KINDS.some((k) => f.startsWith(k.prefix)))
+    .filter((f) => fs.statSync(path.join(SKILLS_DIR, f)).mtimeMs >= cutoff)
+    // Newest first, so the `find` below picks the most recent of each kind.
+    .sort(
+      (a, b) =>
+        fs.statSync(path.join(SKILLS_DIR, b)).mtimeMs -
+        fs.statSync(path.join(SKILLS_DIR, a)).mtimeMs
+    );
 
-  // Sort by modification time descending (newest first)
-  files.sort((a, b) => {
-    const sa = fs.statSync(path.join(SKILLS_DIR, a));
-    const sb = fs.statSync(path.join(SKILLS_DIR, b));
-    return sb.mtimeMs - sa.mtimeMs;
-  });
-
-  // Take the most recent of each type
-  const bookmarks = files.find((f) =>
-    f.startsWith("bookmarks-knowledge-base-")
-  );
-  const playlist = files.find((f) =>
-    f.startsWith("playlist-knowledge-base-")
-  );
-  const podcasts = files.find((f) =>
-    f.startsWith("podcasts-knowledge-base-")
-  );
-
-  const selected = [];
-  if (bookmarks) selected.push(bookmarks);
-  if (playlist) selected.push(playlist);
-  if (podcasts) selected.push(podcasts);
-  return selected;
+  return KB_KINDS.map((k) => files.find((f) => f.startsWith(k.prefix))).filter(Boolean);
 }
 
 // `--from-lineup <file>` runs Stage 4b ONLY, expanding a lineup you have already
@@ -188,6 +177,19 @@ function stripLineupFences(rawLineup) {
 // forces the Lead-Story Doctrine to run as an explicit selection step, and the
 // lineup file that lands in the PR lets the reviewer check "is this the right
 // set of stories?" before line-editing.
+//
+// REMOVED (2026-08-03): a "**HIGH-signal disposition:**" instruction that asked
+// the model to list every HIGH podcast episode and where it landed. Do not
+// reinstate it. A model auditing its own selection is not a check — in the
+// 2026-08-03 baseline it listed 19 of the KB's 20 HIGH episodes and nothing
+// caught the gap. It also cost ~35 lines per run TWICE over: stripRegistryFooter
+// only strips from "**Proposed registry update:**" onward, so the block rode
+// into Stage 4b as input as well.
+//
+// `npm run signal` now answers the same question deterministically — it reads
+// the KB's grades and the draft's URLs and reports HIGH episodes that never got
+// cited. generate-weekly.sh puts that output in the PR body, which is where the
+// reviewer actually reads it.
 function lineupTask(edition) {
   return `---
 
@@ -219,8 +221,6 @@ For each story:
 - {story} — {no seller play / no new development / too old / thin / already led a prior edition}
 
 **Model-release coverage self-check:** list EVERY major model release or benchmark milestone found anywhere in the KBs, and where each landed (lead / big picture / quick hit / cut). Nothing major may be silently dropped — this is how we avoid missing a release like Kimi K3.
-
-**HIGH-signal disposition:** list EVERY podcast episode rated HIGH (and every deep dive) in the podcast KB, and where each landed (lead / big picture / quick hit / cut + one-line reason). A HIGH episode outranks a MEDIUM/LOW item for a Quick Hit slot by default — if a MEDIUM item takes a slot while a HIGH episode sits cut, justify the exception explicitly (fresher, more seller-relevant, or the HIGH episode's substance is already covered by a Big Picture story). Silence is not a disposition.
 
 **Proposed registry update:** if no "## Theme Registry" section was provided to you above, write "No registry provided this run" and skip straight to your Quick Hits — do not fabricate one. Otherwise: the registry informs selection — it never gates it (a new thread or standalone one-off may always lead on its own merits). For each Theme Registry arc that led or advanced this edition, one line: {theme name} — moved to: {new one-line "where it stands"}. Then, only where earned, list births and retirements:
 - NEW THEME: {name} — {why it earns a slot: gravity across ≥2 sources AND plausible staying power, not a one-off}

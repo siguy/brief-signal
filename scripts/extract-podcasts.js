@@ -301,19 +301,35 @@ ${transcript}`;
 // whole run. See EMPTY_MARKER's use: we always write the file, and say so.
 const EMPTY_MARKER = "> **Status:** EMPTY — no new items this week.";
 
+// TWO GRADES, DELIBERATELY. They answer different questions and disagree on
+// roughly a third of episodes (2026-08-02 KB: 20/18/6 vs 19/5/20):
+//
+//   **Editorial Signal:**  does this episode matter as news? Drives the KB sort
+//                          order, the summary tables, and which episodes earn a
+//                          Level-2 deep dive. This is the one Stage 4a's lineup
+//                          disposition audits — "every HIGH episode accounted
+//                          for" means HIGH here.
+//   **GCP Relevance:**     can a Google Cloud seller act on it? Read by
+//                          signal-digest.js for its Tier 0 coverage sweep.
+//
+// It used to be called "Signal Rating", which collided with the prompt's
+// "HIGH-signal disposition" instruction: an auditor read GCP Relevance, the
+// model read Signal Rating, and five episodes looked fabricated when both were
+// in fact reporting truthfully from different columns. Never name either of
+// these just "signal" or just "rating" again — the ambiguity is the bug.
 function formatKnowledgeBase(extractions, deepDives, today) {
   let md = `# Podcast Intelligence Knowledge Base
 
 > **Extracted:** ${today}
 > **Episodes processed:** ${extractions.length}
-> **HIGH signal episodes:** ${extractions.filter((e) => e.signal_rating === "HIGH").length}
+> **HIGH editorial-signal episodes:** ${extractions.filter((e) => e.signal_rating === "HIGH").length}
 > **Deep dives:** ${Object.keys(deepDives).length}
 ${extractions.length === 0 ? EMPTY_MARKER + "\n" : ""}
 ---
 
 `;
 
-  // Sort by signal rating: HIGH first, then MEDIUM, then LOW
+  // Sort by editorial signal: HIGH first, then MEDIUM, then LOW
   const order = { HIGH: 0, MEDIUM: 1, LOW: 2 };
   const sorted = [...extractions].sort(
     (a, b) => (order[a.signal_rating] || 2) - (order[b.signal_rating] || 2)
@@ -322,7 +338,7 @@ ${extractions.length === 0 ? EMPTY_MARKER + "\n" : ""}
   for (const ep of sorted) {
     md += `## ${ep.podcast_name}${ep.episode_number ? ` ${ep.episode_number}` : ""} (${ep.date || "unknown"}) — "${ep.episode_title}"
 **Source:** [${ep.podcast_name} (YouTube)](${ep.url})
-**Duration:** ${ep.duration_min || "?"} min | **Signal Rating:** ${ep.signal_rating}
+**Duration:** ${ep.duration_min || "?"} min | **Editorial Signal:** ${ep.signal_rating}
 
 ### Notable Quotes
 `;
@@ -425,14 +441,14 @@ ${extractions.length === 0 ? EMPTY_MARKER + "\n" : ""}
 }
 
 function formatOrganizedTable(extractions, today) {
-  let md = `# Podcasts — Organized by Signal Rating
+  let md = `# Podcasts — Organized by Editorial Signal
 
 > **Extracted:** ${today}
 > **Total episodes:** ${extractions.length}
 
 ---
 
-## HIGH Signal
+## HIGH Editorial Signal
 
 | # | Podcast | Episode | Duration | GCP Relevance | Link |
 |---|---------|---------|----------|---------------|------|
@@ -442,12 +458,12 @@ function formatOrganizedTable(extractions, today) {
     md += `| ${n++} | ${ep.podcast_name} | **${ep.episode_title}** | ${ep.duration_min || "?"}min | ${ep.gcp_intelligence?.relevance || "?"} | [Watch](${ep.url}) |\n`;
   }
 
-  md += `\n## MEDIUM Signal\n\n| # | Podcast | Episode | Duration | GCP Relevance | Link |\n|---|---------|---------|----------|---------------|------|\n`;
+  md += `\n## MEDIUM Editorial Signal\n\n| # | Podcast | Episode | Duration | GCP Relevance | Link |\n|---|---------|---------|----------|---------------|------|\n`;
   for (const ep of extractions.filter((e) => e.signal_rating === "MEDIUM")) {
     md += `| ${n++} | ${ep.podcast_name} | **${ep.episode_title}** | ${ep.duration_min || "?"}min | ${ep.gcp_intelligence?.relevance || "?"} | [Watch](${ep.url}) |\n`;
   }
 
-  md += `\n## LOW Signal\n\n| # | Podcast | Episode | Duration | Link |\n|---|---------|---------|----------|------|\n`;
+  md += `\n## LOW Editorial Signal\n\n| # | Podcast | Episode | Duration | Link |\n|---|---------|---------|----------|------|\n`;
   for (const ep of extractions.filter((e) => e.signal_rating === "LOW")) {
     md += `| ${n++} | ${ep.podcast_name} | **${ep.episode_title}** | ${ep.duration_min || "?"}min | [Watch](${ep.url}) |\n`;
   }

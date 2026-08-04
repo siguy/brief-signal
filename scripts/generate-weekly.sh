@@ -131,6 +131,16 @@ log "Stage 2: Extracting YouTube playlist (foreground, serial)..."
 log "Waiting for background extractions (Stages 3a/3b) to complete..."
 wait $PID_PODCASTS_YT || true
 wait $PID_PODCASTS_RSS || true
+
+# Stage 3c: Lab news. Inline rather than backgrounded — it is four HTTP GETs and
+# finishes in ~2s, which does not warrant a PID and a `wait`. The `|| log` is not
+# decoration: under `set -e` an unwrapped failure here would abort the run before
+# Stage 4, and a lab having a bad gateway must never cost us the briefing.
+log "Stage 3c: Fetching lab news (Anthropic, OpenAI, DeepMind, Google Cloud)..."
+node scripts/fetch-lab-news.js >> "$LOG_FILE" 2>&1 \
+  && log "Stage 3c complete: lab news extracted." \
+  || log "WARN: Stage 3c failed (lab news). Continuing..."
+
 log "--- All extractions complete ---"
 
 # ---------------------------------------------------------------------------
@@ -162,6 +172,16 @@ STALE_KBS=""
 check_kb_fresh "bookmarks-knowledge-base" || STALE_KBS="${STALE_KBS} bookmarks"
 check_kb_fresh "playlist-knowledge-base"  || STALE_KBS="${STALE_KBS} playlist"
 check_kb_fresh "podcasts-knowledge-base"  || STALE_KBS="${STALE_KBS} podcasts"
+
+# Lab news is checked but NEVER gates the run. A week where no lab published
+# anything is normal, and gating on it would recreate the bug fixed in PR #99
+# (a source that ran and correctly found nothing blocking the pipeline).
+#
+# The check still runs, warn-only, because "quiet" and "crashed" need to stay
+# distinguishable: fetch-lab-news.js always writes a file, so a MISSING or STALE
+# one means the stage died — and generate-briefing.js accepts any KB up to 14
+# days old, which would silently serve last week's headlines as this week's.
+check_kb_fresh "labnews-knowledge-base" || log "WARN: lab news KB is stale or missing — Stage 3c likely failed. Continuing (lab news never gates the run)."
 
 if [ -n "$STALE_KBS" ]; then
   log "ERROR: Refusing to generate briefing with stale KB(s):${STALE_KBS}"
@@ -279,7 +299,15 @@ run_lint() {
       log "WARN: Linter errored (exit $exit_code). Continuing without lint."
     fi
   }
-  [ "$LINT_STATUS" = "pass" ] && log "Lint: clean."
+  # MUST be an `if`, not `[ ... ] && log`. Under `set -e` an AND-list that
+  # evaluates false makes the function return 1, and run_lint is called as a
+  # bare command — so a lint HARD FAILURE would abort the whole pipeline here:
+  # no repair pass (Stage 4c below is then unreachable), no commit, no PR, and
+  # the repo left on the briefing branch. The failure path is the one path that
+  # must not be fatal, since surfacing failures in the PR is the entire point.
+  if [ "$LINT_STATUS" = "pass" ]; then
+    log "Lint: clean."
+  fi
 }
 
 # Fetch story images BEFORE lint so the image validity checks (magic bytes,
@@ -359,6 +387,25 @@ if [ -n "${TODAY:-}" ] && [ -f "$LINEUP_FILE" ] && [ -f "$THEMES_PROPOSED_FILE" 
   fi
 fi
 
+# Signal digest — the deterministic coverage sweep. It reads the KBs' own
+# grades and the draft's own URLs (no model involved) and reports what did not
+# get cited: first-party Google/competitor items, and HIGH editorial-signal
+# podcast episodes. It replaces the self-audit Stage 4a used to write about
+# itself. Advisory, and non-fatal: a digest that fails must not cost us the PR.
+#
+# Date comes from BRIEFING_FILE's basename, not MONDAY_DATE: generate-briefing.js
+# names the file from Node's UTC date, which can differ by a day on a late-evening
+# run (see the note above BRIEFING_FILE). BRIEFING_FILE is resolved by `ls -t`, so
+# it is the one value guaranteed to name the file that actually got written.
+SIGNAL_SECTION=""
+SIGNAL_DATE=$(basename "${BRIEFING_FILE:-}" .md)
+if SIGNAL_OUT=$(node scripts/signal-digest.js --date "$SIGNAL_DATE" 2>&1); then
+  SIGNAL_SECTION=$'\n\n'"$SIGNAL_OUT"
+else
+  log "WARN: Signal digest failed. Continuing without it."
+  SIGNAL_SECTION=$'\n\n## Signal digest\n\n_Digest failed to run — check the log, then `npm run signal` by hand._'
+fi
+
 PR_BODY="$(cat <<PREOF
 ## Weekly AI Market Briefing — ${MONDAY_DATE}
 
@@ -384,7 +431,7 @@ A copy of the unedited first draft is committed at \`${DRAFT_FILE}\`. After you 
 
 ### After merging
 Run \`npm run audio:pr\` to generate the audio script and open a PR.
-Subscriber email is sent when the audio PR is merged.${CRITIQUE_SECTION}${THEME_SECTION}
+Subscriber email is sent when the audio PR is merged.${SIGNAL_SECTION}${CRITIQUE_SECTION}${THEME_SECTION}
 PREOF
 )"
 
