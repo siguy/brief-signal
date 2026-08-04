@@ -30,6 +30,13 @@ jobs:
           cache: npm
 
       - run: npm ci
+
+      # Nothing ran the test suite before this: not CI, not generate-weekly.sh.
+      # The tests existed and passed, but no gate enforced that — a broken lint
+      # rule or KB parser could reach main unnoticed. It runs before the build
+      # so a failure blocks the deploy rather than shipping past it.
+      - run: npm test
+
       - run: npm run build
         env:
           BASE_PATH: /brief-signal

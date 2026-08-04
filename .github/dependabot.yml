@@ -1,0 +1,51 @@
+version: 2
+
+# 15 Dependabot alerts accumulated with nothing driving them down; clearing them
+# in PR #98 was entirely manual, and the next round would have been too.
+#
+# Monthly, not weekly, and grouped into one PR. This repo gets reviewed roughly
+# once a week, when the briefing PR lands — four dependency PRs a month would
+# compete with the thing the review time is actually for, and a queue nobody
+# reads is how the alerts piled up in the first place.
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    groups:
+      # One PR for routine version bumps.
+      npm-dependencies:
+        patterns:
+          - "*"
+        update-types:
+          - minor
+          - patch
+      # Majors separately — they need reading, not rubber-stamping.
+      npm-major:
+        patterns:
+          - "*"
+        update-types:
+          - major
+    commit-message:
+      prefix: "chore(deps)"
+    # WHEN A PR HERE TOUCHES google-gax OR @google/genai, check package.json's
+    # `overrides`. They pin protobufjs ^7.6.5 and brace-expansion ^2.1.3 to
+    # force patched transitive versions. As of 2026-08-03 those pins are still
+    # load-bearing — google-gax@5.0.6 asks for protobufjs ^7.5.3 and
+    # @google/genai@1.43.0 for ^7.5.4, both below the patched floor. Drop an
+    # override once its parent's own floor clears it; a pin held forever is a
+    # pin that rots, and this is the only moment anyone will be looking.
+
+  # The deploy workflow's actions go stale silently and are a supply-chain
+  # surface; same cadence, separate ecosystem.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "chore(ci)"

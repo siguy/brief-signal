@@ -19,6 +19,26 @@ const {
   labelTimestamps,
 } = require("./lint-briefing.js");
 
+// Catch per-test so one failure does not abort the file, and COUNT the tests
+// rather than asserting a total in a string. This file previously ran bare
+// blocks and ended with `console.log("all 12 tests passed")` — a hardcoded
+// number that was already wrong (there were 13 blocks by then) and that could
+// never go down when a test failed. Same shape as signal-digest.test.js.
+let passed = 0;
+let failed = 0;
+function test(name, fn) {
+  try {
+    fn();
+    passed += 1;
+    console.log(`  \u2713 ${name}`);
+  } catch (err) {
+    failed += 1;
+    console.error(`  \u2717 ${name}`);
+    console.error(`    ${err.message}`);
+    process.exitCode = 1;
+  }
+}
+
 const CLEAN = `---
 title: "Test"
 ---
@@ -55,42 +75,42 @@ One position. Motions.
 `;
 
 // 1. Clean fixture passes
-{
+test("Clean fixture passes", () => {
   const r = lint(CLEAN);
   assert.deepStrictEqual(r.hard, [], `clean fixture should pass, got: ${r.hard}`);
-}
+});
 
 // 2. Truncated URL is hard
-{
+test("Truncated URL is hard", () => {
   const r = checkUrls(CLEAN.replace("status/123", "status/..."));
   assert.strictEqual(r.hard.length, 1);
   assert.ok(r.hard[0].includes("Truncated"));
-}
+});
 
 // 3. TLDR bullet without bold hook is hard
-{
+test("TLDR bullet without bold hook is hard", () => {
   const r = checkTldrHooks(CLEAN.replace("-   **Hook four:** fourth thing.", "-   plain prose bullet."));
   assert.ok(r.hard.some((m) => m.includes("lacks a bold hook")));
-}
+});
 
 // 4. TLDR bullet count enforced (3 bullets -> hard)
-{
+test("TLDR bullet count enforced (3 bullets -> hard)", () => {
   const r = checkTldrHooks(CLEAN.replace("-   **Hook four:** fourth thing.\n", ""));
   assert.ok(r.hard.some((m) => m.includes("must be 4-5")));
-}
+});
 
 // 5. Angle block missing the GCP line is hard
-{
+test("Angle block missing the GCP line is hard", () => {
   const broken = CLEAN.replace("3.  **Where the GCP opportunity is:** the line.\n", "");
   const r = checkAngleBlocks(broken);
   assert.strictEqual(r.hard.length, 1);
   assert.ok(r.hard[0].includes("Story One"));
-}
+});
 
 // 5b. REGRESSION: the heading matched with a trailing colon only, so the moment
 // the format dropped the colon (Edition #24) this whole check silently stopped
 // running. Both punctuations must be caught, and both closing labels accepted.
-{
+test("angle heading matches with or without a trailing colon, both closers accepted", () => {
   const noColonMissingCloser = `## The Big Picture
 
 ### A Story
@@ -117,71 +137,68 @@ Body text.
     checkAngleBlocks(legacy).hard.length, 0,
     "legacy format (colon + 'Where the GCP opportunity is') must still pass"
   );
-  console.log("  \u2713 angle heading matches with or without the colon; both closers accepted");
-}
+});
 
 // 6. Story with NO angle block is fine (context-only stories are allowed)
-{
+test("Story with NO angle block is fine (context-only stories are allowed)", () => {
   const noAngle = CLEAN.replace(
     /\*\*Your angle with founders:\*\*[\s\S]*?the line\.\n/,
     ""
   );
   assert.deepStrictEqual(checkAngleBlocks(noAngle).hard, []);
-}
+});
 
 // 7. Same URL in two BP stories, timestamps <30 min apart -> hard
-{
+test("Same URL in two BP stories, timestamps <30 min apart -> hard", () => {
   const overlap = CLEAN.replace("https://youtube.com/watch?v=bbb", "https://youtube.com/watch?v=aaa");
   const r = checkSourceOverlap(overlap); // 5:00 vs 10:00 = 5 min apart
   assert.strictEqual(r.hard.length, 1);
   assert.ok(r.hard[0].includes("min apart"));
-}
+});
 
 // 8. Same URL, timestamps 30+ min apart -> allowed
-{
+test("Same URL, timestamps 30+ min apart -> allowed", () => {
   const ok = CLEAN.replace("https://youtube.com/watch?v=bbb", "https://youtube.com/watch?v=aaa").replace(
     "(30 min watch, 10:00)",
     "(60 min watch, 45:00)"
   );
   assert.deepStrictEqual(checkSourceOverlap(ok).hard, []);
-}
+});
 
 // 9. Same URL, no parseable timestamps -> warn, not hard
-{
+test("Same URL, no parseable timestamps -> warn, not hard", () => {
   const noTs = CLEAN.replace("(60 min watch, 5:00)", "(article)")
     .replace("(30 min watch, 10:00)", "(article)")
     .replace("https://youtube.com/watch?v=bbb", "https://youtube.com/watch?v=aaa");
   const r = checkSourceOverlap(noTs);
   assert.deepStrictEqual(r.hard, []);
   assert.strictEqual(r.warn.length, 1);
-}
+});
 
 // 10. Banned word in prose is hard (inflections included); inside a URL it is not
-{
+test("Banned word in prose is hard (inflections included); inside a URL it is not", () => {
   assert.ok(checkBannedWords("founders leverage cost advantages").hard.length === 1);
   assert.ok(checkBannedWords("leveraging this quarter's prices").hard.length === 1);
   assert.ok(checkBannedWords("real synergies here").hard.length === 1);
   assert.deepStrictEqual(checkBannedWords("[x](https://a.com/leverage-post)").hard, []);
-}
+});
 
 // 11. Naming: bare "Vertex AI" is hard; "(FKA Vertex AI)" is allowed; GEAP is hard
-{
+test("Naming: bare 'Vertex AI' is hard; '(FKA Vertex AI)' is allowed; GEAP is hard", () => {
   assert.ok(checkNaming("built on Vertex AI today").hard.length === 1);
   assert.deepStrictEqual(checkNaming("Gemini Enterprise Agent Platform (FKA Vertex AI)").hard, []);
   assert.ok(checkNaming("the GEAP roadmap").hard.some((m) => m.includes("GEAP")));
-}
+});
 
 // 12. Timestamp parsing: mm:ss and h:mm:ss forms
-{
+test("Timestamp parsing: mm:ss and h:mm:ss forms", () => {
   assert.deepStrictEqual(labelTimestamps("(33 min read, 16:15)"), [16.25]);
   const [t] = labelTimestamps("(78 min watch, 0:37:25)");
   assert.ok(Math.abs(t - 37.4166) < 0.01);
-}
-
-console.log("lint-briefing.test.js: all 12 tests passed");
+});
 
 // 13. Image checks: missing, svg-in-jpg, tiny placeholder, valid JPEG
-{
+test("Image checks: missing, svg-in-jpg, tiny placeholder, valid JPEG", () => {
   const os = require("os");
   const fs = require("fs");
   const path = require("path");
@@ -208,13 +225,12 @@ console.log("lint-briefing.test.js: all 12 tests passed");
   assert.ok(r.hard.some((m) => m.includes("fake.jpg") && m.includes("SVG/HTML")));
   assert.ok(r.hard.some((m) => m.includes("tiny.jpg") && m.includes("small")));
   assert.ok(r.hard.some((m) => m.includes("absent.jpg") && m.includes("missing")));
-}
+});
 
-console.log("image checks: 4 sub-cases pass");
 
 // 14. Cross-edition lead repetition: re-leading last week's story is hard,
 // a genuinely different lead is clean, and both are judged against real prose.
-{
+test("cross-edition lead repetition is hard, and skips gracefully without an archive", () => {
   const os = require("os");
   const fs = require("fs");
   const path = require("path");
@@ -270,6 +286,10 @@ ${prose}
   assert.deepStrictEqual(u.hard, []);
   assert.strictEqual(u.warn.length, 1);
   assert.ok(u.warn[0].includes("skipped"));
-}
+});
 
-console.log("cross-edition lead checks: 4 sub-cases pass");
+if (failed > 0) {
+  console.error(`\n${failed} test(s) FAILED, ${passed} passed.`);
+} else {
+  console.log(`\nAll ${passed} tests passed.`);
+}
