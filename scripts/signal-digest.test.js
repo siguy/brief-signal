@@ -137,6 +137,48 @@ test("splitEntries reads the GCP Relevance grade on podcast entries", () => {
   assert.strictEqual(entries[0].grade, "HIGH");
 });
 
+// --- the two podcast grades ------------------------------------------------
+// These answer different questions and disagree on about a third of episodes.
+// Conflating them is what made five truthfully-graded episodes look fabricated
+// in the Edition #24 post-mortem, so each is pinned independently here.
+
+test("splitEntries keeps Editorial Signal and GCP Relevance apart", () => {
+  const kb = {
+    label: "Podcasts",
+    kind: "podcasts",
+    content:
+      '## Grit (2026-07-27) — "Ex-Twitter CEO on Why AI Needs a New Internet"\n' +
+      "https://www.youtube.com/watch?v=abc\n" +
+      "**Duration:** 62 min | **Editorial Signal:** HIGH\n" +
+      "- **GCP Relevance:** MEDIUM — indirect\n",
+  };
+  const [entry] = splitEntries(kb);
+  assert.strictEqual(entry.editorialSignal, "HIGH", "editorial signal is the episode's news value");
+  assert.strictEqual(entry.grade, "MEDIUM", "grade stays GCP Relevance — Tier 0 depends on it");
+});
+
+test("splitEntries still reads the pre-rename 'Signal Rating' label", () => {
+  // KBs up to MAX_AGE_DAYS old predate the rename and are still in the window.
+  const kb = {
+    label: "Podcasts",
+    kind: "podcasts",
+    content:
+      '## All-In (2026-07-29) — "The $1/Hour Robot"\n' +
+      "https://www.youtube.com/watch?v=def\n" +
+      "**Duration:** 90 min | **Signal Rating:** HIGH\n",
+  };
+  assert.strictEqual(splitEntries(kb)[0].editorialSignal, "HIGH");
+});
+
+test("splitEntries reports no editorial signal when the field is absent", () => {
+  const kb = {
+    label: "Bookmarks",
+    kind: "bookmarks",
+    content: "**[@sama (2026-07-30) — a post](https://x.com/sama/status/1)**\n",
+  };
+  assert.strictEqual(splitEntries(kb)[0].editorialSignal, null);
+});
+
 test("splitEntries handles the playlist's numbered-heading format", () => {
   const kb = {
     label: "Playlist",
