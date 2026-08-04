@@ -110,11 +110,20 @@ function splitEntries(kb) {
     const link = header.match(/\]\((https?:\/\/[^)\s]+)\)/);
     const bare = text.match(/(https?:\/\/[^\s)\]]+)/);
     const grade = text.match(/\*\*GCP Relevance:\*\*\s*(HIGH|MEDIUM|LOW)/i);
+    // The podcast KB carries a SECOND, independent grade — see the comment in
+    // extract-podcasts.js. `grade` above is GCP Relevance ("can a seller act on
+    // it"), which drives the Tier 0 lanes. `editorialSignal` is "does it matter
+    // as news", which is what Stage 4a's lineup disposition is auditing. They
+    // disagree on roughly a third of episodes, so the two must never be merged.
+    // `Signal Rating` is the pre-rename label: KBs up to 14 days old still use
+    // it, so both spellings are accepted until the window rolls over.
+    const signal = text.match(/\*\*(?:Editorial Signal|Signal Rating):\*\*\s*(HIGH|MEDIUM|LOW)/i);
     return {
       source: kb.label,
       header: header.replace(/^#+\s*/, "").replace(/\*\*/g, "").trim(),
       url: link ? link[1] : bare ? bare[1] : null,
       grade: grade ? grade[1].toUpperCase() : null,
+      editorialSignal: signal ? signal[1].toUpperCase() : null,
       text,
     };
   });
@@ -167,8 +176,13 @@ function mark(entry, urls) {
   return hit ? "  ✓ cited" : "  ⚠ NOT CITED";
 }
 
-function line(entry, urls) {
-  const grade = entry.grade ? `[${entry.grade}] ` : "";
+// `label` names which grade the bracket is showing. Tier 0 omits it — every
+// line there is GCP Relevance, so the column is unambiguous in context. The
+// HIGH-editorial-signal roll-up passes "GCP" because the section is keyed on
+// the OTHER grade, and an unlabelled [MEDIUM] under a "HIGH" heading is
+// precisely the collision this change exists to remove.
+function line(entry, urls, label = "") {
+  const grade = entry.grade ? `[${label ? `${label}: ` : ""}${entry.grade}] ` : "";
   return `- ${grade}${entry.header}${mark(entry, urls)}\n  ${entry.source}${entry.url ? ` · ${entry.url}` : ""}`;
 }
 
@@ -248,17 +262,49 @@ function main() {
   );
   out.push("");
 
+  // HIGH editorial-signal roll-up — the deterministic replacement for the
+  // model's self-audit, which Stage 4a no longer emits.
+  //
+  // That audit asked the model to list every HIGH episode and say where it
+  // landed. It was unreliable in the way self-audits are: in the 2026-08-03
+  // baseline it listed 19 of the KB's 20 HIGH episodes, and nothing flagged the
+  // missing row. It was also only ever a proxy for the question worth asking.
+  //
+  // This asks the question directly — did each HIGH episode's permalink reach
+  // the draft — off the KB's own grades and the draft's own URLs. No model is
+  // consulted, so no row can go missing and no grade can be misreported. It is
+  // strictly stronger than the audit: an episode the model "dispositioned" but
+  // silently dropped shows up here as NOT CITED.
+  //
+  // Reads `curated`, not `entries`: lab news carries no editorial signal, and
+  // saying so explicitly beats relying on a missing field to filter it out.
+  const highSignal = curated.filter((e) => e.editorialSignal === "HIGH");
+  if (highSignal.length) {
+    const uncitedHigh = highSignal.filter((e) => cited(e, urls) === false);
+    out.push("### HIGH editorial-signal episodes (advisory)");
+    out.push("");
+    out.push(
+      urls && uncitedHigh.length
+        ? `${uncitedHigh.length} of ${highSignal.length} not cited in the draft:\n` +
+            uncitedHigh.map((e) => line(e, urls, "GCP")).join("\n")
+        : urls
+          ? `All ${highSignal.length} cited in the draft.`
+          : `${highSignal.length} this week — no draft to check against.`
+    );
+    out.push("");
+  }
+
   // Lab news gets its own section for the reason given above: it is uniformly
   // first-party, so the useful question is not "is this first-party?" but
   // "did the labs announce something we never covered?".
   if (labNews.length) {
-    const uncited = labNews.filter((e) => cited(e, urls) === false);
+    const uncitedLab = labNews.filter((e) => cited(e, urls) === false);
     out.push(`### Lab news — announcements straight from the labs (advisory)`);
     out.push("");
     out.push(
-      urls && uncited.length
-        ? `${uncited.length} of ${labNews.length} not cited in the draft:\n` +
-            uncited.map((e) => `- ${e.header}${mark(e, urls)}\n  ${e.url || ""}`).join("\n")
+      urls && uncitedLab.length
+        ? `${uncitedLab.length} of ${labNews.length} not cited in the draft:\n` +
+            uncitedLab.map((e) => `- ${e.header}${mark(e, urls)}\n  ${e.url || ""}`).join("\n")
         : urls
           ? `All ${labNews.length} cited in the draft.`
           : `${labNews.length} this week — no draft to check against.`

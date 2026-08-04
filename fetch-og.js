@@ -1,7 +1,7 @@
 const fs = require('fs');
+const os = require('os');
 const path = require('path');
-const { pipeline } = require('stream/promises');
-const { Readable } = require('stream');
+const { execSync, execFileSync } = require('child_process');
 
 const CONTENT_DIR = path.join(__dirname, 'content', 'briefings');
 
@@ -139,11 +139,113 @@ async function downloadImage(imageUrl, destPath) {
     if (!res.ok) return false;
 
     const buffer = Buffer.from(await res.arrayBuffer());
-    fs.writeFileSync(destPath, buffer);
-    return true;
+    return writeVerifiedImage(buffer, destPath);
   } catch (e) {
     console.log(`  [skip] Failed to download image: ${e.message}`);
     return false;
+  }
+}
+
+// Identify an image by its magic bytes. Content-Type is not good enough — a
+// server can send image/jpeg over anything, and did: 11 PNGs and a WebP are
+// sitting in content/briefings/images under .jpg names today because whatever
+// arrived was written to whatever extension the markdown asked for.
+//
+// Deliberately narrow. These are the formats we can do something about; an
+// unrecognised buffer is rejected rather than guessed at, and the caller falls
+// through to the YouTube thumbnail and then the placeholder.
+function sniffImageFormat(buf) {
+  if (buf.length >= 3 && buf[0] === 0xff && buf[1] === 0xd8 && buf[2] === 0xff) return 'jpeg';
+  if (
+    buf.length >= 8 &&
+    buf[0] === 0x89 && buf[1] === 0x50 && buf[2] === 0x4e && buf[3] === 0x47 &&
+    buf[4] === 0x0d && buf[5] === 0x0a && buf[6] === 0x1a && buf[7] === 0x0a
+  ) return 'png';
+  if (
+    buf.length >= 12 &&
+    buf.slice(0, 4).toString('latin1') === 'RIFF' &&
+    buf.slice(8, 12).toString('latin1') === 'WEBP'
+  ) return 'webp';
+  return null;
+}
+
+// What the markdown reference claims the bytes are. lint-briefing.js's image
+// check keys off this same extension, so agreeing with it here is what keeps a
+// download from becoming a lint hard failure later.
+function expectedFormat(destPath) {
+  const ext = path.extname(destPath).toLowerCase();
+  if (ext === '.jpg' || ext === '.jpeg') return 'jpeg';
+  if (ext === '.png') return 'png';
+  return null;
+}
+
+// macOS ships `sips`; nothing else does, and CI never runs this file
+// (.github/workflows/deploy.yml is npm ci + npm run build). Absent it, a
+// format mismatch is simply rejected — the fallback chain still runs.
+let sipsLookup = null;
+function hasSips() {
+  if (sipsLookup === null) {
+    try {
+      execSync('command -v sips', { stdio: 'ignore' });
+      sipsLookup = true;
+    } catch {
+      sipsLookup = false;
+    }
+  }
+  return sipsLookup;
+}
+
+// Write `buffer` to destPath only if we can guarantee the bytes match the
+// extension — converting when we can, refusing when we can't. Returns false
+// rather than throwing so the caller's fallback chain is unchanged.
+function writeVerifiedImage(buffer, destPath) {
+  const actual = sniffImageFormat(buffer);
+  const wanted = expectedFormat(destPath);
+
+  if (!actual) {
+    const head = buffer.slice(0, 8).toString('utf8').trimStart();
+    const kind = head.startsWith('<') ? 'markup (SVG/HTML)' : 'unrecognised format';
+    console.log(`  [skip] Refusing to write ${kind} to ${path.basename(destPath)}`);
+    return false;
+  }
+  if (!wanted) {
+    console.log(`  [skip] Unsupported destination extension: ${path.basename(destPath)}`);
+    return false;
+  }
+  if (actual === wanted) {
+    fs.writeFileSync(destPath, buffer);
+    return true;
+  }
+  if (!hasSips()) {
+    console.log(`  [skip] Got ${actual}, need ${wanted}, and sips is unavailable: ${path.basename(destPath)}`);
+    return false;
+  }
+
+  // Convert via a temp file named with the TRUE extension — sips dispatches on
+  // the input extension, so handing it a .jpg full of PNG bytes fails.
+  const tmp = path.join(
+    fs.mkdtempSync(path.join(os.tmpdir(), 'brief-signal-img-')),
+    `src.${actual === 'jpeg' ? 'jpg' : actual}`
+  );
+  try {
+    fs.writeFileSync(tmp, buffer);
+    execFileSync('sips', ['-s', 'format', wanted, tmp, '--out', destPath], { stdio: 'ignore' });
+    // sips can exit 0 and still produce something unusable. Trust the bytes,
+    // not the exit code — that assumption is what put us here.
+    const written = fs.existsSync(destPath) ? fs.readFileSync(destPath) : Buffer.alloc(0);
+    if (sniffImageFormat(written) !== wanted) {
+      console.log(`  [skip] sips reported success but did not produce ${wanted}: ${path.basename(destPath)}`);
+      if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
+      return false;
+    }
+    console.log(`  [converted] ${actual} -> ${wanted}`);
+    return true;
+  } catch (e) {
+    console.log(`  [skip] Conversion failed (${e.message}): ${path.basename(destPath)}`);
+    if (fs.existsSync(destPath)) fs.unlinkSync(destPath);
+    return false;
+  } finally {
+    fs.rmSync(path.dirname(tmp), { recursive: true, force: true });
   }
 }
 
@@ -159,18 +261,21 @@ function findImageSources(markdown) {
     const alt = imgMatch[1];
     const filename = imgMatch[2];
 
-    // Search nearby lines (up to 10 below) for the first URL
-    let sourceUrl = null;
+    // Collect EVERY URL in the nearby lines (up to 11 below), not just the
+    // first. This used to `break` on the first match, which meant a story
+    // linking e.g. openai.com before its YouTube link could never reach the
+    // thumbnail fallback — the one source of images that practically always
+    // works. sourceUrl stays pinned to the first URL because that is the
+    // story's primary source and the right target for the og:image fetch;
+    // widening it would change which image every working story gets.
+    const sourceUrls = [];
     for (let j = i + 1; j < Math.min(i + 12, lines.length); j++) {
       const urlMatch = lines[j].match(/\((https?:\/\/[^)]+)\)/);
-      if (urlMatch) {
-        sourceUrl = urlMatch[1];
-        break;
-      }
+      if (urlMatch) sourceUrls.push(urlMatch[1]);
     }
 
-    if (sourceUrl) {
-      images.push({ alt, filename, sourceUrl, line: i + 1 });
+    if (sourceUrls.length) {
+      images.push({ alt, filename, sourceUrl: sourceUrls[0], sourceUrls, line: i + 1 });
     }
   }
   return images;
@@ -215,8 +320,10 @@ async function processBriefing(filepath) {
 
     // Fallback: most briefing sources are YouTube episodes — the thumbnail
     // is a real, on-topic image and practically never 404s at hqdefault.
+    // Try EVERY nearby link for a YouTube id, not just the primary source.
     if (!ok) {
-      for (const thumb of youtubeThumbUrls(img.sourceUrl)) {
+      const thumbs = (img.sourceUrls || [img.sourceUrl]).flatMap(youtubeThumbUrls);
+      for (const thumb of thumbs) {
         console.log(`  Trying YouTube thumbnail ${thumb}...`);
         ok = await downloadImage(thumb, destPath);
         if (ok) break;
@@ -271,4 +378,17 @@ async function main() {
   console.log('\nDone. Run `npm run build` to include images in output.');
 }
 
-main();
+// Only sweep content/briefings/ and hit the network when run as a script.
+// Without this guard, `require()`ing this file from a test walks every briefing
+// and starts downloading — which is why there were no tests for it.
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  sniffImageFormat,
+  expectedFormat,
+  writeVerifiedImage,
+  findImageSources,
+  youtubeThumbUrls,
+};

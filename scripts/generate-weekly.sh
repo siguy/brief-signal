@@ -299,7 +299,15 @@ run_lint() {
       log "WARN: Linter errored (exit $exit_code). Continuing without lint."
     fi
   }
-  [ "$LINT_STATUS" = "pass" ] && log "Lint: clean."
+  # MUST be an `if`, not `[ ... ] && log`. Under `set -e` an AND-list that
+  # evaluates false makes the function return 1, and run_lint is called as a
+  # bare command — so a lint HARD FAILURE would abort the whole pipeline here:
+  # no repair pass (Stage 4c below is then unreachable), no commit, no PR, and
+  # the repo left on the briefing branch. The failure path is the one path that
+  # must not be fatal, since surfacing failures in the PR is the entire point.
+  if [ "$LINT_STATUS" = "pass" ]; then
+    log "Lint: clean."
+  fi
 }
 
 # Fetch story images BEFORE lint so the image validity checks (magic bytes,
@@ -379,6 +387,25 @@ if [ -n "${TODAY:-}" ] && [ -f "$LINEUP_FILE" ] && [ -f "$THEMES_PROPOSED_FILE" 
   fi
 fi
 
+# Signal digest — the deterministic coverage sweep. It reads the KBs' own
+# grades and the draft's own URLs (no model involved) and reports what did not
+# get cited: first-party Google/competitor items, and HIGH editorial-signal
+# podcast episodes. It replaces the self-audit Stage 4a used to write about
+# itself. Advisory, and non-fatal: a digest that fails must not cost us the PR.
+#
+# Date comes from BRIEFING_FILE's basename, not MONDAY_DATE: generate-briefing.js
+# names the file from Node's UTC date, which can differ by a day on a late-evening
+# run (see the note above BRIEFING_FILE). BRIEFING_FILE is resolved by `ls -t`, so
+# it is the one value guaranteed to name the file that actually got written.
+SIGNAL_SECTION=""
+SIGNAL_DATE=$(basename "${BRIEFING_FILE:-}" .md)
+if SIGNAL_OUT=$(node scripts/signal-digest.js --date "$SIGNAL_DATE" 2>&1); then
+  SIGNAL_SECTION=$'\n\n'"$SIGNAL_OUT"
+else
+  log "WARN: Signal digest failed. Continuing without it."
+  SIGNAL_SECTION=$'\n\n## Signal digest\n\n_Digest failed to run — check the log, then `npm run signal` by hand._'
+fi
+
 PR_BODY="$(cat <<PREOF
 ## Weekly AI Market Briefing — ${MONDAY_DATE}
 
@@ -404,7 +431,7 @@ A copy of the unedited first draft is committed at \`${DRAFT_FILE}\`. After you 
 
 ### After merging
 Run \`npm run audio:pr\` to generate the audio script and open a PR.
-Subscriber email is sent when the audio PR is merged.${CRITIQUE_SECTION}${THEME_SECTION}
+Subscriber email is sent when the audio PR is merged.${SIGNAL_SECTION}${CRITIQUE_SECTION}${THEME_SECTION}
 PREOF
 )"
 
