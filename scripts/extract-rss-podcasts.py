@@ -350,7 +350,10 @@ def format_knowledge_base_entries(extractions: list[dict], deep_dives: dict[str,
         ep_num = f" {ep['episode_number']}" if ep.get("episode_number") else ""
         md += f'## {ep["podcast_name"]}{ep_num} ({ep.get("date", "unknown")}) — "{ep["episode_title"]}"\n'
         md += f'**Source:** [{ep["podcast_name"]} (RSS)]({ep.get("episode_url") or ep.get("url", "")})\n'
-        md += f'**Duration:** {ep.get("duration_min") or "?"} min | **Signal Rating:** {ep.get("signal_rating", "?")}\n\n'
+        # Label MUST match extract-podcasts.js — this stage appends to the same
+        # KB file, so two spellings would put two names for one field in one
+        # document. See the two-grade comment in extract-podcasts.js.
+        md += f'**Duration:** {ep.get("duration_min") or "?"} min | **Editorial Signal:** {ep.get("signal_rating", "?")}\n\n'
 
         # Notable Quotes
         md += "### Notable Quotes\n"
@@ -430,7 +433,7 @@ def format_knowledge_base_header(total: int, high: int, deep_dive_count: int, to
 
 > **Extracted:** {today}
 > **Episodes processed:** {total}
-> **HIGH signal episodes:** {high}
+> **HIGH editorial-signal episodes:** {high}
 > **Deep dives:** {deep_dive_count}
 {empty}
 ---
@@ -461,14 +464,14 @@ def format_organized_table_entries(extractions: list[dict]) -> str:
 
 def format_organized_table_header(total: int, today: str) -> str:
     """Format the organized table file header."""
-    return f"""# Podcasts — Organized by Signal Rating
+    return f"""# Podcasts — Organized by Editorial Signal
 
 > **Extracted:** {today}
 > **Total episodes:** {total}
 
 ---
 
-## HIGH Signal
+## HIGH Editorial Signal
 
 | # | Podcast | Episode | Duration | GCP Relevance | Link |
 |---|---------|---------|----------|---------------|------|
