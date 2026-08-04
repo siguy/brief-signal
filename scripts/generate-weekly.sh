@@ -131,6 +131,16 @@ log "Stage 2: Extracting YouTube playlist (foreground, serial)..."
 log "Waiting for background extractions (Stages 3a/3b) to complete..."
 wait $PID_PODCASTS_YT || true
 wait $PID_PODCASTS_RSS || true
+
+# Stage 3c: Lab news. Inline rather than backgrounded — it is four HTTP GETs and
+# finishes in ~2s, which does not warrant a PID and a `wait`. The `|| log` is not
+# decoration: under `set -e` an unwrapped failure here would abort the run before
+# Stage 4, and a lab having a bad gateway must never cost us the briefing.
+log "Stage 3c: Fetching lab news (Anthropic, OpenAI, DeepMind, Google Cloud)..."
+node scripts/fetch-lab-news.js >> "$LOG_FILE" 2>&1 \
+  && log "Stage 3c complete: lab news extracted." \
+  || log "WARN: Stage 3c failed (lab news). Continuing..."
+
 log "--- All extractions complete ---"
 
 # ---------------------------------------------------------------------------
@@ -162,6 +172,16 @@ STALE_KBS=""
 check_kb_fresh "bookmarks-knowledge-base" || STALE_KBS="${STALE_KBS} bookmarks"
 check_kb_fresh "playlist-knowledge-base"  || STALE_KBS="${STALE_KBS} playlist"
 check_kb_fresh "podcasts-knowledge-base"  || STALE_KBS="${STALE_KBS} podcasts"
+
+# Lab news is checked but NEVER gates the run. A week where no lab published
+# anything is normal, and gating on it would recreate the bug fixed in PR #99
+# (a source that ran and correctly found nothing blocking the pipeline).
+#
+# The check still runs, warn-only, because "quiet" and "crashed" need to stay
+# distinguishable: fetch-lab-news.js always writes a file, so a MISSING or STALE
+# one means the stage died — and generate-briefing.js accepts any KB up to 14
+# days old, which would silently serve last week's headlines as this week's.
+check_kb_fresh "labnews-knowledge-base" || log "WARN: lab news KB is stale or missing — Stage 3c likely failed. Continuing (lab news never gates the run)."
 
 if [ -n "$STALE_KBS" ]; then
   log "ERROR: Refusing to generate briefing with stale KB(s):${STALE_KBS}"
