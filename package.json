@@ -16,7 +16,7 @@
     "snapshot": "./scripts/snapshot-briefing.sh",
     "redraft": "node scripts/generate-briefing.js --from-lineup",
     "signal": "node scripts/signal-digest.js",
-    "test": "node scripts/generate-briefing.test.js && node scripts/lint-briefing.test.js && node scripts/signal-digest.test.js"
+    "test": "node scripts/generate-briefing.test.js && node scripts/lint-briefing.test.js && node scripts/signal-digest.test.js && node fetch-og.test.js"
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^6.4.0",
