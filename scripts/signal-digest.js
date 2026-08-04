@@ -33,11 +33,15 @@ const MAX_AGE_DAYS = 14;
 // generate-briefing.js — one convention, read by every consumer.
 const EMPTY_MARKER_RE = /^>\s*\*\*Status:\*\*\s*EMPTY\b/m;
 
+// ORDER IS LOAD-BEARING. generate-briefing.js builds its prompt by concatenating
+// KBs in this order, and lab news goes first on purpose: it is the smallest KB
+// and the only one added to close a verified miss, so burying it at the end of a
+// ~136k-token prompt would defeat the point of adding it.
 const KB_KINDS = [
+  { prefix: "labnews-knowledge-base-", label: "Lab news", kind: "labnews" },
   { prefix: "bookmarks-knowledge-base-", label: "Bookmarks", kind: "bookmarks" },
   { prefix: "podcasts-knowledge-base-", label: "Podcasts", kind: "podcasts" },
   { prefix: "playlist-knowledge-base-", label: "Playlist", kind: "playlist" },
-  { prefix: "labnews-knowledge-base-", label: "Lab news", kind: "labnews" },
 ];
 
 // Tier 0 lane A — the entry ORIGINATES from Google or a named competitor.
@@ -212,10 +216,19 @@ function main() {
   // full context) is allowed to filter them out; otherwise a 90-minute episode
   // that says "Google" once floods the lane. Ungraded entries always show —
   // which is why Step 3a matters: today that means every bookmark.
+  // Lab news is excluded from every lane and reported separately. Lane A exists
+  // to FIND first-party items hiding among curated sources; every lab-news entry
+  // is first-party by construction, so folding them in would add 30-50 rows a
+  // week and make the closing advisory read "38 items are not cited" every time
+  // — destroying the signal the lane exists to produce.
+  const isLabNews = (e) => e.source === "Lab news";
+  const curated = entries.filter((e) => !isLabNews(e));
+  const labNews = entries.filter(isLabNews);
+
   const isLow = (e) => e.grade === "LOW";
-  const laneA = entries.filter((e) => FIRST_PARTY_HANDLE.test(e.text) || FIRST_PARTY_DOMAIN.test(e.text));
-  const laneB = entries.filter((e) => !laneA.includes(e) && !isLow(e) && GOOGLE_MENTION.test(e.text));
-  const laneC = entries.filter(
+  const laneA = curated.filter((e) => FIRST_PARTY_HANDLE.test(e.text) || FIRST_PARTY_DOMAIN.test(e.text));
+  const laneB = curated.filter((e) => !laneA.includes(e) && !isLow(e) && GOOGLE_MENTION.test(e.text));
+  const laneC = curated.filter(
     (e) => !laneA.includes(e) && !laneB.includes(e) && !isLow(e) && COMPETITOR_MENTION.test(e.text)
   );
 
@@ -234,6 +247,24 @@ function main() {
       : "_none this week_"
   );
   out.push("");
+
+  // Lab news gets its own section for the reason given above: it is uniformly
+  // first-party, so the useful question is not "is this first-party?" but
+  // "did the labs announce something we never covered?".
+  if (labNews.length) {
+    const uncited = labNews.filter((e) => cited(e, urls) === false);
+    out.push(`### Lab news — announcements straight from the labs (advisory)`);
+    out.push("");
+    out.push(
+      urls && uncited.length
+        ? `${uncited.length} of ${labNews.length} not cited in the draft:\n` +
+            uncited.map((e) => `- ${e.header}${mark(e, urls)}\n  ${e.url || ""}`).join("\n")
+        : urls
+          ? `All ${labNews.length} cited in the draft.`
+          : `${labNews.length} this week — no draft to check against.`
+    );
+    out.push("");
+  }
 
   if (urls) {
     const missed = [...laneA, ...laneB].filter((e) => cited(e, urls) === false);
@@ -258,4 +289,5 @@ module.exports = {
   FIRST_PARTY_DOMAIN,
   GOOGLE_MENTION,
   COMPETITOR_MENTION,
+  KB_KINDS,
 };
