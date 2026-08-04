@@ -279,7 +279,15 @@ run_lint() {
       log "WARN: Linter errored (exit $exit_code). Continuing without lint."
     fi
   }
-  [ "$LINT_STATUS" = "pass" ] && log "Lint: clean."
+  # MUST be an `if`, not `[ ... ] && log`. Under `set -e` an AND-list that
+  # evaluates false makes the function return 1, and run_lint is called as a
+  # bare command — so a lint HARD FAILURE would abort the whole pipeline here:
+  # no repair pass (Stage 4c below is then unreachable), no commit, no PR, and
+  # the repo left on the briefing branch. The failure path is the one path that
+  # must not be fatal, since surfacing failures in the PR is the entire point.
+  if [ "$LINT_STATUS" = "pass" ]; then
+    log "Lint: clean."
+  fi
 }
 
 # Fetch story images BEFORE lint so the image validity checks (magic bytes,
