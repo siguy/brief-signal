@@ -43,11 +43,25 @@ How to execute on GCP.
 
 *Sources: bookmarks, playlist, podcasts*`;
 
+// Catch per-test so one failure does not abort the file. Previously an assert
+// threw straight out of the module: Node printed one stack trace and every
+// later test was skipped, so you fixed failures one run at a time. The exit
+// code was always correct — the summary line below is simply never reached on
+// a throw — but seeing one failure when there are five is its own bug.
+// Same shape as signal-digest.test.js.
 let passed = 0;
+let failed = 0;
 function test(name, fn) {
-  fn();
-  console.log(`  ✓ ${name}`);
-  passed++;
+  try {
+    fn();
+    passed += 1;
+    console.log(`  ✓ ${name}`);
+  } catch (err) {
+    failed += 1;
+    console.error(`  ✗ ${name}`);
+    console.error(`    ${err.message}`);
+    process.exitCode = 1;
+  }
 }
 
 // 1. The real failure mode: three concatenated copies -> collapse to one.
@@ -287,4 +301,8 @@ test("isEmptyKb does not fire on the word EMPTY appearing in an entry", () => {
   assert.ok(!isEmptyKb(kb));
 });
 
-console.log(`\nAll ${passed} tests passed.`);
+if (failed > 0) {
+  console.error(`\n${failed} test(s) FAILED, ${passed} passed.`);
+} else {
+  console.log(`\nAll ${passed} tests passed.`);
+}
