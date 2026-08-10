@@ -114,6 +114,29 @@ function checkUrls(md) {
   return { hard, warn: [] };
 }
 
+// A link closed with "]" instead of ")" renders as literal text, so the citation
+// silently stops being a link. Gemini does this repeatedly — once in Edition
+// #25's first draft, five more times in its redraft — and every other check
+// misses it: extractLinks() only sees well-formed links, so a broken one is
+// invisible precisely because it is broken.
+//
+// Also checks YouTube ID length. Real ids are exactly 11 characters; the Valar
+// Atomics citation shipped with a 10-character id that 404s, inherited from a
+// bug in extract-podcasts.js (see todos/001). Cheap shape check, and it catches
+// the whole class regardless of which upstream stage introduced it.
+function checkLinkSyntax(md) {
+  const hard = [];
+  for (const m of md.matchAll(/\]\((https?:\/\/[^)\s\]]+)\]/g)) {
+    hard.push(`Link closed with "]" instead of ")" — renders as text, not a link: ${m[1]}`);
+  }
+  for (const m of md.matchAll(/[?&]v=([A-Za-z0-9_-]+)/g)) {
+    if (m[1].length !== 11) {
+      hard.push(`YouTube id "${m[1]}" is ${m[1].length} chars (must be 11) — this link will 404`);
+    }
+  }
+  return { hard, warn: [] };
+}
+
 function checkTldrHooks(md) {
   const hard = [];
   const body = sectionBody(md, /^##\s+TLDR/);
@@ -393,6 +416,7 @@ function checkCrossEditionLead(md, baseDir = BRIEFINGS_DIR) {
 function lint(md) {
   const checks = [
     ["urls", checkUrls],
+    ["link-syntax", checkLinkSyntax],
     ["tldr", checkTldrHooks],
     ["angle-blocks", checkAngleBlocks],
     ["source-overlap", checkSourceOverlap],
@@ -450,6 +474,7 @@ module.exports = {
   leadTerms,
   leadOverlap,
   checkUrls,
+  checkLinkSyntax,
   checkTldrHooks,
   checkAngleBlocks,
   checkSourceOverlap,
