@@ -69,9 +69,16 @@ const COMPETITOR_MENTION =
   /\b(claude|llama|mistral|grok|deepseek|qwen|kimi)[\d.]*\b|\bGPT-?\d|\bazure\b|\bbedrock\b|\bsagemaker\b|\bcopilot\b/i;
 
 function parseArgs(argv) {
-  const args = { date: null };
+  const args = { date: null, lineup: null };
   const i = argv.indexOf("--date");
   if (i !== -1 && argv[i + 1]) args.date = argv[i + 1];
+  // `--lineup <file>` sweeps against a Stage 4a lineup instead of a finished
+  // draft, which is what makes the digest usable at the editorial gate: it
+  // answers "what did the planning pass leave on the floor?" before any prose
+  // exists. Matching works identically — a lineup cites its sources in
+  // `braids in:` and its Quick Hit candidates as ordinary markdown links.
+  const j = argv.indexOf("--lineup");
+  if (j !== -1 && argv[j + 1]) args.lineup = argv[j + 1];
   return args;
 }
 
@@ -118,10 +125,22 @@ function splitEntries(kb) {
     // `Signal Rating` is the pre-rename label: KBs up to 14 days old still use
     // it, so both spellings are accepted until the window rolls over.
     const signal = text.match(/\*\*(?:Editorial Signal|Signal Rating):\*\*\s*(HIGH|MEDIUM|LOW)/i);
+    // Every URL the entry carries, not just its header permalink. A bookmark's
+    // real subject is often the article it links to, and the briefing cites the
+    // article — so permalink-only matching reported stories that plainly ran as
+    // NOT CITED (Edition #25: the Black Hat talk, Cloudflare's Kitesurf post and
+    // WeatherNext were all cited via their own URLs, all three flagged missing).
+    // Overcounting misses is worse than the alternative: it teaches the reader
+    // that the section is noise, and then a real gap goes unread.
+    // t.co is excluded — X's shortener never appears in a briefing, and an
+    // unresolved shortener can never match anything anyway.
+    const urls = [...new Set((text.match(/https?:\/\/[^\s)\]"'>]+/g) || []))]
+      .filter((u) => !/^https?:\/\/t\.co\//i.test(u));
     return {
       source: kb.label,
       header: header.replace(/^#+\s*/, "").replace(/\*\*/g, "").trim(),
       url: link ? link[1] : bare ? bare[1] : null,
+      urls,
       grade: grade ? grade[1].toUpperCase() : null,
       editorialSignal: signal ? signal[1].toUpperCase() : null,
       text,
@@ -129,9 +148,11 @@ function splitEntries(kb) {
   });
 }
 
-// A story counts as "reached the draft" when the draft cites its permalink.
-// Deliberately strict: a story can be alluded to without being cited, but for
-// an advisory sweep an uncited source is exactly what's worth a second look.
+// A story counts as "reached the draft" when the draft cites any URL the KB
+// entry carries — its permalink or the article it links to. Still deliberately
+// mechanical: a story can be alluded to without being cited at all, and for an
+// advisory sweep an uncited source is exactly what's worth a second look.
+// Works unchanged on a lineup file, whose `braids in:` lists are ordinary links.
 function draftUrls(draftPath) {
   if (!draftPath || !fs.existsSync(draftPath)) return null;
   const text = fs.readFileSync(draftPath, "utf-8");
@@ -166,8 +187,10 @@ function latestBriefing() {
 }
 
 function cited(entry, urls) {
-  if (!urls || !entry.url) return null;
-  return urls.has(normalizeUrl(entry.url));
+  if (!urls) return null;
+  const candidates = entry.urls?.length ? entry.urls : entry.url ? [entry.url] : [];
+  if (!candidates.length) return null;
+  return candidates.some((u) => urls.has(normalizeUrl(u)));
 }
 
 function mark(entry, urls) {
@@ -194,14 +217,26 @@ function main() {
     process.exit(1);
   }
 
+  // At the editorial gate there is no draft yet, so sweep against the lineup.
+  // `against` names what we compared to, so every "not cited in the draft" line
+  // below can say "the lineup" when that is the truth — a digest that claims to
+  // have read a draft that does not exist is worse than no digest.
   const date = args.date || latestBriefing();
-  const draftPath = date ? path.join(BRIEFINGS_DIR, `${date}.md`) : null;
+  const draftPath = args.lineup || (date ? path.join(BRIEFINGS_DIR, `${date}.md`) : null);
   const urls = draftUrls(draftPath);
+  const against = args.lineup ? "the lineup" : "the draft";
   const entries = kbs.flatMap(splitEntries);
 
   const out = [];
-  out.push(`## Signal digest${date ? ` — ${date}` : ""}`);
+  out.push(`## Signal digest${date ? ` — ${date}` : ""}${args.lineup ? " (lineup)" : ""}`);
   out.push("");
+  if (args.lineup) {
+    out.push(
+      `_Swept against the Stage 4a lineup \`${path.basename(args.lineup)}\` — no draft exists yet. ` +
+        `Anything marked NOT CITED was not selected for the edition._`
+    );
+    out.push("");
+  }
 
   out.push("**Sources read**");
   for (const kb of kbs) {
@@ -285,10 +320,10 @@ function main() {
     out.push("");
     out.push(
       urls && uncitedHigh.length
-        ? `${uncitedHigh.length} of ${highSignal.length} not cited in the draft:\n` +
+        ? `${uncitedHigh.length} of ${highSignal.length} not cited in ${against}:\n` +
             uncitedHigh.map((e) => line(e, urls, "GCP")).join("\n")
         : urls
-          ? `All ${highSignal.length} cited in the draft.`
+          ? `All ${highSignal.length} cited in ${against}.`
           : `${highSignal.length} this week — no draft to check against.`
     );
     out.push("");
@@ -303,10 +338,10 @@ function main() {
     out.push("");
     out.push(
       urls && uncitedLab.length
-        ? `${uncitedLab.length} of ${labNews.length} not cited in the draft:\n` +
+        ? `${uncitedLab.length} of ${labNews.length} not cited in ${against}:\n` +
             uncitedLab.map((e) => `- ${e.header}${mark(e, urls)}\n  ${e.url || ""}`).join("\n")
         : urls
-          ? `All ${labNews.length} cited in the draft.`
+          ? `All ${labNews.length} cited in ${against}.`
           : `${labNews.length} this week — no draft to check against.`
     );
     out.push("");
@@ -316,8 +351,8 @@ function main() {
     const missed = [...laneA, ...laneB].filter((e) => cited(e, urls) === false);
     out.push(
       missed.length
-        ? `> **${missed.length} first-party or Google-specific item(s) are not cited in the draft.** Advisory only — check whether that was deliberate.`
-        : "> All first-party and Google-specific items are cited in the draft."
+        ? `> **${missed.length} first-party or Google-specific item(s) are not cited in ${against}.** Advisory only — check whether that was deliberate.`
+        : `> All first-party and Google-specific items are cited in ${against}.`
     );
   }
 
@@ -330,6 +365,7 @@ module.exports = {
   splitEntries,
   EMPTY_MARKER_RE,
   normalizeUrl,
+  cited,
   parseArgs,
   FIRST_PARTY_HANDLE,
   FIRST_PARTY_DOMAIN,

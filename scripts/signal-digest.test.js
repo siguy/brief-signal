@@ -12,6 +12,7 @@ const {
   splitEntries,
   normalizeUrl,
   parseArgs,
+  cited,
   FIRST_PARTY_HANDLE,
   FIRST_PARTY_DOMAIN,
   GOOGLE_MENTION,
@@ -196,6 +197,72 @@ test("parseArgs reads --date", () => {
 // Report failures honestly. A summary that says "all passed" while a test
 // failed is the same class of silent-success bug this pipeline keeps getting
 // bitten by — see tasks/lessons.md on silent fallbacks.
+// --- cited(): a story counts when ANY of its URLs reached the draft ---------
+// Regression from Edition #25: matching only the header permalink reported the
+// Black Hat talk, Cloudflare's Kitesurf post and WeatherNext as NOT CITED even
+// though all three ran — the briefing cited each one's own article URL. A digest
+// that overstates misses trains the reader to skip it.
+
+test("cited matches a bookmark via its linked article, not just the permalink", () => {
+  const entry = {
+    url: "https://x.com/CloudflareDev/status/2085394318005846411",
+    urls: [
+      "https://x.com/CloudflareDev/status/2085394318005846411",
+      "https://blog.cloudflare.com/kitesurf/",
+    ],
+  };
+  const draft = new Set([normalizeUrl("https://blog.cloudflare.com/kitesurf/")]);
+  assert.strictEqual(cited(entry, draft), true);
+});
+
+test("cited still reports a genuine miss", () => {
+  const entry = {
+    url: "https://x.com/bgurley/status/2085440000000000000",
+    urls: [
+      "https://x.com/bgurley/status/2085440000000000000",
+      "https://p3institute.substack.com/p/from-open-source-software",
+    ],
+  };
+  const draft = new Set([normalizeUrl("https://blog.cloudflare.com/kitesurf/")]);
+  assert.strictEqual(cited(entry, draft), false);
+});
+
+test("cited falls back to url when urls is absent", () => {
+  const entry = { url: "https://blog.google/weathernext/" };
+  const draft = new Set([normalizeUrl("https://blog.google/weathernext/")]);
+  assert.strictEqual(cited(entry, draft), true);
+});
+
+test("cited returns null with no draft to compare against", () => {
+  assert.strictEqual(cited({ url: "https://x.com/a/status/1", urls: [] }, null), null);
+});
+
+test("splitEntries excludes t.co shorteners from an entry's urls", () => {
+  // An unresolved shortener can never match a briefing URL, so counting it
+  // would only ever produce noise.
+  const kb = {
+    kind: "bookmarks",
+    label: "Bookmarks",
+    content: [
+      "**[@someone (2026-08-06) — A post](https://x.com/someone/status/123)** (1 min)",
+      "",
+      "Read this https://t.co/abc123 now",
+      "",
+      "*Linked: \"A Real Article\" — 7 min read* — https://example.com/article",
+      "",
+      "- **GCP Relevance:** HIGH — test entry.",
+    ].join("\n"),
+  };
+  const [entry] = splitEntries(kb);
+  assert.ok(!entry.urls.some((u) => u.includes("t.co")), "t.co should be filtered out");
+  assert.ok(entry.urls.includes("https://example.com/article"), "article URL should be kept");
+});
+
+test("parseArgs reads --lineup for the pre-draft sweep", () => {
+  const args = parseArgs(["--lineup", "drafts/2026-08-10-lineup.md"]);
+  assert.strictEqual(args.lineup, "drafts/2026-08-10-lineup.md");
+});
+
 if (failed > 0) {
   console.error(`\n${failed} test(s) FAILED, ${passed} passed.`);
 } else {

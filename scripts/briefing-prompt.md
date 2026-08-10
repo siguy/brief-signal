@@ -163,7 +163,7 @@ The 2-3 lead stories, ordered as a narrative arc (related stories adjacent). Alw
 
 {The story. ~250-300 words MAX per story — usually 1-2 tight paragraphs. Lead with the sharpest fact + source link, give the context that makes it matter, and — when two items are merged — name the tension between them. Every claim carries an inline [link with a time label (2 min read)](url).}
 
-**Your angle with founders** {Include ONLY when a seller can act on the story (Principle 2) — omit entirely for context-only stories like energy/power. When present: 4 bullets — concede → eval → compete → "Where GCP wins:" — roughly 250-350 words. At most ONE question, and only if it reframes. Use the format in the Section Voice Guide.}
+**Your angle with founders** {Include ONLY when a seller can act on the story (Principle 2) — omit entirely for context-only stories like energy/power. When present: 4 bullets, roughly 180-220 words, closing with "Where GCP wins:". The four obligations are fixed but the SHAPE MUST VARY between stories in an edition — never run the same lead-in pattern twice. At most ONE question, and only if it reframes. See the shapes in the Section Voice Guide.}
 
 ### {Item Title}
 
@@ -228,24 +228,44 @@ Every thread this edition — {name them in a clause} — points to one GCP posi
 
 **First decide whether the story even has an angle (Principle 2):** include this block only when a cloud or frontier-lab seller could actually act on the story. For context-only stories — energy/power supply is the classic case — omit it entirely rather than manufacturing an angle.
 
-This block is a **rep's toolkit for a real conversation**, not a list of questions. It is four bullets, each with a bolded lead-in, roughly 250-350 words total. Use **at most ONE question in the whole block, and only if it reframes the decision** — a question the founder can answer about something they control. Questions are not the unit of value here; the argument is.
+This block is a **rep's toolkit for a real conversation**, not a list of questions. It is four bullets, each with a bolded lead-in, **roughly 180-220 words total** — tight enough that a rep can hold it in their head walking into a meeting. Use **at most ONE question in the whole block, and only if it reframes the decision** — a question the founder can answer about something they control. Questions are not the unit of value here; the argument is.
 
-The four moves, in order:
+**Four obligations, but NOT a fixed script.** Every angle block must do these four things:
 
-1. **Concede what is actually true.** If a rival is genuinely cheaper, faster, or better on a public benchmark, say so first and plainly. A rep who argues against a number the founder can look up loses the room.
-2. **Move the decision to an eval on their workload.** A leaderboard is not their workload; a token price is not their bill. Push toward measuring cost per accepted outcome on their own data — counting egress, grounding, latency to where the data sits, governance, and commitments they already hold. Say explicitly that if the rival still wins, they should use it.
-3. **Compete where the news cannot reach.** Name the dimensions a price cut or a benchmark cannot touch: frontier reasoning, grounding, data residency, agentic orchestration, TPU economics at scale.
-4. **"Where GCP wins:"** one line naming the concrete deal motion. This is the ONE place GCP product positioning is allowed outside "Our Play" — it is required, not a violation.
+1. **Grant what is actually true.** If a rival is genuinely cheaper, faster, or better on a public benchmark, say so first and plainly. A rep who argues against a number the founder can look up loses the room.
+2. **Move the decision to something testable on their workload.** A leaderboard is not their workload; a token price is not their bill. Push toward measuring on their own data — cost per accepted outcome, egress, grounding, latency to where the data sits, governance, commitments they already hold. Say explicitly that if the rival still wins, they should use it.
+3. **Compete where the news cannot reach.** Name the dimensions a price cut or a benchmark cannot touch: frontier reasoning, grounding, data residency, agentic orchestration, inference economics at scale.
+4. **"Where GCP wins:"** one line naming the concrete deal motion. This is the ONE place GCP product positioning is allowed outside "Our Play" — it is required, not a violation, and it always closes the block.
 
-**Yes (the shape — see Edition #24 for full worked examples):**
-> - **Concede the tier — don't defend the price list.** The mid-tier is commoditizing, and on public benchmarks the rival currently looks both cheaper and stronger. Say it first, plainly.
-> - **Then insist on the eval.** A leaderboard is not their workload and a token price is not their bill. If they still win the eval, tell them to use it; the rep who says that is the one they call next quarter.
-> - **Compete where a price cut cannot reach.** Frontier reasoning, grounding in Search and their own corpus, data-resident workloads, agentic orchestration, TPU economics at scale.
-> - **Where GCP wins:** optionality is not "route to whoever is cheapest" — it is insurance against lock-in precisely because the leader just rotated. On the Agent Platform that is a config change rather than a migration.
+**VARY THE SHAPE ACROSS STORIES IN AN EDITION.** Obligations 1-3 may be met in any order, merged, or expressed through a structure that fits the story — only obligation 4 is fixed in place. Do not open more than one angle block in an edition with the same move. Three consecutive blocks running "Concede X / Then insist / Compete / Where GCP wins" is the failure mode: the scaffolding becomes visible, the reader learns the rhythm and stops reading the content. Simon flagged exactly this on Edition #25.
+
+Pick the shape from the story, not from the template. Worked shapes, all of which satisfy the four obligations:
+
+- **Contested narrative** (a story where the market has already reached a verdict) — *what they'll say* → *the reframe that holds* → *the question to leave behind* → *Where GCP wins*.
+- **Technical risk** (an incident or failure mode) — *the uncomfortable version of what happened* → *specific things to inspect in their architecture* → *name the products that address those exact failure modes* → *Where GCP wins*.
+- **Cost or procurement** — *the conversation to skip* → *the decomposition to run live* → *who to bring in when they cannot answer* → *Where GCP wins*.
+- **Rival advance** (the original concede-first shape, still correct when a competitor genuinely just won) — *concede the tier* → *insist on the eval* → *compete where a price cut cannot reach* → *Where GCP wins*.
+
+**Yes — contested narrative (Edition #25, the Google leadership story):**
+> - **What they'll say:** "Google is losing its AI people." True, and worth granting plainly — the departures are real and the market read them as a verdict.
+> - **The reframe that actually holds:** the same week produced a $200 billion capital commitment to infrastructure and a Cloud partnership with the lab Jeff Dean left to found. That is a company choosing which layer to win, not one retreating from the race.
+> - **The question to leave behind:** "The leading model has rotated roughly every quarter for two years. Is your stack built so that a change in model leadership is a routing decision, or a migration?"
+> - **Where GCP wins:** the Agent Platform runs Gemini, Claude and open weights like Gemma side by side, so a founder's answer can be "routing decision" — without re-architecting when the leaderboard moves again.
+
+**Yes — technical risk (Edition #25, the agent security story). Note obligation 3 is met by naming specific products against specific failure modes, not by listing posture words:**
+> - **Open with the uncomfortable version:** this happened inside a frontier lab, with a security team watching. Nobody's agent stack is safer than OpenAI's by default.
+> - **Three things to look at in their architecture.** What shared write surface can two agents both reach? Does each agent hold its own identity, or do they share a service account? Is cross-agent traffic logged anywhere a human would read? The OpenAI failure was the first of those: a channel nobody thought of as a channel.
+> - **Name the products, not the posture.** Model Armor for runtime inspection inline via Agent Gateway and Agent Runtime; Agent Identity so agents are not sharing a service account; AI Protection in Security Command Center for posture management across agents and MCP servers; Applied Threat Intelligence in Google SecOps.
+> - **Where GCP wins:** agent security as a platform feature rather than a bolt-on — the same stack the agents already run on.
 
 **No (the retired shape — a quiz, not a toolkit):**
 > 1. **Where it hurts:** "What's your plan for using that leverage?"
 > 2. **How they're hedging:** "Are you set up to run the best model per job?"
+
+**No (correct content, visibly identical scaffolding — what Edition #25 shipped before revision):**
+> Story 1: **Concede the churn** → **Then insist on** → **Compete on** → Where GCP wins
+> Story 2: **Concede the threat** → **Frame security as** → **Compete on** → Where GCP wins
+> Story 3: **Concede the cost pressure** → **Make it an eval** → **Compete on** → Where GCP wins
 
 **Never assume the founder will fine-tune or distill.** Raise it only for the profile it genuinely fits — the narrow set with volume to justify it — and say so explicitly as an option for that profile, never as the default path.
 
@@ -398,7 +418,7 @@ When in doubt: every hyperscaler is squeezed. The GCP story is about *workload m
 - **Opinionated** — Take a stance on what matters and what's noise
 - **Connective** — Link patterns across items. "This reminds me of..." energy.
 - **Action-oriented** — Every section should make the reader want to do something
-- **Concise** — Target **~2,000-2,150 words total** (hard ceiling ~2,350). Big Picture stories ~250-300 words each; the angle block ~90 words; Quick Hits one sentence each; Seller's Edge ~300-350 words; Our Play ~150 words. If you're over, cut a Quick Hit or tighten a story — never pad.
+- **Concise** — Target **~2,000-2,150 words total** (hard ceiling ~2,350). Big Picture stories ~250-300 words each (the angle block a further ~180-220 on top of that); Quick Hits one sentence each; Seller's Edge ~300-350 words; Our Play ~150 words. If you're over, cut a Quick Hit or tighten a story — never pad.
 
 ## Writing Pattern
 
@@ -438,7 +458,7 @@ Before finalizing, verify:
 - [ ] No repeated person/narrative from a previous edition
 
 **GCP positioning**
-- [ ] Every "Your angle" is present ONLY on stories with a real seller play (context-only stories like energy/power have no angle block), and follows the 4-move shape: concede → eval → compete → "Where GCP wins:" — at most ONE question in the whole block, and only if it reframes
+- [ ] Every "Your angle" is present ONLY on stories with a real seller play (context-only stories like energy/power have no angle block), and meets the four obligations (grant what is true, move to something testable on their workload, compete where the news cannot reach, close with "Where GCP wins:") — and NO TWO angle blocks in this edition use the same shape or the same lead-in pattern; at most ONE question in the whole block, and only if it reframes
 - [ ] **GCP product positioning appears only in three allowed places: (a) "Our Play", (b) the "Where GCP wins:" line that closes a Big Picture angle block, and (c) the optional single "GCP plays this week" TLDR summary bullet. (b) and (c) are permitted features, NOT violations.** Elsewhere, *news* about Google releases is fine, but a pitch/"use this" line is not. Test: would this read as sales copy in TechCrunch?
 - [ ] Our Play's three motions are execution detail anchored to the week's stories (not generic filler; a fresh GCP source is a bonus, not required)
 - [ ] **No bare "Vertex AI" and no "GEAP" — "Gemini Enterprise Agent Platform (FKA Vertex AI)" on first mention, "Agent Platform" after; no deprecated names (Duet AI, Bard, PaLM)**
