@@ -71,7 +71,16 @@ gesture at the strategic direction instead of inventing specifics.
   — don't cite it for the Gemma story. No Claude tuning exists.
 - **Context caching** — implicit, on by default, 90% discount on cached input
   tokens (Gemini 2.5+). Table stakes, not a differentiator: Bedrock offers the
-  same 90%. Cache and batch discounts don't stack.
+  same 90%. **Cache and batch do not COMPOUND on the same token** — a cached
+  token inside a batch request bills at the cache rate (10% of input), not at
+  90%-then-50%. They are not mutually exclusive though: the two rates hit
+  different pools, so a batch job with caching gets 90% off cached input and
+  50% off everything else. Always advise running both; only model the pools
+  separately when sizing a term. (Phrasing note: "don't stack" alone reads as
+  "don't bother doing both" and shipped that way in Edition #25 — say
+  "don't compound".) Confidence: consistent across secondary sources,
+  not stated on the Google batch-inference doc page — re-verify before
+  quoting a combined effective rate to a customer.
 - **Google for Startups Cloud Program** — up to $200K credits, or $350K
   AI-first (Year 1 covers 100% of usage to $250K; Year 2 covers 20% to $100K).
 
