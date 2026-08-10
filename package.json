@@ -21,19 +21,19 @@
     "test": "node scripts/generate-briefing.test.js && node scripts/lint-briefing.test.js && node scripts/signal-digest.test.js && node scripts/lineup-digest.test.js && node scripts/fetch-lab-news.test.js && node fetch-og.test.js && bash scripts/generate-weekly.test.sh"
   },
   "dependencies": {
-    "@google-cloud/text-to-speech": "^6.4.0",
+    "@google-cloud/text-to-speech": "^6.4.1",
     "@google/genai": "^1.43.0",
-    "autoprefixer": "^10.4.24",
+    "autoprefixer": "^10.5.4",
     "dotenv": "^17.4.2",
     "marked": "^15.0.0",
-    "postcss": "^8.5.23",
-    "tailwindcss": "^4.2.1"
+    "postcss": "^8.5.26",
+    "tailwindcss": "^4.3.3"
   },
   "overrides": {
     "protobufjs": "^7.6.5",
     "brace-expansion": "^2.1.3"
   },
   "devDependencies": {
-    "@tailwindcss/cli": "^4.2.1"
+    "@tailwindcss/cli": "^4.3.3"
   }
 }
