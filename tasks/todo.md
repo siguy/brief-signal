@@ -1,4 +1,96 @@
-# Editorial hardening — approved by Simon 2026-07-26
+# Editorial gate — surface the lineup BEFORE the edition is written
+
+**Status:** BUILT — approved by Simon 2026-08-09; gate defaults OFF per his call
+**Branch (proposed):** `feat/editorial-gate-before-draft`
+**One sentence:** Move Simon's editorial judgement from after the draft to before it,
+and make the Stage 4a output readable when it arrives.
+
+## Why
+
+The gate in `docs/editorial-process.md` is real but late. Stage 4a plans the lineup
+and Stage 4b immediately expands it into prose — no pause. Simon reviews on Monday
+with the edition already written, and corrects by editing the lineup and running
+`npm run redraft`. He sees the selection, but only after the thing is made.
+
+Two failures observed on Edition #25 (PR #111):
+1. **No pre-draft stop.** `--from-lineup` runs Stage 4b only; nothing runs Stage 4a
+   and halts.
+2. **The output is unreadable on arrival.** `generate-weekly.sh` orders the PR body
+   `SIGNAL_SECTION` → `CRITIQUE_SECTION` → `THEME_SECTION`, so ~270 lines of ratings
+   table land first and the theme registry diff lands at line 329. Simon's words:
+   *"I just see the ratings."* The themes↔stories mapping (`advances:` per story)
+   only exists inside the committed lineup file and is never inlined.
+
+Editorial cost this week: seven HIGH stories absent from the edition, including
+Gurley's "Google should embrace open models" — the strategic prescription for the
+lead story. They converge on one unbuilt thread (open weights as Google's answer)
+that a pre-draft review would likely have caught.
+
+## Steps
+
+### 1. `--lineup-only` mode in `scripts/generate-briefing.js`
+- [x] Add `--lineup-only`: run Stage 4a, write `drafts/{date}-lineup.md` and
+      `drafts/{date}-themes-proposed.md`, then exit 0 without calling Stage 4b
+- [x] Mirrors the existing `--from-lineup` arg parsing (`:54-63`); the two compose
+      into a full stop/resume loop
+- [x] `npm run lineup` script entry
+
+### 2. Make the digest work before a draft exists
+- [x] `scripts/signal-digest.js` currently diffs KB items against a written briefing.
+      Add a no-briefing mode: report all graded items with no cited/uncited column
+- [x] When a lineup exists but no draft, match against the lineup's `braids in:` URLs
+      so the gate answers "what did 4a leave on the floor?"
+
+### 3. Fix the digest's false positives
+- [x] Match a bookmark as cited when the briefing cites **its linked article**, not
+      only its permalink. Edition #25 flagged Eric Wallace, Cloudflare Kitesurf and
+      WeatherNext as NOT CITED though all three ran — the citation used the
+      `blog.google` / `blog.cloudflare.com` / YouTube URL
+- [x] Bookmarks carry `external_links` in the raw JSON; match on those too
+- [x] Overcounting trains the reader to ignore the section — the reason it reads as
+      noise today
+
+### 4. Reorder and compress the PR body (`scripts/generate-weekly.sh`)
+- [x] New order: **lineup summary → theme registry → critique → signal digest**
+- [x] Wrap the digest in `<details><summary>` so it stops burying everything
+- [x] Inline a compact lineup summary: each Big Picture story with its `advances:`
+      themes and gravity, so "which story drives this registry change?" is answerable
+      without opening a file
+- [x] Keep the full lineup file committed and linked
+
+### 5. Wire the gate into the Sunday run
+- [x] Decide the default (see Open questions) and implement in `generate-weekly.sh`
+- [x] Update `docs/editorial-process.md` + `docs/diagrams/editorial-gate.mmd` — the
+      diagram currently shows review only after `pr`
+
+## Decisions (resolved 2026-08-09)
+
+1. **Sunday does not stop by default.** `LINEUP_GATE=1` opts in. The reordered PR
+   body and the digest fix improve every unattended run immediately; the hard stop
+   is used on weeks there is time for it. Simon's call.
+2. **Themes ↔ stories mapping and the full proposed registry go at the TOP** of the
+   PR body — Simon's explicit instruction. Registry is inside a `<details>`.
+3. **Same branch, not a separate PR.** `npm run redraft` writes the draft onto the
+   lineup branch, so the lineup PR becomes the edition PR.
+
+## Acceptance criteria
+
+- [x] `npm run lineup` produces lineup + themes-proposed and writes no briefing
+- [x] `npm run redraft -- <lineup>` still expands an edited lineup (unchanged behaviour)
+- [x] PR body leads with lineup + themes; digest is collapsed
+- [x] Digest reports zero false "NOT CITED" for Edition #25's three known cases
+- [x] `docs/editorial-process.md` and the mermaid diagram match the built behaviour
+
+## Out of scope
+
+- `todos/001-*` — the `extract-podcasts.js` URL bug. Separate, already filed.
+- The podcast recency leak (Valar Atomics 2026-07-02, BG2 2026-03-15, ChinaTalk
+  2026-06-30 all cleared a 7-day window). Needs its own todo.
+
+---
+
+# Archive — Editorial hardening (approved 2026-07-26, all merged)
+
 
 Four workstreams approved via Q&A (session 2026-07-26). Order: A (Monday deadline) → B → C → D.
 

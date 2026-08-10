@@ -22,6 +22,37 @@ re-enters at Stage 4b and rewrites the prose from an edited lineup, without
 replanning. The Sunday path is unchanged; the gate costs nothing on the weeks
 the lineup is right.
 
+### Reviewing before the edition exists (`LINEUP_GATE=1`)
+
+By default Stage 4b expands the lineup moments after 4a writes it, so the review
+above happens with the prose already written. To review the *selection* first:
+
+```bash
+LINEUP_GATE=1 ./scripts/generate-weekly.sh    # extracts, plans, stops, opens a lineup PR
+npm run redraft -- content/briefings/drafts/<date>-lineup.md   # after you approve/edit
+```
+
+Or, without the pipeline: `npm run lineup` runs Stage 4a alone against the
+newest KBs and writes nothing else.
+
+Under the gate no draft is written, so images, lint, critique and the repair pass
+are all skipped, and the signal digest sweeps against the **lineup** instead of a
+draft — answering "what did Stage 4a leave on the floor?" while acting on the
+answer is still cheap.
+
+**It defaults off.** A gated Sunday produces no edition until a human acts, so a
+busy Monday costs the week's briefing. Off by default means the unattended run
+still ships a draft; the gate is opt-in for weeks with time to use it.
+
+### What the PR body leads with
+
+The PR body opens with the **themes ↔ stories mapping** and the **full proposed
+registry** (rendered by `scripts/lineup-digest.js`), then the critique, then the
+signal digest collapsed behind a `<details>`. That order is deliberate: the
+editorial decision leads and the mechanical sweeps support it. It used to be
+reversed, which put the registry diff at line ~329 behind a ~270-line ratings
+table — present, but unreachable.
+
 Diagram source: [`docs/diagrams/editorial-gate.mmd`](diagrams/editorial-gate.mmd)
 (edit that, not the exported `.svg`).
 
@@ -31,9 +62,11 @@ flowchart TD
         extract["Stages 1-3: extract sources<br/>bookmarks · podcasts · playlist"]
         s4a["Stage 4a — plan the lineup<br/>Gemini call"]
         lineup[["lineup.md — THE DECISION<br/>what leads · what's cut"]]
+        gate{"LINEUP_GATE=1?"}
         s4b["Stage 4b — write the prose<br/>Gemini call, expands the lineup"]
         checks["Images → lint → critique"]
         pr(["PR opened"])
+        lineupPr(["Lineup PR opened<br/>no draft written"])
     end
     subgraph monday["Monday — human review"]
         review{"Is the lineup right?"}
@@ -41,7 +74,9 @@ flowchart TD
         redraft["npm run redraft<br/>--from-lineup FILE"]
         merge(["Merge and publish"])
     end
-    extract --> s4a --> lineup --> s4b --> checks --> pr --> review
+    extract --> s4a --> lineup --> gate
+    gate -->|"no (default)"| s4b --> checks --> pr --> review
+    gate -->|"yes — stop before any prose"| lineupPr --> review
     review -->|yes| merge
     review -->|no| edit --> redraft
     redraft -->|"re-enters at 4b, no replanning"| s4b
@@ -49,7 +84,7 @@ flowchart TD
     classDef gate fill:#ddf3e4,stroke:#2f7d4f,stroke-width:2px,color:#1c4c30
     classDef llm fill:#dfe9fb,stroke:#3b6bb5,color:#1f3c66
     class lineup decision
-    class redraft,edit gate
+    class redraft,edit,gate,lineupPr gate
     class s4a,s4b llm
 ```
 
@@ -61,10 +96,11 @@ flowchart TD
 | 3 | Merge + score | Same-thesis items become ONE story (name the tension). Score: datable event × counted gravity (KBs × shows) × changed-this-week × seller play. | Lead-Story Doctrine, Steps 2-4 |
 | 4 | Tag to arcs | Each candidate: `advances: {arc}` or NEW THREAD. Registry updates *proposed*, never auto-applied. | `lineupTask`; `drafts/{date}-themes-proposed.md` |
 | 5 | Pick the braid | Per story, `braids in:` names the X-bookmark voices to weave (target 2-3 per story) alongside podcast anchors. | `lineupTask`; braiding rule in prompt's Section assignment |
+| 5b | **Gate (optional)** | `LINEUP_GATE=1` stops here: the lineup + proposed registry are committed and a PR is opened with no draft. Steps 6-8 are skipped; the signal digest sweeps against the lineup. Resume with `npm run redraft`. Defaults **off**. | `scripts/generate-weekly.sh`; `--lineup-only` in `scripts/generate-briefing.js` |
 | 6 | Draft | Stage 4b expands the approved lineup: stories braided, angle blocks + Our Play grounded ONLY in the GCP playbook + week's KBs, Seller's Edge teach (~300-350 words, worked example). | `scripts/briefing-prompt.md` template; `content/gcp-playbook.md` (fed to Stage 4b) |
 | 7 | Verify | Images fetched (YouTube-thumb fallback) → deterministic lint (URLs, hooks, angle lines, source overlap, banned words, naming, image validity, cross-edition lead repeat) + LLM critique (editorial judgment + coverage check). | `fetch-og.js`; `scripts/lint-briefing.js`; `scripts/critique-briefing.js` |
 | 8 | Repair (one shot) | Hard failures → ONE targeted Gemini revision; fabrication guard (no new URLs ever); image failures excluded (disk problems). Residual failures go in the PR body. | `scripts/repair-briefing.js` |
-| 9 | Human review (Mon) | Simon reviews the PR: lineup file first (right events? right arcs? right braid?), then prose; approves/rejects the themes-proposed update; merges → deploy → audio pipeline. | PR body + `drafts/{date}-lineup.md` |
+| 9 | Human review (Mon) | Simon reviews the PR, which now opens with the themes ↔ stories mapping and the full proposed registry: right events? right arcs? right braid? Then prose; approves/rejects the themes-proposed update; merges → deploy → audio pipeline. | PR body (`scripts/lineup-digest.js`) + `drafts/{date}-lineup.md` |
 
 ## Standing sections & their specs
 - **TLDR** — 4-5 bold-hook bullets. (prompt template)

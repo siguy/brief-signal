@@ -239,6 +239,30 @@ test("parseArgs picks up the lineup path", () => {
   assert.strictEqual(args.fromLineup, "content/briefings/drafts/2026-08-03-lineup.md");
 });
 
+test("parseArgs defaults lineupOnly to false", () => {
+  assert.strictEqual(parseArgs([]).lineupOnly, false);
+});
+
+test("parseArgs reads --lineup-only", () => {
+  const args = parseArgs(["--lineup-only"]);
+  assert.strictEqual(args.lineupOnly, true);
+  assert.strictEqual(args.fromLineup, null);
+});
+
+test("--lineup-only and --from-lineup together exit non-zero", () => {
+  // The two are opposites — one skips Stage 4a, the other skips 4b. Honouring
+  // either silently would run a pass the caller explicitly asked to skip.
+  // Run as a subprocess because the guard calls process.exit.
+  const { spawnSync } = require("child_process");
+  const res = spawnSync(
+    process.execPath,
+    [require("path").join(__dirname, "generate-briefing.js"), "--lineup-only", "--from-lineup", "x.md"],
+    { encoding: "utf-8", env: { ...process.env, GOOGLE_API_KEY: "test-key-not-used" } }
+  );
+  assert.strictEqual(res.status, 1);
+  assert.match(res.stderr, /mutually exclusive/);
+});
+
 test("targetDateFromLineup derives the edition date from the filename", () => {
   // This is the safety property: a redraft can only land on the edition its own
   // lineup names, never on today's date or a neighbouring week.

@@ -96,6 +96,41 @@ assert_contains "run_critique reports error" "$out" "STATUS=error"
 guard=$(grep -c 'if \[ "\$LINT_STATUS" = "hard_failures" \]; then' "$PIPELINE")
 assert_contains "Stage 4c guard matches run_lint's hard-failure state" "$guard" "1"
 
+# --- Lineup gate -----------------------------------------------------------
+# The gate's risk is not that it fails loudly — it is that it half-runs. With no
+# draft on disk, `ls -t content/briefings/*.md` returns the PREVIOUSLY published
+# edition, and every downstream stage would then snapshot, critique and lint last
+# week's file under this week's name. These pin the guards that prevent that.
+
+assert_contains "LINEUP_GATE defaults to off" \
+  "$(grep -c 'LINEUP_GATE=${LINEUP_GATE:-0}' "$PIPELINE")" "1"
+
+assert_contains "gate passes --lineup-only to the generator" \
+  "$(grep -c 'generate-briefing.js --lineup-only' "$PIPELINE")" "1"
+
+# BRIEFING_FILE must be assigned with ${VAR-default} (unset-only), NOT
+# ${VAR:-default}: the gate sets it to the empty string on purpose, and the
+# colon form would helpfully overwrite that with last week's edition.
+assert_contains "gate's empty BRIEFING_FILE survives the ls -t fallback" \
+  "$(grep -c 'BRIEFING_FILE=${BRIEFING_FILE-\$(ls -t' "$PIPELINE")" "1"
+
+# The draft-only checks are skipped as one block. If this guard is ever removed,
+# a gated run would lint the previous edition and report its result as this week's.
+assert_contains "draft-only checks are skipped under the gate" \
+  "$(grep -c 'Lineup gate: skipping images, critique, lint and repair' "$PIPELINE")" "1"
+
+assert_contains "gate sweeps the digest against the lineup, not a draft" \
+  "$(grep -c 'SIGNAL_ARGS=(--date "\$MONDAY_DATE" --lineup "\$LINEUP_FILE")' "$PIPELINE")" "1"
+
+# The editorial section must precede the critique and the digest in the PR body.
+# This is the whole point of the reorder; an accidental swap restores the bug.
+body_order=$(grep -o '${THEME_SECTION}${CRITIQUE_SECTION}${SIGNAL_SECTION}' "$PIPELINE" | head -1)
+assert_contains "PR body leads with themes, ends with the digest" \
+  "$body_order" '${THEME_SECTION}${CRITIQUE_SECTION}${SIGNAL_SECTION}'
+
+assert_contains "signal digest is collapsed behind a details block" \
+  "$(grep -c '<summary><b>📊 Signal digest</b>' "$PIPELINE")" "1"
+
 if [ "$failed" -gt 0 ]; then
   echo ""
   echo "generate-weekly.test.sh: $failed FAILED, $passed passed"
