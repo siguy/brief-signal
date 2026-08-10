@@ -11,6 +11,7 @@ const assert = require("assert");
 const {
   lint,
   checkUrls,
+  checkLinkSyntax,
   checkTldrHooks,
   checkAngleBlocks,
   checkSourceOverlap,
@@ -54,7 +55,7 @@ title: "Test"
 
 ### Story One
 
-Text [Alice on Show A (60 min watch, 5:00)](https://youtube.com/watch?v=aaa).
+Text [Alice on Show A (60 min watch, 5:00)](https://youtube.com/watch?v=aaaaaaaaaaa).
 
 **Your angle with founders:**
 1.  **Where it hurts:** "Q?"
@@ -63,7 +64,7 @@ Text [Alice on Show A (60 min watch, 5:00)](https://youtube.com/watch?v=aaa).
 
 ### Story Two
 
-Text [Bob on Show B (30 min watch, 10:00)](https://youtube.com/watch?v=bbb).
+Text [Bob on Show B (30 min watch, 10:00)](https://youtube.com/watch?v=bbbbbbbbbbb).
 
 ## Quick Hits
 
@@ -150,7 +151,7 @@ test("Story with NO angle block is fine (context-only stories are allowed)", () 
 
 // 7. Same URL in two BP stories, timestamps <30 min apart -> hard
 test("Same URL in two BP stories, timestamps <30 min apart -> hard", () => {
-  const overlap = CLEAN.replace("https://youtube.com/watch?v=bbb", "https://youtube.com/watch?v=aaa");
+  const overlap = CLEAN.replace("https://youtube.com/watch?v=bbbbbbbbbbb", "https://youtube.com/watch?v=aaaaaaaaaaa");
   const r = checkSourceOverlap(overlap); // 5:00 vs 10:00 = 5 min apart
   assert.strictEqual(r.hard.length, 1);
   assert.ok(r.hard[0].includes("min apart"));
@@ -158,7 +159,7 @@ test("Same URL in two BP stories, timestamps <30 min apart -> hard", () => {
 
 // 8. Same URL, timestamps 30+ min apart -> allowed
 test("Same URL, timestamps 30+ min apart -> allowed", () => {
-  const ok = CLEAN.replace("https://youtube.com/watch?v=bbb", "https://youtube.com/watch?v=aaa").replace(
+  const ok = CLEAN.replace("https://youtube.com/watch?v=bbbbbbbbbbb", "https://youtube.com/watch?v=aaaaaaaaaaa").replace(
     "(30 min watch, 10:00)",
     "(60 min watch, 45:00)"
   );
@@ -169,7 +170,7 @@ test("Same URL, timestamps 30+ min apart -> allowed", () => {
 test("Same URL, no parseable timestamps -> warn, not hard", () => {
   const noTs = CLEAN.replace("(60 min watch, 5:00)", "(article)")
     .replace("(30 min watch, 10:00)", "(article)")
-    .replace("https://youtube.com/watch?v=bbb", "https://youtube.com/watch?v=aaa");
+    .replace("https://youtube.com/watch?v=bbbbbbbbbbb", "https://youtube.com/watch?v=aaaaaaaaaaa");
   const r = checkSourceOverlap(noTs);
   assert.deepStrictEqual(r.hard, []);
   assert.strictEqual(r.warn.length, 1);
@@ -286,6 +287,43 @@ ${prose}
   assert.deepStrictEqual(u.hard, []);
   assert.strictEqual(u.warn.length, 1);
   assert.ok(u.warn[0].includes("skipped"));
+});
+
+// --- link syntax: the class every other check is blind to -------------------
+// A link closed with "]" renders as literal text. extractLinks() only matches
+// well-formed links, so a broken one is invisible precisely because it is
+// broken. Shipped once in Edition #25's first draft and five more times in its
+// redraft before this rule existed.
+
+test("checkLinkSyntax catches a link closed with ] instead of )", () => {
+  const r = checkLinkSyntax("See [Black Hat (37 min)](https://www.youtube.com/watch?v=87DyyMV0kCY] here.");
+  assert.strictEqual(r.hard.length, 1);
+  assert.match(r.hard[0], /instead of/);
+});
+
+test("checkLinkSyntax catches every occurrence, not just the first", () => {
+  const r = checkLinkSyntax(
+    "[a](https://example.com/one] and [b](https://example.com/two]"
+  );
+  assert.strictEqual(r.hard.length, 2);
+});
+
+test("checkLinkSyntax catches a short YouTube id", () => {
+  // The Valar Atomics link shipped with 10 chars and 404s; extract-podcasts.js
+  // built the url field with a character dropped (todos/001).
+  const r = checkLinkSyntax("[Valar (62 min)](https://www.youtube.com/watch?v=5Xvbq_zvO4)");
+  assert.strictEqual(r.hard.length, 1);
+  assert.match(r.hard[0], /10 chars/);
+});
+
+test("checkLinkSyntax passes a correct 11-char id and well-formed link", () => {
+  const r = checkLinkSyntax("[Valar (62 min)](https://www.youtube.com/watch?v=5Xvbq_zvOQ4)");
+  assert.deepStrictEqual(r.hard, []);
+});
+
+test("checkLinkSyntax does not fire on ordinary prose containing ] and (", () => {
+  const r = checkLinkSyntax("A sentence [with brackets] and (parentheses) but no links.");
+  assert.deepStrictEqual(r.hard, []);
 });
 
 if (failed > 0) {
