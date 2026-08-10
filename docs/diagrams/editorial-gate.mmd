@@ -9,9 +9,11 @@ flowchart TD
         extract["Stages 1-3: extract sources<br/>bookmarks · podcasts · playlist"]
         s4a["Stage 4a — plan the lineup<br/>Gemini call"]
         lineup[["lineup.md — THE DECISION<br/>what leads · what's cut"]]
+        gate{"LINEUP_GATE=1?"}
         s4b["Stage 4b — write the prose<br/>Gemini call, expands the lineup"]
         checks["Images → lint → critique"]
         pr(["PR opened"])
+        lineupPr(["Lineup PR opened<br/>no draft written"])
     end
     subgraph monday["Monday — human review"]
         review{"Is the lineup right?"}
@@ -19,7 +21,9 @@ flowchart TD
         redraft["npm run redraft<br/>--from-lineup FILE"]
         merge(["Merge and publish"])
     end
-    extract --> s4a --> lineup --> s4b --> checks --> pr --> review
+    extract --> s4a --> lineup --> gate
+    gate -->|"no (default)"| s4b --> checks --> pr --> review
+    gate -->|"yes — stop before any prose"| lineupPr --> review
     review -->|yes| merge
     review -->|no| edit --> redraft
     redraft -->|"re-enters at 4b, no replanning"| s4b
@@ -27,5 +31,5 @@ flowchart TD
     classDef gate fill:#ddf3e4,stroke:#2f7d4f,stroke-width:2px,color:#1c4c30
     classDef llm fill:#dfe9fb,stroke:#3b6bb5,color:#1f3c66
     class lineup decision
-    class redraft,edit gate
+    class redraft,edit,gate,lineupPr gate
     class s4a,s4b llm

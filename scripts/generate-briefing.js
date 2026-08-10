@@ -50,8 +50,14 @@ function findKnowledgeBaseFiles() {
 // approval gate: the lineup IS the decision, the draft is only its execution.
 // Stage 4b already treats the lineup as an "Approved Story Lineup"; this flag is
 // what finally lets a human do the approving.
+//
+// `--lineup-only` is the other half of that gate: it runs Stage 4a and STOPS,
+// so the selection can be reviewed before any prose exists. Together the two
+// flags make a stop/resume loop — `npm run lineup`, read it, edit it, then
+// `npm run redraft -- <file>`. Without the stop, 4b expands the lineup moments
+// after 4a writes it and the review necessarily happens after the fact.
 function parseArgs(argv) {
-  const args = { fromLineup: null };
+  const args = { fromLineup: null, lineupOnly: argv.includes("--lineup-only") };
   const i = argv.indexOf("--from-lineup");
   if (i !== -1) {
     const value = argv[i + 1];
@@ -61,6 +67,13 @@ function parseArgs(argv) {
       process.exit(1);
     }
     args.fromLineup = value;
+  }
+  // The two are opposites: one skips 4a, the other skips 4b. Asking for both is
+  // a mistake worth catching loudly rather than silently honouring one.
+  if (args.fromLineup && args.lineupOnly) {
+    console.error("ERROR: --lineup-only and --from-lineup are mutually exclusive.");
+    console.error("  --lineup-only plans a lineup; --from-lineup expands one that already exists.");
+    process.exit(1);
   }
   return args;
 }
@@ -402,7 +415,10 @@ async function main() {
   // A redraft is exempt because replacing that exact edition is its whole purpose — and
   // it is safe for a different reason: its target comes from the lineup filename, not
   // from today's date, and the version it replaces is preserved in drafts/ (step 8).
-  if (fs.existsSync(outputPath) && !redraft && !process.env.FORCE_OVERWRITE) {
+  // Lineup-only is exempt for the simplest reason: it never writes outputPath, so
+  // there is nothing to clobber. Planning next week's lineup must not be blocked by
+  // the presence of a briefing it cannot touch.
+  if (fs.existsSync(outputPath) && !redraft && !args.lineupOnly && !process.env.FORCE_OVERWRITE) {
     console.error(
       `ERROR: content/briefings/${targetDate}.md already exists (Edition #${existingEdition || "?"}). ` +
         `Refusing to overwrite it with Edition #${edition}.`
@@ -499,6 +515,21 @@ async function main() {
     } catch (err) {
       console.warn(`  WARN: lineup pass failed (${err.message || err}); drafting without it.`);
     }
+  }
+
+  // 5b. The editorial gate. Stop here when asked: the lineup and the proposed
+  //     registry update are on disk, and nothing has been drafted. A lineup the
+  //     planning pass failed to produce is not a gate, it is a silent no-op —
+  //     exit non-zero so a caller can tell "nothing to review" from "review this".
+  if (args.lineupOnly) {
+    if (!lineup.trim()) {
+      console.error("\nERROR: Stage 4a produced no lineup — nothing to review.");
+      process.exit(1);
+    }
+    console.log(`\nLineup-only mode — stopping before Stage 4b. No briefing written.`);
+    console.log(`  Review:  content/briefings/drafts/${targetDate}-lineup.md`);
+    console.log(`  Then:    npm run redraft -- content/briefings/drafts/${targetDate}-lineup.md`);
+    return;
   }
 
   // 6. Stage 4b — draft the briefing, expanding the approved lineup.

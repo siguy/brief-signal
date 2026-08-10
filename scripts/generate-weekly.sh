@@ -227,7 +227,29 @@ git checkout main
 git pull origin main
 git checkout -b "$BRANCH"
 
-if BRIEFING_DATE="$MONDAY_DATE" node scripts/generate-briefing.js >> "$LOG_FILE" 2>&1; then
+# LINEUP_GATE=1 stops the run after Stage 4a: the lineup and the proposed theme
+# registry are committed and a PR is opened for them, with no briefing written.
+# Simon approves or edits the lineup, then expands it himself:
+#   npm run redraft -- content/briefings/drafts/<date>-lineup.md
+#
+# Defaults OFF, deliberately. The gate is the right shape editorially — the
+# selection is the decision and it should be reviewed before the prose exists —
+# but a gated Sunday produces no edition until a human acts, so a busy Monday
+# costs the week's briefing. Off by default means the reordered PR body (below)
+# improves every unattended run immediately, while the hard stop stays opt-in
+# until it has proven itself on a few weeks Simon chose to run it.
+LINEUP_GATE=${LINEUP_GATE:-0}
+if [ "$LINEUP_GATE" = "1" ]; then
+  log "LINEUP_GATE=1 — Stage 4a only. No briefing will be drafted this run."
+  if BRIEFING_DATE="$MONDAY_DATE" node scripts/generate-briefing.js --lineup-only >> "$LOG_FILE" 2>&1; then
+    log "Stage 4a complete: lineup generated (no draft)."
+  else
+    log "ERROR: Stage 4a failed (lineup generation). Cleaning up."
+    git checkout main
+    git branch -D "$BRANCH"
+    exit 1
+  fi
+elif BRIEFING_DATE="$MONDAY_DATE" node scripts/generate-briefing.js >> "$LOG_FILE" 2>&1; then
   log "Stage 4 complete: briefing generated."
 else
   log "ERROR: Stage 4 failed (briefing generation). Cleaning up."
@@ -247,13 +269,28 @@ fi
 # bash code re-computes the date moments later and UTC has crossed midnight,
 # the two disagree and the snapshot looks for a nonexistent path. Reading
 # the most-recently-modified .md file is robust to that race.
-BRIEFING_FILE=$(ls -t content/briefings/*.md 2>/dev/null | grep -v '/drafts/' | head -1)
+#
+# In gate mode no briefing was written, so `ls -t` would return the PREVIOUSLY
+# published edition and every stage below would snapshot, critique and lint last
+# week's file under this week's name. Set the date from MONDAY_DATE instead and
+# leave BRIEFING_FILE empty — the draft-only stages are skipped wholesale below.
+if [ "$LINEUP_GATE" = "1" ]; then
+  BRIEFING_FILE=""
+  TODAY="$MONDAY_DATE"
+  CRITIQUE_STATUS="skipped (lineup gate)"
+  LINT_STATUS="skipped"
+  DRAFT_FILE=""
+fi
+
+BRIEFING_FILE=${BRIEFING_FILE-$(ls -t content/briefings/*.md 2>/dev/null | grep -v '/drafts/' | head -1)}
 if [ -n "$BRIEFING_FILE" ] && [ -f "$BRIEFING_FILE" ]; then
   TODAY=$(basename "$BRIEFING_FILE" .md)
   DRAFT_FILE="content/briefings/drafts/${TODAY}-v0-stage4.md"
   mkdir -p content/briefings/drafts
   cp "$BRIEFING_FILE" "$DRAFT_FILE"
   log "Stage 4 draft snapshot: $DRAFT_FILE"
+elif [ "$LINEUP_GATE" = "1" ]; then
+  log "Lineup gate: no draft to snapshot (expected)."
 else
   log "WARN: No briefing file found in content/briefings/ after Stage 4 — skipping draft snapshot."
 fi
@@ -310,6 +347,13 @@ run_lint() {
   fi
 }
 
+# Every check below reads a drafted briefing. Under the lineup gate there isn't
+# one, so they are skipped as a block rather than each guarding itself — a lint
+# run with no draft would grade the previously published edition.
+if [ "$LINEUP_GATE" = "1" ]; then
+  log "Lineup gate: skipping images, critique, lint and repair (no draft to check)."
+else
+
 # Fetch story images BEFORE lint so the image validity checks (magic bytes,
 # size, existence) run against real files — and a failed fetch surfaces as a
 # lint hard failure instead of a silently broken image on the live site.
@@ -357,13 +401,19 @@ if [ "$LINT_STATUS" = "hard_failures" ]; then
   fi
 fi
 
+fi  # end: draft-only checks (skipped under LINEUP_GATE)
+
 # ---------------------------------------------------------------------------
 # Stage 5: Fetch OG images, commit, push, open PR
 # ---------------------------------------------------------------------------
 log "--- Stage 5: Committing and opening PR ---"
 
 git add content/briefings/
-git commit -m "Add briefing: ${MONDAY_DATE}"
+if [ "$LINEUP_GATE" = "1" ]; then
+  git commit -m "Add lineup for review: ${MONDAY_DATE}"
+else
+  git commit -m "Add briefing: ${MONDAY_DATE}"
+fi
 git push -u origin "$BRANCH"
 
 # Read critique markdown if it exists so we can inline it in the PR body
@@ -374,16 +424,27 @@ elif [ "$CRITIQUE_STATUS" = "error" ]; then
   CRITIQUE_SECTION=$'\n\n## 🤖 Automated Quality Review\n\n_Critique pass errored — review manually against the checklist in scripts/briefing-prompt.md._'
 fi
 
-# Theme registry diff — pull the "Proposed registry update" section straight out
-# of the Stage 4a lineup file (already committed alongside the draft); no
-# separate log file to keep in sync. Missing lineup/proposed file = no section.
+# Editorial section — themes ↔ stories mapping + the full proposed registry,
+# rendered by scripts/lineup-digest.js from the Stage 4a lineup (already committed
+# alongside the draft); no separate log file to keep in sync.
+#
+# This goes FIRST in the PR body, ahead of the critique and the signal digest.
+# It used to go last, behind ~270 lines of ratings table, which made it
+# unreachable in practice — Simon's verdict on Edition #25 was "I just see the
+# ratings." The ordering below is the fix, and it is the point of the section:
+# the editorial decision leads, the mechanical sweeps support it.
+#
+# Missing lineup/proposed file = no section (the renderer prints nothing).
 THEME_SECTION=""
 LINEUP_FILE="content/briefings/drafts/${TODAY:-}-lineup.md"
 THEMES_PROPOSED_FILE="content/briefings/drafts/${TODAY:-}-themes-proposed.md"
-if [ -n "${TODAY:-}" ] && [ -f "$LINEUP_FILE" ] && [ -f "$THEMES_PROPOSED_FILE" ]; then
-  THEME_DIFF=$(awk '/^\*\*Full proposed registry:\*\*/{exit} /^\*\*Proposed registry update:\*\*/{flag=1} flag{print}' "$LINEUP_FILE")
-  if [ -n "$THEME_DIFF" ]; then
-    THEME_SECTION=$'\n\n## 🗺️ Theme Registry Update (proposed)\n\n'"$THEME_DIFF"$'\n\nFull proposed registry: `'"$THEMES_PROPOSED_FILE"$'`. On approval, copy it over `content/themes.md` — it is never auto-updated.'
+if [ -n "${TODAY:-}" ] && [ -f "$LINEUP_FILE" ]; then
+  THEME_ARGS=(--lineup "$LINEUP_FILE")
+  [ -f "$THEMES_PROPOSED_FILE" ] && THEME_ARGS+=(--themes "$THEMES_PROPOSED_FILE")
+  if THEME_OUT=$(node scripts/lineup-digest.js "${THEME_ARGS[@]}" 2>&1) && [ -n "$THEME_OUT" ]; then
+    THEME_SECTION=$'\n\n'"$THEME_OUT"
+  else
+    log "WARN: Lineup digest produced nothing — PR body will omit the themes section."
   fi
 fi
 
@@ -397,16 +458,55 @@ fi
 # names the file from Node's UTC date, which can differ by a day on a late-evening
 # run (see the note above BRIEFING_FILE). BRIEFING_FILE is resolved by `ls -t`, so
 # it is the one value guaranteed to name the file that actually got written.
+#
+# Collapsed behind a <details>. It runs to several hundred lines — long enough
+# that inline it buries everything after it, which is exactly what happened to
+# the theme registry section before this change. It stays in the PR because it
+# is the only place that answers "what did we never even consider?", but it is a
+# lookup table, not a read-through.
+#
+# Under the lineup gate there is no draft, so the sweep runs against the lineup
+# instead: "what did Stage 4a leave on the floor?" — which is the whole question
+# at the gate, and the one moment where acting on the answer is still cheap.
 SIGNAL_SECTION=""
 SIGNAL_DATE=$(basename "${BRIEFING_FILE:-}" .md)
-if SIGNAL_OUT=$(node scripts/signal-digest.js --date "$SIGNAL_DATE" 2>&1); then
-  SIGNAL_SECTION=$'\n\n'"$SIGNAL_OUT"
+if [ "$LINEUP_GATE" = "1" ]; then
+  SIGNAL_ARGS=(--date "$MONDAY_DATE" --lineup "$LINEUP_FILE")
+else
+  SIGNAL_ARGS=(--date "$SIGNAL_DATE")
+fi
+if SIGNAL_OUT=$(node scripts/signal-digest.js "${SIGNAL_ARGS[@]}" 2>&1); then
+  SIGNAL_SECTION=$'\n\n<details>\n<summary><b>📊 Signal digest</b> — every graded item, and whether it reached the edition</summary>\n\n'"$SIGNAL_OUT"$'\n\n</details>'
 else
   log "WARN: Signal digest failed. Continuing without it."
   SIGNAL_SECTION=$'\n\n## Signal digest\n\n_Digest failed to run — check the log, then `npm run signal` by hand._'
 fi
 
-PR_BODY="$(cat <<PREOF
+if [ "$LINEUP_GATE" = "1" ]; then
+  PR_TITLE="Lineup for review: Week of ${MONDAY_DATE}"
+  PR_BODY="$(cat <<PREOF
+## Story lineup for review — ${MONDAY_DATE}
+
+**No briefing has been drafted yet.** Stage 4a planned this lineup and stopped, so
+the selection is still cheap to change — that is the entire point of this PR.
+
+### What to do
+1. Read the themes ↔ stories section below, then \`${LINEUP_FILE}\`.
+2. Check the signal digest for anything HIGH that was left out.
+3. Edit the lineup file directly if the selection is wrong — add, cut, or re-merge stories.
+4. Expand it into the edition:
+   \`\`\`
+   npm run redraft -- ${LINEUP_FILE}
+   \`\`\`
+   The draft lands on this same branch; commit and push it, and this PR becomes the edition PR.
+
+The lineup is the decision; the draft is only its execution. Everything below is here to
+inform that one call.${THEME_SECTION}${SIGNAL_SECTION}
+PREOF
+)"
+else
+  PR_TITLE="Briefing: Week of ${MONDAY_DATE}"
+  PR_BODY="$(cat <<PREOF
 ## Weekly AI Market Briefing — ${MONDAY_DATE}
 
 Auto-generated by the Brief Signal pipeline.
@@ -431,13 +531,14 @@ A copy of the unedited first draft is committed at \`${DRAFT_FILE}\`. After you 
 
 ### After merging
 Run \`npm run audio:pr\` to generate the audio script and open a PR.
-Subscriber email is sent when the audio PR is merged.${SIGNAL_SECTION}${CRITIQUE_SECTION}${THEME_SECTION}
+Subscriber email is sent when the audio PR is merged.${THEME_SECTION}${CRITIQUE_SECTION}${SIGNAL_SECTION}
 PREOF
 )"
+fi
 
 gh pr create \
   --repo "$REPO" \
-  --title "Briefing: Week of ${MONDAY_DATE}" \
+  --title "$PR_TITLE" \
   --body "$PR_BODY"
 
 log "PR created. Returning to main."
