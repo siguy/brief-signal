@@ -16,7 +16,8 @@ provider · **CHECK** = unverified or sources conflict · **CALC** = arithmetic 
 ## The short version
 
 - **Gemini 3.7 Flash is the cheapest of the three mid-tier models at either of its rates.** $0.75/$3.75 until 31 December 2026, $1.50/$7.50 after. Claude Sonnet 5 is $2.00/$10.00; GPT-5.6 Terra is $2.00/$12.00.
-- **GPT-5.6 Terra is the better agentic-coding model.** Google's own card puts it ahead on DeepSWE (69.6% to 65.3%), Terminal-bench 2.1 and OSWorld. Concede that, then move the decision to the customer's workload.
+- **GPT-5.6 Terra is the better agentic-coding model.** Google's own comparison puts it ahead on DeepSWE (69.6% to 65.3%) and both Terminal-bench versions. Concede that, then move the decision to the customer's workload.
+- **Luna is not in this class.** The widely-repeated "Flash is 8× more expensive" line prices it against GPT-5.6 Luna at $0.20/$1.20 — a budget tier. Against actual mid-tier competitors Flash is the cheapest option on the table.
 - **Flash's real win is enterprise automation** — AutomationBench 30.4% against Sonnet 5's 10.7%, nearly 3× — plus long-context retrieval, video and web-dev Elo.
 - **The Gemini discount is credits back on net spend**, not a discounted list rate. The invoice shows list with a credit applied, which matters for any commitment calculated off gross spend.
 - **Thinking cannot be switched off on 3.7 Flash.** Reasoning bills at the output rate and `MINIMAL` is not a supported `thinking_level` — the largest uncontrolled cost variable on this page.
@@ -79,7 +80,7 @@ benchmarks. Read the losses as the more informative half.
 | LVBench | **85.4%** | 68.5% | 78.9% | — |
 | GDPVal-AA v2 (Elo) | 1525 | 1598 | 1578 | **1628** |
 | Agent's Last Exam (pass rate) | 26.3% | **33.3%** | 28.0% | — |
-| OSWorld-2.0 | 47.9% | — | **50.2%** | — |
+| OSWorld-2.0 | 38.1% | 39.6% | **50.2%** | — |
 
 **The honest read:** Terra is the stronger agentic-coding model on the benchmarks that measure
 it, and Sonnet 5 leads on GDPVal and Agent's Last Exam. Flash's clear wins are enterprise
@@ -186,6 +187,7 @@ evaluation.
 - **"DeepSeek V4-Pro-Max at 80.6% SWE-bench Verified."** A third-party claim absent from both DeepSeek's pricing page and its Hugging Face organisation listing. Unverified.
 - **Claude Sonnet 5 benchmark scores from Anthropic.** Anthropic publishes them only inside a chart image and extraction returned inconsistent values. The Sonnet 5 column above is Google's published view of it, not Anthropic's.
 - **Gemini 3.6 Flash DeepSWE v1.1.** Google's blog says 49.0%; the DeepMind model card says 48.6%. Cite one, do not average.
+- **OSWorld-2.0 for 3.7 Flash, and Sonnet 5's DeepSWE.** Google's launch comparison chart (posted by Koray Kavukcuoglu, and the image at the head of Edition #26) and the DeepMind model card disagree: the chart shows OSWorld-2.0 at 38.1% for 3.7 Flash with Sonnet 5 at 39.6%, while a model-card read returned 47.9% and no Sonnet figure. The chart also puts Sonnet 5's DeepSWE at 54.0% against the card's 53.8%. The table above follows the launch chart. Both are first-party Google, so treat OSWorld as contested and prefer Terminal-bench or DeepSWE, where the two sources agree.
 
 ## Sources
 

@@ -82,20 +82,48 @@ async function fetchMicrolinkScreenshot(tweetUrl) {
   }
 }
 
+// Reject og:image values that are technically valid images but useless as a
+// story illustration. An x.com post page whose tweet has no media advertises the
+// AUTHOR'S AVATAR as its og:image, so a story about the open-weights fight
+// rendered as a 400x400 headshot — a valid JPEG, which is why the linter's
+// magic-byte and size checks passed it. Falling through to the YouTube-thumbnail
+// fallback gives a real, on-topic image instead.
+function isUsableImage(imageUrl) {
+  const rejects = [
+    /pbs\.twimg\.com\/profile_images\//i,  // X avatar
+    /pbs\.twimg\.com\/profile_banners\//i, // X header
+    /\/default_profile/i,                  // X egg avatar
+    /gravatar\.com\/avatar/i,
+  ];
+  if (rejects.some((re) => re.test(imageUrl))) {
+    console.log(`  [reject] avatar/banner, not a story image: ${imageUrl}`);
+    return false;
+  }
+  return true;
+}
+
 async function fetchOGImage(url) {
-  // For Twitter/X URLs, try the syndication API first, then Microlink screenshot
+  // For Twitter/X URLs the syndication API is the ONLY trusted path: it returns
+  // the media actually attached to the tweet.
+  //
+  // The Microlink screenshot fallback that used to sit here has been removed.
+  // Screenshotting a logged-out x.com page reliably captures X's "See this post
+  // in the app / Open X" interstitial modal dead centre over the content, and
+  // the request still *succeeds* — so it short-circuited every better fallback
+  // below and published a modal as the story's image. Edition #26 shipped one
+  // that way (open-weights-fight-zuckerberg.jpg) and lint could not catch it:
+  // the file was a perfectly valid JPEG of the wrong thing.
+  //
+  // A tweet with no media now falls through to the og:image sweep and the
+  // YouTube-thumbnail fallback, and finally to a placeholder — all of which are
+  // honest failures a human can see, unlike a plausible-looking screenshot.
   const tweetId = extractTweetId(url);
   if (tweetId) {
     console.log(`  [twitter] Trying syndication API for tweet ${tweetId}...`);
     const tweetImg = await fetchTweetImage(tweetId);
     if (tweetImg) return tweetImg;
 
-    // Fallback: Microlink screenshot (free, 50 req/min)
-    console.log(`  [twitter] Trying Microlink screenshot...`);
-    const microlinkImg = await fetchMicrolinkScreenshot(url);
-    if (microlinkImg) return microlinkImg;
-
-    console.log(`  [twitter] All Twitter methods failed, falling back to OG...`);
+    console.log(`  [twitter] No tweet media — falling back to OG...`);
   }
 
   try {
@@ -113,11 +141,11 @@ async function fetchOGImage(url) {
     // Try og:image first, then twitter:image
     const ogMatch = html.match(/<meta[^>]*property=["']og:image["'][^>]*content=["']([^"']+)["']/i)
       || html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*property=["']og:image["']/i);
-    if (ogMatch) return ogMatch[1];
+    if (ogMatch && isUsableImage(ogMatch[1])) return ogMatch[1];
 
     const twMatch = html.match(/<meta[^>]*name=["']twitter:image["'][^>]*content=["']([^"']+)["']/i)
       || html.match(/<meta[^>]*content=["']([^"']+)["'][^>]*name=["']twitter:image["']/i);
-    if (twMatch) return twMatch[1];
+    if (twMatch && isUsableImage(twMatch[1])) return twMatch[1];
 
     return null;
   } catch (e) {
@@ -268,10 +296,16 @@ function findImageSources(markdown) {
     // works. sourceUrl stays pinned to the first URL because that is the
     // story's primary source and the right target for the og:image fetch;
     // widening it would change which image every working story gets.
+    // matchAll, not match: a Markdown paragraph is ONE line carrying many
+    // citations, so taking only the first URL per line collected two candidates
+    // for a story with a dozen links — and never reached the YouTube links that
+    // the thumbnail fallback below depends on. That contradicted this comment's
+    // own promise to collect every nearby URL.
     const sourceUrls = [];
     for (let j = i + 1; j < Math.min(i + 12, lines.length); j++) {
-      const urlMatch = lines[j].match(/\((https?:\/\/[^)]+)\)/);
-      if (urlMatch) sourceUrls.push(urlMatch[1]);
+      for (const m of lines[j].matchAll(/\((https?:\/\/[^)\s]+)\)/g)) {
+        sourceUrls.push(m[1]);
+      }
     }
 
     if (sourceUrls.length) {
@@ -307,15 +341,25 @@ async function processBriefing(filepath) {
       continue;
     }
 
-    console.log(`  Fetching OG from ${img.sourceUrl}...`);
-    const ogImageUrl = await fetchOGImage(img.sourceUrl);
-
+    // Sweep EVERY nearby link for an og:image, primary source first — not just
+    // the primary. A story whose first citation is an X post with no media used
+    // to give up here even when a later citation was a vendor page with a
+    // perfectly good og:image. Edition #26's lead is the case in point: its
+    // first link is a tweet, its second is a DeepMind model card.
+    //
+    // Order still matters: the primary source is tried first and wins when it
+    // works, so stories that already produced the right image keep it.
     let ok = false;
-    if (ogImageUrl) {
+    for (const candidate of img.sourceUrls || [img.sourceUrl]) {
+      console.log(`  Fetching OG from ${candidate}...`);
+      const ogImageUrl = await fetchOGImage(candidate);
+      if (!ogImageUrl) {
+        console.log(`  [no og:image] ${candidate}`);
+        continue;
+      }
       console.log(`  Downloading ${ogImageUrl}...`);
       ok = await downloadImage(ogImageUrl, destPath);
-    } else {
-      console.log(`  [no og:image] ${img.sourceUrl}`);
+      if (ok) break;
     }
 
     // Fallback: most briefing sources are YouTube episodes — the thumbnail
