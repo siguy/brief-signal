@@ -16,7 +16,8 @@ provider · **CHECK** = unverified or sources conflict · **CALC** = arithmetic 
 ## The short version
 
 - **Gemini 3.7 Flash is the cheapest of the three mid-tier models at either of its rates.** $0.75/$3.75 until 31 December 2026, $1.50/$7.50 after. Claude Sonnet 5 is $2.00/$10.00; GPT-5.6 Terra is $2.00/$12.00.
-- **GPT-5.6 Terra is the better agentic-coding model.** Google's own comparison puts it ahead on DeepSWE (69.6% to 65.3%) and both Terminal-bench versions. Concede that, then move the decision to the customer's workload.
+- **On price-performance Flash wins outright.** Terra's edge on the core coding benchmarks is 1.0 to 4.3 points at 3.1× the price. Per blended dollar, Flash beats Terra on **every** benchmark in Google's table — even at the post-January rate. See the points-per-dollar table below.
+- **Concede computer use specifically, not agentic coding generally.** Terra's real leads are OSWorld-2.0 (50.2% to 38.1%, +12.1) and Terminal-bench 3.0 (20.8% to 14.9%, +5.9) — 30-40% relative. Everything else is inside a few points.
 - **Luna is not in this class.** The widely-repeated "Flash is 8× more expensive" line prices it against GPT-5.6 Luna at $0.20/$1.20 — a budget tier. Against actual mid-tier competitors Flash is the cheapest option on the table.
 - **Flash's real win is enterprise automation** — AutomationBench 30.4% against Sonnet 5's 10.7%, nearly 3× — plus long-context retrieval, video and web-dev Elo.
 - **The Gemini discount is credits back on net spend**, not a discounted list rate. The invoice shows list with a credit applied, which matters for any commitment calculated off gross spend.
@@ -82,11 +83,31 @@ benchmarks. Read the losses as the more informative half.
 | Agent's Last Exam (pass rate) | 26.3% | **33.3%** | 28.0% | — |
 | OSWorld-2.0 | 38.1% | 39.6% | **50.2%** | — |
 
-**The honest read:** Terra is the stronger agentic-coding model on the benchmarks that measure
-it, and Sonnet 5 leads on GDPVal and Agent's Last Exam. Flash's clear wins are enterprise
-automation, long-context retrieval, video and web-dev Elo. So the trade is real rather than
-rhetorical: at the introductory rate Flash is 2.7× cheaper than Sonnet 5 and 3.1× cheaper than
-Terra while giving up some agentic-coding ground. After January that narrows to 1.33× and 1.56×.
+### Benchmark points per blended dollar (CALC)
+
+The table above is the raw capability picture. This one is the buying decision. Each cell is the
+benchmark score divided by the model's blended price — our arithmetic on verified list prices,
+not a vendor figure. Higher is better.
+
+| Benchmark | Flash (promo, $4.50) | Flash (standard, $9.00) | Terra ($14.00) | Sonnet 5 ($12.00) |
+|---|---|---|---|---|
+| DeepSWE v1.1 | **14.51** | 7.26 | 4.97 | 4.50 |
+| Terminal-bench 2.1 | **19.07** | 9.53 | 6.24 | 6.70 |
+| FrontierCode 1.1 Main | **9.69** | 4.84 | 2.95 | 3.56 |
+| AutomationBench | **6.76** | 3.38 | 1.69 | 0.89 |
+| AA Intelligence Index | **12.44** | 6.22 | 4.07 | 4.58 |
+| OSWorld-2.0 | **8.47** | 4.23 | 3.59 | 3.30 |
+| Terminal-bench 3.0 | **3.31** | 1.66 | 1.49 | 1.22 |
+
+**The honest read:** Terra is ahead in absolute terms on DeepSWE (+4.3), Terminal-bench 2.1
+(+1.6) and the AA index (+1.0), and meaningfully ahead on computer use — OSWorld-2.0 (+12.1) and
+Terminal-bench 3.0 (+5.9). Sonnet 5 leads GDPVal and Agent's Last Exam. But at 3.1× and 2.7× the
+price respectively, neither converts that into value: **Flash returns more points per dollar than
+both on every row above, and still does at its post-January standard rate.**
+
+So the argument to have with a founder is not which model tops a leaderboard. It is what a
+one-to-four-point delta is worth per accepted unit of work — and whether their workload is the
+computer-use case where Terra's lead is actually large.
 
 ## Open weights
 
