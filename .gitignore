@@ -11,5 +11,17 @@ GEMINI.md
 vite-signal/
 .env
 
-# Internal sales playbook layer — repo and site are PUBLIC; this never ships
+# Internal sales playbook layer — repo and site are PUBLIC; this never ships.
+#
+# This rule used to read `docs/internal/` alone, which never matched the
+# playbook's actual path, so content/gcp-playbook.md was tracked and public.
+# It remains in git history: this rule plus the accompanying `git rm --cached`
+# only stop it shipping from here forward.
+#
+# The file must still exist LOCALLY on any machine that runs the pipeline:
+# scripts/generate-briefing.js feeds it to Stage 4b as ground truth for "Our
+# Play", and scripts/generate-weekly.sh reads its "Last verified" date for the
+# 90-day staleness warning. Both degrade to a warning when it is missing, so a
+# fresh clone still builds — it just drafts Our Play without ground truth.
 docs/internal/
+content/gcp-playbook.md
