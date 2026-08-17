@@ -235,3 +235,72 @@ body {
     @apply text-xs text-brand-text-muted mt-4;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Reference pages (/model-pricing) — dense tabular content.
+   The briefing template had no table styles at all because editions never
+   used tables; a markdown-authored pricing sheet is almost entirely tables,
+   so these live scoped under .reference-page to avoid changing how any
+   existing edition renders.
+   --------------------------------------------------------------------------- */
+@layer components {
+  .reference-page .table-scroll {
+    @apply overflow-x-auto my-8 border border-brand-border rounded-sm;
+  }
+  .reference-page table {
+    @apply w-full border-collapse font-sans text-sm;
+    min-width: 40rem;
+  }
+  .reference-page thead th {
+    @apply font-mono text-[10px] uppercase tracking-widest font-normal text-left px-4 py-3 whitespace-nowrap;
+    color: var(--color-brand-accent);
+    background: rgba(250, 248, 245, 0.04);
+    border-bottom: 1px solid var(--color-brand-border);
+  }
+  .reference-page tbody td {
+    @apply px-4 py-3 align-baseline;
+    border-bottom: 1px solid var(--color-brand-border);
+  }
+  .reference-page tbody tr:last-child td {
+    border-bottom: none;
+  }
+  .reference-page tbody tr:hover td {
+    background: rgba(250, 248, 245, 0.02);
+  }
+  /* Digits line up in columns; a pricing sheet is unreadable without this. */
+  .reference-page tbody td:not(:first-child) {
+    @apply font-mono;
+    font-variant-numeric: tabular-nums;
+  }
+  .reference-page tbody td:first-child {
+    color: var(--color-brand-primary);
+  }
+  /* Markdown **bold** inside a cell marks the winning figure in a row. */
+  .reference-page tbody td strong {
+    color: var(--color-brand-accent);
+    @apply font-normal;
+  }
+  .reference-page tbody td em {
+    color: var(--color-brand-text-muted);
+    @apply not-italic;
+  }
+  .reference-page h2 {
+    @apply text-xl font-bold font-sans uppercase tracking-widest mt-16 mb-4;
+    color: var(--color-brand-accent);
+  }
+  .reference-page h3 {
+    @apply text-base font-sans font-bold mt-10 mb-3;
+    color: var(--color-brand-primary);
+  }
+  .reference-page ol,
+  .reference-page ul {
+    @apply my-6 pl-6 flex flex-col gap-3;
+  }
+  .reference-page ol { @apply list-decimal; }
+  .reference-page ul { @apply list-disc; }
+  .reference-page code {
+    @apply font-mono text-[0.85em] px-1.5 py-0.5 rounded-sm;
+    background: rgba(250, 248, 245, 0.06);
+    color: var(--color-brand-primary);
+  }
+}

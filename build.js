@@ -60,9 +60,31 @@ function parseFrontmatter(raw) {
 }
 
 // Render markdown and inject custom styling wrappers (e.g. for "Our Play")
+// Site-relative link targets an author may use in briefing Markdown. Each needs
+// BASE_PATH prepended at build time or it 404s in production: the site is served
+// from /brief-signal/, so a bare href="/model-pricing/" resolves to the domain
+// root instead. Local dev (BASE_PATH unset) leaves them absolute, which is what
+// a file:// preview needs.
+//
+// Only these known internal destinations are rewritten. A blanket rewrite of
+// every leading-slash href would mangle protocol-relative and external URLs.
+const INTERNAL_LINKS = ['/model-pricing', '/sellers-edge', '/archive', '/subscribe'];
+
+function applyBasePath(html) {
+  if (!BASE_PATH) return html;
+  let out = html;
+  for (const target of INTERNAL_LINKS) {
+    out = out.replace(
+      new RegExp(`href="${target}(/?)"`, 'g'),
+      `href="${BASE_PATH}${target}$1"`
+    );
+  }
+  return out;
+}
+
 function renderMarkdown(md) {
-  let html = marked(md);
-  
+  let html = applyBasePath(marked(md));
+
   // Wrap the "Our Play" section in a special styled container.
   // This looks for an <h2> that says "Our Play", and wraps it and all following 
   // siblings until the next <h2> or end of file into a special div.
@@ -287,6 +309,48 @@ function build() {
     content: subscribeContent,
   });
   fs.writeFileSync(path.join(DIST_DIR, 'subscribe', 'index.html'), subscribePage);
+
+  // Build Model Pricing reference page from content/model-pricing.md.
+  //
+  // Deliberately a LIVING page, not a per-edition archive like Seller's Edge
+  // below: a stale price actively misleads in a way a stale teach does not, so
+  // each refresh overwrites this file rather than stacking another section.
+  // The "last checked" date in its own frontmatter subtitle is the only
+  // freshness signal a reader gets — keep it accurate on every edit.
+  //
+  // A missing file logs and skips, so the site still builds for anyone who
+  // clones without it.
+  const PRICING_PATH = path.join(__dirname, 'content', 'model-pricing.md');
+  if (fs.existsSync(PRICING_PATH)) {
+    const { meta: pricingMeta, body: pricingBody } = parseFrontmatter(
+      fs.readFileSync(PRICING_PATH, 'utf-8')
+    );
+    ensureDir(path.join(DIST_DIR, 'model-pricing'));
+    const pricingPage = render(template, {
+      title: pricingMeta.title || 'Model Pricing & Performance',
+      subtitle: pricingMeta.subtitle || 'Verified reference',
+      url: '/model-pricing/',
+      audio_player: '',
+      feedback_cta: '',
+      sources: '',
+      base: getBase(1), // dist/model-pricing/ → 1 level deep
+      // Each table gets its own horizontally-scrollable container. Without
+      // this a wide pricing table makes the whole page scroll sideways on
+      // mobile, which breaks every other section too. marked emits bare
+      // <table> elements, so the wrapper has to be added here.
+      content:
+        '<article class="reference-page">' +
+        renderMarkdown(pricingBody).replace(
+          /<table>([\s\S]*?)<\/table>/g,
+          '<div class="table-scroll"><table>$1</table></div>'
+        ) +
+        '</article>',
+    });
+    fs.writeFileSync(path.join(DIST_DIR, 'model-pricing', 'index.html'), pricingPage);
+    console.log('Built Model Pricing reference page');
+  } else {
+    console.log('No content/model-pricing.md — skipping Model Pricing page');
+  }
 
   // Build Seller's Edge library page — every edition's teach, compiled
   // newest-first, so the section compounds into a field guide instead of
