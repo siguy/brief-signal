@@ -17,7 +17,7 @@ import json
 import os
 import re
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -63,7 +63,18 @@ PROJECT_DIR = SCRIPT_DIR.parent
 OUTPUT_DIR = Path.home() / "info-agg" / "prompts"
 TODAY = datetime.now().strftime("%Y-%m-%d")
 OUTPUT_FILE = OUTPUT_DIR / f"bookmarks-raw-{TODAY}.json"
-DEDUP_WEEKS = 4
+# Stop paging after this many CONSECUTIVE pages that contained nothing new.
+# X returns bookmarks newest-bookmarked first, so once we have seen this many
+# all-duplicate pages in a row, everything below is older and already captured.
+# 3 pages = 60 tweets of margin before we call it.
+#
+# There is deliberately no date window on deduplication (there used to be a
+# 4-week one). A bookmark's key is only "seen" if it appears in a prior raw
+# file, and those files go back further than any window we would pick — so a
+# window does not bound work, it just makes old bookmarks look new. On
+# 2026-08-23 that returned the entire 2,472-entry archive back to 2021 as
+# "new". Bounding the work is what STOP_AFTER_DUPE_PAGES is for.
+STOP_AFTER_DUPE_PAGES = 3
 PAGE_DELAY = 0.5          # seconds between pagination requests
 MAX_BACKOFF = 300          # max seconds to wait on rate-limit (5 min)
 BOOKMARKS_PER_PAGE = 20
@@ -91,23 +102,26 @@ def log_error(msg: str) -> None:
 # ---------------------------------------------------------------------------
 
 def load_existing_keys() -> set[str]:
-    """Load URL-path keys from the last DEDUP_WEEKS weeks of raw JSON files."""
-    cutoff = datetime.now() - timedelta(weeks=DEDUP_WEEKS)
+    """Load URL-path keys from EVERY raw JSON file we have ever written.
+
+    Deliberately unfiltered — by date and by filename shape. Both filters used
+    to exist here and both caused the same bug from opposite directions:
+
+    - A 4-week date cutoff meant a bookmark last written more than 4 weeks ago
+      was not "seen", so it was re-fetched as new.
+    - Requiring the filename to parse as `bookmarks-raw-YYYY-MM-DD.json` threw
+      away every variant we write by hand during recovery — including
+      `bookmarks-raw-<date>.full-with-dupes.json`, the file whose entire job is
+      to preserve an over-fetch. The dedup pass could not see the safety net,
+      so the next run over-fetched the same entries again.
+
+    Reading every match is cheap: a few thousand short strings.
+    """
     keys: set[str] = set()
 
     pattern = str(OUTPUT_DIR / "bookmarks-raw-*.json")
     for filepath in sorted(glob.glob(pattern)):
-        # Extract date from filename
         fname = os.path.basename(filepath)
-        try:
-            date_str = fname.replace("bookmarks-raw-", "").replace(".json", "")
-            file_date = datetime.strptime(date_str, "%Y-%m-%d")
-        except ValueError:
-            continue
-
-        if file_date < cutoff:
-            continue
-
         try:
             with open(filepath, "r", encoding="utf-8") as f:
                 data = json.load(f)
@@ -143,6 +157,19 @@ def load_existing_keys() -> set[str]:
             log(f"  Warning: could not read {fname}: {e}")
 
     return keys
+
+
+def should_stop_early(page_new: int, consecutive_dupe_pages: int) -> tuple[bool, int]:
+    """Decide whether to stop paginating, given the page we just processed.
+
+    Returns (stop, new_consecutive_count). Any page with at least one new
+    bookmark resets the counter — we only stop on an unbroken run, so a single
+    all-duplicate page in the middle of fresh material does not end the fetch.
+    """
+    if page_new > 0:
+        return False, 0
+    consecutive_dupe_pages += 1
+    return consecutive_dupe_pages >= STOP_AFTER_DUPE_PAGES, consecutive_dupe_pages
 
 
 # ---------------------------------------------------------------------------
@@ -284,7 +311,7 @@ async def fetch_all_bookmarks() -> dict:
     # Load existing keys for deduplication
     log("Loading existing bookmarks for deduplication...")
     existing_keys = load_existing_keys()
-    log(f"Found {len(existing_keys)} existing bookmark keys from last {DEDUP_WEEKS} weeks")
+    log(f"Found {len(existing_keys)} existing bookmark keys across all prior raw files")
 
     # Initialize twikit client with cookie auth
     client = Client(language="en-US")
@@ -297,6 +324,7 @@ async def fetch_all_bookmarks() -> dict:
     bookmarks: dict = {}
     dupes = 0
     page = 0
+    consecutive_dupe_pages = 0
 
     log("Starting bookmark fetch...")
 
@@ -329,6 +357,17 @@ async def fetch_all_bookmarks() -> dict:
         # Check if there are more pages
         if not result or len(result) == 0:
             log("No more bookmarks to fetch.")
+            break
+
+        # Stop once we have paged into material we already have. Without this
+        # the fetch walks the ENTIRE bookmark list every single run (177 pages
+        # on 2026-08-23) purely to rediscover that it is all duplicates.
+        stop, consecutive_dupe_pages = should_stop_early(page_new, consecutive_dupe_pages)
+        if stop:
+            log(
+                f"Reached {consecutive_dupe_pages} consecutive pages with nothing new "
+                f"— stopping ({len(bookmarks)} new, {dupes} dupes seen)."
+            )
             break
 
         # Rate-limit delay between pages
