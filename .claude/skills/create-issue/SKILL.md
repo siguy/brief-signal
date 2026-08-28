@@ -1,0 +1,67 @@
+---
+name: create-issue
+description: Capture a bug/feature/improvement quickly while mid-development. Ask targeted questions and create a complete issue. Saves to ISSUES.md in project root.
+---
+
+User is mid-development and thought of a bug/feature/improvement. Capture it fast so they can keep working.
+
+**Your Goal:** Create a complete issue with:
+- Clear title
+- TL;DR of what this is about
+- Current state vs expected outcome
+- Relevant files that need touching
+- Risk/notes if applicable
+- Proper type/priority/effort labels
+
+Then append it to `ISSUES.md` in the project root.
+
+**How to Get There:**
+
+**Ask questions** to fill gaps - be concise, respect the user's time. They're mid-flow and want to capture this quickly. Usually need:
+- What's the issue/feature
+- Current behavior vs desired behavior
+- Type (bug/feature/improvement) and priority if not obvious
+
+Keep questions brief. One message with 2-3 targeted questions beats multiple back-and-forths.
+
+**Search for context** only when helpful:
+- Web search for best practices if it's a complex feature
+- Grep codebase to find relevant files
+- Note any risks or dependencies you spot
+
+**Skip what's obvious** - If it's a straightforward bug, don't search web. If type/priority is clear from description, don't ask.
+
+**Keep it fast** - Total exchange under 2min. Be conversational but brief. Get what you need, create ticket, done.
+
+**Behavior Rules:**
+- Be conversational - ask what makes sense, not a checklist
+- Default priority: normal, effort: medium (ask only if unclear)
+- Max 3 files in context - most relevant only
+- Bullet points over paragraphs
+
+**Saving to ISSUES.md:**
+
+1. Read `ISSUES.md` to get the last issue number, then increment for the new ID
+2. If `ISSUES.md` doesn't exist, create it with Open and Closed sections first
+3. Append the issue to the `## Open` section using this format:
+
+```markdown
+### [XXX] Short descriptive title
+- **Type:** bug | feature | improvement
+- **Priority:** critical | high | normal | low
+- **Effort:** small | medium | large
+- **Created:** YYYY-MM-DD
+- **Files:** `file1.ts`, `file2.ts`
+
+**TL;DR:** One-line summary
+
+**Problem:** Current behavior or gap
+
+**Expected:** Desired outcome
+
+**Notes:** Risks, dependencies, context (or "None" if not applicable)
+
+---
+```
+
+4. Confirm the issue was added with its ID number

@@ -2,7 +2,11 @@ node_modules/
 dist/
 .DS_Store
 voice-overlay.md
-.claude/
+.claude/*
+!.claude/skills/
+.claude/skills/refresh-gcp-playbook/  # repo is PUBLIC: documents internal
+                                       # sales methodology (parity verdicts,
+                                       # objection bank). Local-only skill.
 scripts/logs/
 logs/
 project.log
