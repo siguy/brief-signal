@@ -465,6 +465,24 @@ if [ -n "${TODAY:-}" ] && [ -f "$LINEUP_FILE" ]; then
   fi
 fi
 
+# Braid ledger — did the draft actually weave in the bookmarks the lineup named?
+# Stage 4a's `braids in:` field is the only place the pipeline records its own
+# intent; nothing else compares that intent to the finished prose. Three
+# outcomes: landed, substituted (the subject ran but was credited to a different
+# source), and dropped. Advisory and never fatal — a story legitimately tightens
+# while drafting, so this prompts a review rather than gating a run.
+#
+# Sits beside the theme section because both answer editorial questions about the
+# lineup; the mechanical sweeps follow.
+BRAID_SECTION=""
+if [ -n "${TODAY:-}" ] && [ "$LINEUP_GATE" != "1" ]; then
+  if BRAID_OUT=$(node scripts/braid-ledger.js --date "$TODAY" 2>/dev/null) && [ -n "$BRAID_OUT" ]; then
+    BRAID_SECTION=$'\n\n'"$BRAID_OUT"
+  else
+    log "WARN: Braid ledger produced nothing — PR body will omit it."
+  fi
+fi
+
 # Signal digest — the deterministic coverage sweep. It reads the KBs' own
 # grades and the draft's own URLs (no model involved) and reports what did not
 # get cited: first-party Google/competitor items, and HIGH editorial-signal
@@ -548,7 +566,7 @@ A copy of the unedited first draft is committed at \`${DRAFT_FILE}\`. After you 
 
 ### After merging
 Run \`npm run audio:pr\` to generate the audio script and open a PR.
-Subscriber email is sent when the audio PR is merged.${THEME_SECTION}${CRITIQUE_SECTION}${SIGNAL_SECTION}
+Subscriber email is sent when the audio PR is merged.${THEME_SECTION}${BRAID_SECTION}${CRITIQUE_SECTION}${SIGNAL_SECTION}
 PREOF
 )"
 fi
