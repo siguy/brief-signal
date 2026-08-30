@@ -39,7 +39,7 @@ If an episode has no subtitles (rare for English content, but it happens), the s
 
 ### Step 4: Level 1 Extraction (Every Episode)
 
-This is where the AI magic happens. The transcript gets sent to **Gemini 2.5 Flash** with a carefully crafted system prompt (`scripts/podcast-extraction-prompt.md`). Gemini returns a structured JSON object containing:
+This is where the AI magic happens. The transcript gets sent to **Gemini 3.7 Flash** with a carefully crafted system prompt (`scripts/podcast-extraction-prompt.md`). Gemini returns a structured JSON object containing:
 
 - **Notable quotes** -- verbatim, with speaker names and timestamps
 - **Consensus signals** -- things hosts/guests treat as obvious ("everyone agrees agents are the next platform shift")
@@ -141,7 +141,7 @@ This fault tolerance is a professional engineering pattern worth internalizing: 
 | Tool | What It Does | Why This One |
 |------|-------------|--------------|
 | **yt-dlp** | Downloads video metadata and subtitles from YouTube | Free, open source, actively maintained. The standard tool for YouTube data extraction. |
-| **Gemini 2.5 Flash** | Reads transcripts and extracts structured intelligence | Fast, cheap, good at following detailed JSON schemas. The Flash model handles long transcripts (1-hour podcast = ~15K words) within its context window without issue. |
+| **Gemini 3.7 Flash** | Reads transcripts and extracts structured intelligence | Fast, cheap, good at following detailed JSON schemas. The Flash model handles long transcripts (1-hour podcast = ~15K words) within its context window without issue. |
 | **Node.js** | Runs the extraction and briefing scripts | Matches the rest of the project (build.js, audio pipeline). Keeps the stack consistent. |
 | **VTT parsing (pure JS)** | Converts YouTube subtitle files to clean text | No external dependency needed. The format is simple enough that a 15-line parser handles it. |
 
@@ -484,3 +484,129 @@ we'd missed.
   the original plan were already implemented, and one had already failed in
   production. Reading the code first would have saved the effort.
 - **When a check and its subject share a brain, it isn't a check.**
+
+## Swapping the Engine Mid-Flight (2026-08-29)
+
+We moved every text-generation call in the pipeline from `gemini-2.5-flash` to
+`gemini-3.7-flash` — nine call sites across six files (both briefing stages, the
+critic, the repairer, the audio-script writer, and both podcast extractors).
+
+On the surface this is find-and-replace. The reason it deserves a section is that
+**this pipeline runs unattended at 9 PM on a Sunday.** Nobody is watching. If a
+model string is wrong, or the new model returns a slightly different shape, the
+first symptom is a missing briefing on Monday morning — and by then the week's
+knowledge bases are already stale.
+
+### The order the checks were run in
+
+The instinct is to edit the files first and find out later. Do it backwards:
+
+1. **Confirm the model exists — from the API, not from memory.** A `ListModels`
+   call against the real key returned `gemini-3.7-flash`, version
+   `3.7-flash-08-2026`, with no `-preview` suffix. That last detail matters: a
+   preview model can be withdrawn or renamed under you. Guessing a plausible ID
+   like `gemini-3-7-flash` would have shipped a 404 into a cron job.
+2. **Diff the metadata against the outgoing model.** Same 1,048,576-token input
+   limit, same 65,536 output limit, same `supportedGenerationMethods`. If the
+   context window had shrunk, the podcast extractor — which stuffs whole
+   hour-long transcripts into one call — would have started failing on the
+   longest episodes only. That is the nastiest class of bug: the one that looks
+   like flakiness.
+3. **Exercise every call *shape* the code actually uses.** The pipeline makes two
+   kinds of request: plain text with a `systemInstruction`, and JSON mode with
+   `responseMimeType: "application/json"`. Both were smoke-tested against the new
+   model before a single file changed. Testing "does the model respond" is not
+   the same as testing "does it respond the way my code parses."
+4. **Run a real stage end-to-end.** Unit tests pass without ever touching the
+   API — they cover our fence-stripping and truncation logic, not Google's
+   behaviour. So the critic was run live against a published edition. It came
+   back with valid JSON, a correctly structured report, and a real hard failure
+   it found on its own. *That* is the evidence the swap works.
+
+### The thing worth internalising
+
+**A green test suite and a working pipeline are different claims.** `npm test`
+passed identically before and after this change, because not one of those 14
+tests makes a network call. They were never going to catch a bad model ID. When
+you change the boundary between your code and someone else's service, your own
+tests go quiet exactly when you most want them talking — so you have to go
+touch the real thing.
+
+### One cost note
+
+Gemini 3.7 Flash cannot turn thinking off, and reasoning bills at the output
+rate. That sounds alarming until you measure it: on an identical prompt, 2.5
+Flash burned 425 thinking tokens and 3.7 Flash burned 436. The behaviour is not
+new — 2.5 Flash was thinking all along. What actually changed is the rate card
+($0.75/$3.75 per million introductory, doubling on 1 January 2027), so the
+weekly run gets more expensive per token even though it uses about the same
+number of them. Worth knowing before the January invoice, not after.
+
+
+### Two follow-ups, and what each one taught
+
+**Thinking level.** Gemini 3 replaced 2.5's `thinkingBudget` (a token number) with
+`thinkingLevel` (`MINIMAL`/`LOW`/`MEDIUM`/`HIGH`). We pinned every 3.7 call to
+`HIGH`. The measurable cost is about 41% more thinking tokens; the measurable
+benefit showed up immediately in the critic, which on the same Edition #24 caught
+everything it had before *plus* a finding it had missed — podcast citations
+labelled "read" when they should say "listen."
+
+The trap was in the Python extractor. In JavaScript the setting nests under
+`thinkingConfig`; in Python the SDK wants a nested `thinking_config` dict too, and
+a flat `"thinking_level"` key raises a pydantic `ValidationError`. Both spellings
+*look* right. One crashes. The only reason that didn't ship is that both forms
+were tried against the live API before either was written into a file — the same
+habit as checking the model ID, applied one level down. **When two SDKs wrap the
+same API, verify the config shape per language. Symmetry is an assumption, not a
+guarantee.**
+
+**TTS — tried, measured, rejected.** We also tried moving the audio step to
+`gemini-3.1-flash-tts-preview`. This is a genuinely different API from everything
+above — Cloud Text-to-Speech, via `@google-cloud/text-to-speech`, where the model
+rides in as `voice.modelName`. That a model ID appears in the Generative Language
+API's model list tells you nothing about whether Cloud TTS accepts it, so it had to
+be tried. It was accepted, with Fenrir and the existing style prompt, and it
+synthesised 26% faster.
+
+Two measurements nearly sent us the wrong way in opposite directions.
+
+The first was a false alarm. A single test sentence took 33% longer to speak, which
+on a five-minute briefing would be a real regression. On a 254-word chunk of an
+actual script the gap collapsed to 4.9%. The one-sentence clip was mostly lead-in
+silence, and a fixed overhead looks enormous when you divide it by four seconds.
+**Benchmark on a payload the size of the real one.** Small samples don't just add
+noise — they systematically exaggerate whatever is constant.
+
+The second was the one that mattered, and Simon caught it by ear before the
+numbers did: the two samples didn't sound like the same person. They shouldn't
+have differed at all — same `voice.name`, same prompt, same text. And the API
+wasn't ignoring us: it validates voice names (a bogus one is rejected outright)
+and `Puck` produces audibly different output, so "Fenrir" really was honoured.
+
+Measuring pitch settled it. Fenrir on 2.5 Pro TTS has a median fundamental
+frequency of about 140 Hz with a real low end (5.7% of voiced frames below
+100 Hz). Fenrir on 3.1 Flash TTS sits at about 180 Hz with essentially nothing
+below 100 and 16% above 250 — roughly four semitones higher and much thinner.
+Scanning all 16 male Gemini-TTS voices on 3.1 made it starker: Fenrir is the
+*highest-pitched of the sixteen*, the furthest available voice from the show's
+existing sound. Three others (Algieba, Sadachbia, Umbriel) land within 1 Hz of the
+old median.
+
+We reverted. A weekly show's voice is part of its identity, and 26% faster
+synthesis on a step you run by hand is not worth changing who reads the briefing
+to listeners who know it.
+
+**The lesson: an identifier is not an identity.** "Fenrir" is a label the API
+accepts, not a guarantee of the same voice across model generations — exactly the
+same trap as assuming two SDKs take the same config shape, one level further out.
+Anything whose *output* is the product — a voice, a writing style, a rendering —
+needs to be checked by the sense that consumes it, not just by whether the call
+returned 200. The pitch analysis is what turned "sounds different to me" into
+something decidable, but the ear got there first.
+
+One honest limit: `generate-audio.js` was never run end-to-end, because it writes
+to `content/audio/{date}.mp3` and would have overwritten a published episode. The
+tests issued the identical request shape directly instead. That is good evidence,
+not proof, and the difference is worth naming rather than glossing.
+

@@ -483,9 +483,12 @@ async function main() {
     try {
       console.log(`\nStage 4a: planning story lineup for Edition #${edition}...`);
       const lineupResp = await ai.models.generateContent({
-        model: "gemini-2.5-flash",
+        model: "gemini-3.7-flash",
         contents: kbAndContext,
-        config: { systemInstruction: `${systemPrompt}\n\n${lineupTask(edition)}` },
+        config: {
+          systemInstruction: `${systemPrompt}\n\n${lineupTask(edition)}`,
+          thinkingConfig: { thinkingLevel: "HIGH" },
+        },
       });
       const rawLineup = lineupResp.text || "";
       lineup = stripLineupFences(rawLineup);
@@ -541,16 +544,17 @@ ${lineup ? `You already planned this story lineup for this edition. Expand it in
 
 ${kbContent}${emptySourceNote}${previousContext}`;
 
-  console.log(`\nStage 4b: drafting Edition #${edition} (gemini-2.5-flash)...`);
+  console.log(`\nStage 4b: drafting Edition #${edition} (gemini-3.7-flash)...`);
   const gcpPlaybook = readGcpPlaybook();
   const stage4bSystem = gcpPlaybook
     ? `${systemPrompt}\n\n## GCP Playbook (ground truth for "Our Play" and "Where the GCP opportunity is" — only claims from this playbook or the week's KBs may appear in product positioning)\n\n${gcpPlaybook}`
     : systemPrompt;
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3.7-flash",
     contents: userMessage,
     config: {
       systemInstruction: stage4bSystem,
+      thinkingConfig: { thinkingLevel: "HIGH" },
     },
   });
   let text = response.text;

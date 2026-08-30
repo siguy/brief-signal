@@ -1,3 +1,85 @@
+# Gemini model upgrade → gemini-3.7-flash
+
+**Status:** DONE — branch `claude/gemini-3-7-flash-upgrade-8c3dc1`, 2026-08-29
+**One sentence:** Move every text-generation call in the pipeline from
+`gemini-2.5-flash` to `gemini-3.7-flash`.
+
+## Done
+
+- [x] Verify the model ID against the live API before editing anything —
+      `gemini-3.7-flash` is GA on the project key (version `3.7-flash-08-2026`,
+      no `-preview` suffix). Guessing `gemini-3-7-flash` from the model-card slug
+      would have shipped a 404 into the Sunday cron.
+- [x] Diff model metadata vs. the outgoing model — identical 1M input / 65K output
+      limits and `supportedGenerationMethods`. No context regression for the
+      podcast extractor, which sends whole hour-long transcripts in one call.
+- [x] Smoke-test both call shapes the pipeline uses (plain + `systemInstruction`;
+      JSON mode via `responseMimeType`). Both return parseable output.
+- [x] Swap 9 call sites + 1 log string across 6 files. Simon chose the plain string
+      swap over a `GEMINI_MODEL` env-override constant — smallest diff.
+- [x] `npm test` — 14 + 18 + bookmark suites pass, exit 0.
+- [x] Live end-to-end run of `critique-briefing.js` against Edition #24 — valid
+      JSON, correct report structure, found a real hard failure on its own.
+- [x] Docs: CHANGELOG entry under Unreleased/Changed; FOR_SIMON.md model names
+      updated + new section "Swapping the Engine Mid-Flight (2026-08-29)".
+
+## Deliberately not changed
+
+- `scripts/generate-audio.js` — stays on `gemini-2.5-pro-tts`. It is the Cloud
+  Text-to-Speech surface (`@google-cloud/text-to-speech`), a different API with no
+  3.7 equivalent. `gemini-3.1-flash-tts-preview` was tried at Simon's request and
+  reverted — it changes the voice. See "Follow-ups" below.
+- `tasks/lessons.md`, `CHANGELOG.md` history, `docs/plans/`, published editions —
+  historical records of what ran at the time. The line-261 lesson (no
+  `maxOutputTokens` cap, because thinking tokens share the budget) still holds:
+  3.7 Flash cannot disable thinking either.
+- `scripts/generate-briefing.test.js:213` comment — accurately records a failure
+  observed against 2.5-flash.
+
+## Follow-ups (Simon, 2026-08-30)
+
+- [x] **Thinking level `HIGH` on all 9 Gemini 3.7 call sites.** JS uses
+      `thinkingConfig: { thinkingLevel: "HIGH" }`; Python needs a **nested**
+      `"thinking_config": {"thinking_level": "HIGH"}` — the flat key raises a
+      pydantic `ValidationError`. Both forms were tried live before editing;
+      the flat one would have crashed `extract-rss-podcasts.py` at runtime.
+      Measured: thinking tokens 677 → 957 (+41%), output 156 → 181, latency
+      unchanged, JSON mode still parses.
+- [x] **TTS: tried `gemini-3.1-flash-tts-preview`, REVERTED to `gemini-2.5-pro-tts`.**
+      Cloud TTS accepts it with Fenrir and it synthesises 26% faster, but it
+      renders the same voice *name* as a different reader. Simon heard it in the
+      A/B; pitch analysis confirmed: median F0 ~180Hz vs ~140Hz on 2.5, ~0% of
+      voiced frames below 100Hz vs 5.7%. Of the 16 male Gemini-TTS voices on 3.1,
+      Fenrir is the highest-pitched — the furthest match to the current sound.
+      Algieba / Sadachbia / Umbriel land within 1Hz if a 3.1 move is ever wanted;
+      samples of all four sent to Simon. Simon's call: revert, keep the voice.
+- [x] Corrected the call-site count: **9**, not 8 (`generate-briefing.js` has two).
+      Fixed in the commit message, FOR_SIMON.md and this file.
+
+## Watch on the next runs
+
+- **Cost.** `HIGH` thinking on `extract-podcasts.js` L1 is the real exposure —
+  it runs on every episode (60-80/week), unlike the once-weekly briefing stages.
+  If the weekly spend jumps, narrow `HIGH` to the briefing/critique/repair stages
+  and leave the extractors on default thinking.
+- **TTS is unchanged**, so audio carries no new risk this cycle. If a future TTS
+  model swap is proposed, A/B the voice before shipping it — same `voice.name`
+  does NOT mean same voice across model generations.
+
+- **Stage 4b word count** / `grep -c '^## TLDR'` = 1 — the repetition-loop guard
+  (`truncateRepetition`) was written against 2.5-flash behaviour, and `HIGH`
+  thinking changes generation dynamics.
+- **Podcast extractor JSON parse rate** across a full 60-80 episode batch. Only a
+  handful of calls were live-tested; the batch is where shape drift would show.
+- **Rate card**, separate from thinking level: 3.7 Flash is $0.75/$3.75 per 1M
+  introductory, doubling 1 Jan 2027.
+
+**Rollback:** model string is a one-line revert per file (6 files); thinking level
+is a one-line removal per call site (9); TTS is the one constant in
+`generate-audio.js`. All three are independent.
+
+---
+
 # Editorial gate — surface the lineup BEFORE the edition is written
 
 **Status:** BUILT — approved by Simon 2026-08-09; gate defaults OFF per his call

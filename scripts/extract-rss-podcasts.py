@@ -291,9 +291,13 @@ Date: {episode.get('date', 'unknown')}
 
     try:
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.7-flash",
             contents=user_message,
-            config={"system_instruction": prompt, "response_mime_type": "application/json"},
+            config={
+                "system_instruction": prompt,
+                "response_mime_type": "application/json",
+                "thinking_config": {"thinking_level": "HIGH"},
+            },
         )
         return json.loads(strip_code_fences(response.text))
     except json.JSONDecodeError:
@@ -317,9 +321,13 @@ def deep_dive(client, deep_dive_prompt: str, level1_data: dict, transcript: str)
 
     try:
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.7-flash",
             contents=user_message,
-            config={"system_instruction": deep_dive_prompt, "response_mime_type": "application/json"},
+            config={
+                "system_instruction": deep_dive_prompt,
+                "response_mime_type": "application/json",
+                "thinking_config": {"thinking_level": "HIGH"},
+            },
         )
         return json.loads(strip_code_fences(response.text))
     except json.JSONDecodeError:

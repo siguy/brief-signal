@@ -250,11 +250,12 @@ Date: ${episode.upload_date || "unknown"}
 ${transcript}`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3.7-flash",
     contents: userMessage,
     config: {
       systemInstruction: systemPrompt,
       responseMimeType: "application/json",
+      thinkingConfig: { thinkingLevel: "HIGH" },
     },
   });
 
@@ -277,11 +278,12 @@ ${JSON.stringify(level1Data, null, 2)}
 ${transcript}`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3.7-flash",
     contents: userMessage,
     config: {
       systemInstruction: deepDivePrompt,
       responseMimeType: "application/json",
+      thinkingConfig: { thinkingLevel: "HIGH" },
     },
   });
 

@@ -232,9 +232,9 @@ ${briefing}`;
   console.log(`Critiquing ${path.basename(briefingPath)}...`);
   const ai = new GoogleGenAI({ apiKey });
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-3.7-flash",
     contents: userMessage,
-    config: { systemInstruction },
+    config: { systemInstruction, thinkingConfig: { thinkingLevel: "HIGH" } },
   });
 
   let raw = response.text;
