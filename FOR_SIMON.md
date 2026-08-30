@@ -488,7 +488,7 @@ we'd missed.
 ## Swapping the Engine Mid-Flight (2026-08-29)
 
 We moved every text-generation call in the pipeline from `gemini-2.5-flash` to
-`gemini-3.7-flash` — eight call sites across six files (both briefing stages, the
+`gemini-3.7-flash` — nine call sites across six files (both briefing stages, the
 critic, the repairer, the audio-script writer, and both podcast extractors).
 
 On the surface this is find-and-replace. The reason it deserves a section is that
@@ -541,3 +541,43 @@ new — 2.5 Flash was thinking all along. What actually changed is the rate card
 ($0.75/$3.75 per million introductory, doubling on 1 January 2027), so the
 weekly run gets more expensive per token even though it uses about the same
 number of them. Worth knowing before the January invoice, not after.
+
+
+### Two follow-ups, and what each one taught
+
+**Thinking level.** Gemini 3 replaced 2.5's `thinkingBudget` (a token number) with
+`thinkingLevel` (`MINIMAL`/`LOW`/`MEDIUM`/`HIGH`). We pinned every 3.7 call to
+`HIGH`. The measurable cost is about 41% more thinking tokens; the measurable
+benefit showed up immediately in the critic, which on the same Edition #24 caught
+everything it had before *plus* a finding it had missed — podcast citations
+labelled "read" when they should say "listen."
+
+The trap was in the Python extractor. In JavaScript the setting nests under
+`thinkingConfig`; in Python the SDK wants a nested `thinking_config` dict too, and
+a flat `"thinking_level"` key raises a pydantic `ValidationError`. Both spellings
+*look* right. One crashes. The only reason that didn't ship is that both forms
+were tried against the live API before either was written into a file — the same
+habit as checking the model ID, applied one level down. **When two SDKs wrap the
+same API, verify the config shape per language. Symmetry is an assumption, not a
+guarantee.**
+
+**TTS.** We also moved the audio step to `gemini-3.1-flash-tts-preview`. This is a
+genuinely different API from everything above — Cloud Text-to-Speech, via
+`@google-cloud/text-to-speech`, where the model rides in as `voice.modelName`. The
+fact that a model ID appears in the Generative Language API's model list tells you
+nothing about whether Cloud TTS accepts it. It had to be tried.
+
+It works, with Fenrir and the existing style prompt, and synthesises 26% faster.
+But the first measurement nearly sent us the wrong way: a single test sentence took
+33% longer to speak, which on a five-minute briefing would have been a real
+regression. On a 254-word chunk of an actual script the gap collapsed to 4.9%. The
+one-sentence clip was mostly lead-in silence, and a fixed overhead looks enormous
+when you divide it by four seconds. **Benchmark on a payload the size of the real
+one.** Small samples don't just add noise — they systematically exaggerate whatever
+is constant.
+
+One honest limit: `generate-audio.js` was never run end-to-end, because it writes
+to `content/audio/{date}.mp3` and would have overwritten a published episode. The
+test issued the identical request shape directly instead. That is good evidence,
+not proof, and the difference is worth naming rather than glossing.
+

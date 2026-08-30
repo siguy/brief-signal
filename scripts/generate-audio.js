@@ -22,7 +22,9 @@ const AUDIO_DIR = path.join(__dirname, "..", "content", "audio");
 const MAX_BYTES = 3800; // Stay safely under 4,000-byte API limit for Gemini TTS
 
 const DEFAULT_VOICE = "Fenrir";
-const MODEL = "gemini-2.5-pro-tts";
+// Preview model — Cloud TTS may withdraw or rename it. Roll back to
+// "gemini-2.5-pro-tts" if a run fails on the model name.
+const MODEL = "gemini-3.1-flash-tts-preview";
 const VOICE_PROMPT =
   "Read aloud like a sharp colleague casually catching you up on industry news over coffee. Warm, curious.";
 

@@ -86,6 +86,7 @@ async function main() {
     contents: `Convert this briefing into a spoken-word audio script:\n\n${briefing.content}`,
     config: {
       systemInstruction: systemPrompt,
+      thinkingConfig: { thinkingLevel: "HIGH" },
     },
   });
   let script = stripCodeFences(response.text);

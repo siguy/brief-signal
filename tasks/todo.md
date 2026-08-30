@@ -15,7 +15,7 @@
       podcast extractor, which sends whole hour-long transcripts in one call.
 - [x] Smoke-test both call shapes the pipeline uses (plain + `systemInstruction`;
       JSON mode via `responseMimeType`). Both return parseable output.
-- [x] Swap 8 call sites + 1 log string across 6 files. Simon chose the plain string
+- [x] Swap 9 call sites + 1 log string across 6 files. Simon chose the plain string
       swap over a `GEMINI_MODEL` env-override constant — smallest diff.
 - [x] `npm test` — 14 + 18 + bookmark suites pass, exit 0.
 - [x] Live end-to-end run of `critique-briefing.js` against Edition #24 — valid
@@ -25,9 +25,9 @@
 
 ## Deliberately not changed
 
-- `scripts/generate-audio.js` — `gemini-2.5-pro-tts` is the Cloud Text-to-Speech
-  surface (`@google-cloud/text-to-speech`), a different API with no 3.7
-  equivalent; the Fenrir voice is tuned to it.
+- (superseded) `scripts/generate-audio.js` was initially left on
+  `gemini-2.5-pro-tts`; Simon then asked to try `gemini-3.1-flash-tts-preview`,
+  which is now wired in. See "Follow-ups" below.
 - `tasks/lessons.md`, `CHANGELOG.md` history, `docs/plans/`, published editions —
   historical records of what ran at the time. The line-261 lesson (no
   `maxOutputTokens` cap, because thinking tokens share the budget) still holds:
@@ -35,16 +35,47 @@
 - `scripts/generate-briefing.test.js:213` comment — accurately records a failure
   observed against 2.5-flash.
 
-## Watch on the next unattended run (Sunday 2026-08-30)
+## Follow-ups (Simon, 2026-08-30)
 
-- Stage 4b word count / `grep -c '^## TLDR'` = 1 — the repetition loop guard
-  (`truncateRepetition`) was written against 2.5-flash behaviour.
-- Podcast extractor JSON parse rate across a full 60-80 episode batch. Only two
-  calls were live-tested; the batch is where shape drift would show.
-- Cost: thinking burn is unchanged (425 → 436 tokens on an identical prompt) but
-  the rate card is higher, and doubles 1 Jan 2027.
+- [x] **Thinking level `HIGH` on all 9 Gemini 3.7 call sites.** JS uses
+      `thinkingConfig: { thinkingLevel: "HIGH" }`; Python needs a **nested**
+      `"thinking_config": {"thinking_level": "HIGH"}` — the flat key raises a
+      pydantic `ValidationError`. Both forms were tried live before editing;
+      the flat one would have crashed `extract-rss-podcasts.py` at runtime.
+      Measured: thinking tokens 677 → 957 (+41%), output 156 → 181, latency
+      unchanged, JSON mode still parses.
+- [x] **TTS → `gemini-3.1-flash-tts-preview`** as `voice.modelName` on the Cloud
+      TTS request. Verified live with Fenrir + the existing style prompt:
+      26% faster synthesis (48.5s vs 65.4s on a 254-word chunk), same 32 kbps,
+      delivery 4.9% slower (98.4s → 103.2s ≈ +15s on a 5-min briefing). Samples
+      of both sent to Simon for a listen.
+- [x] Corrected the call-site count: **9**, not 8 (`generate-briefing.js` has two).
+      Fixed in the commit message, FOR_SIMON.md and this file.
 
-**Rollback:** revert the model string in the 6 files (one-line change each).
+## Watch on the next runs
+
+- **Cost.** `HIGH` thinking on `extract-podcasts.js` L1 is the real exposure —
+  it runs on every episode (60-80/week), unlike the once-weekly briefing stages.
+  If the weekly spend jumps, narrow `HIGH` to the briefing/critique/repair stages
+  and leave the extractors on default thinking.
+- **TTS is a preview model.** Cloud TTS can withdraw or rename it. Rollback is the
+  one-line constant in `generate-audio.js` (comment is in place). Contained risk:
+  audio is a manual step, not part of the Sunday cron.
+- `generate-audio.js` was NOT run end-to-end (it would overwrite the shipped
+  Edition #24 MP3). The direct test used an identical request shape — good
+  evidence, not proof. First real run is Edition #25's audio.
+
+- **Stage 4b word count** / `grep -c '^## TLDR'` = 1 — the repetition-loop guard
+  (`truncateRepetition`) was written against 2.5-flash behaviour, and `HIGH`
+  thinking changes generation dynamics.
+- **Podcast extractor JSON parse rate** across a full 60-80 episode batch. Only a
+  handful of calls were live-tested; the batch is where shape drift would show.
+- **Rate card**, separate from thinking level: 3.7 Flash is $0.75/$3.75 per 1M
+  introductory, doubling 1 Jan 2027.
+
+**Rollback:** model string is a one-line revert per file (6 files); thinking level
+is a one-line removal per call site (9); TTS is the one constant in
+`generate-audio.js`. All three are independent.
 
 ---
 

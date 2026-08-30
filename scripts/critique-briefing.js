@@ -234,7 +234,7 @@ ${briefing}`;
   const response = await ai.models.generateContent({
     model: "gemini-3.7-flash",
     contents: userMessage,
-    config: { systemInstruction },
+    config: { systemInstruction, thinkingConfig: { thinkingLevel: "HIGH" } },
   });
 
   let raw = response.text;

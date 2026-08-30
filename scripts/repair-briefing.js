@@ -131,7 +131,10 @@ ${original}`;
   const response = await ai.models.generateContent({
     model: "gemini-3.7-flash",
     contents: userMessage,
-    config: { systemInstruction: systemPrompt },
+    config: {
+      systemInstruction: systemPrompt,
+      thinkingConfig: { thinkingLevel: "HIGH" },
+    },
   });
 
   const repaired = stripOuterFence((response.text || "").trim());

@@ -255,6 +255,7 @@ ${transcript}`;
     config: {
       systemInstruction: systemPrompt,
       responseMimeType: "application/json",
+      thinkingConfig: { thinkingLevel: "HIGH" },
     },
   });
 
@@ -282,6 +283,7 @@ ${transcript}`;
     config: {
       systemInstruction: deepDivePrompt,
       responseMimeType: "application/json",
+      thinkingConfig: { thinkingLevel: "HIGH" },
     },
   });
 

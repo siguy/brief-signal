@@ -485,7 +485,10 @@ async function main() {
       const lineupResp = await ai.models.generateContent({
         model: "gemini-3.7-flash",
         contents: kbAndContext,
-        config: { systemInstruction: `${systemPrompt}\n\n${lineupTask(edition)}` },
+        config: {
+          systemInstruction: `${systemPrompt}\n\n${lineupTask(edition)}`,
+          thinkingConfig: { thinkingLevel: "HIGH" },
+        },
       });
       const rawLineup = lineupResp.text || "";
       lineup = stripLineupFences(rawLineup);
@@ -551,6 +554,7 @@ ${kbContent}${emptySourceNote}${previousContext}`;
     contents: userMessage,
     config: {
       systemInstruction: stage4bSystem,
+      thinkingConfig: { thinkingLevel: "HIGH" },
     },
   });
   let text = response.text;
