@@ -1,3 +1,53 @@
+# Gemini model upgrade → gemini-3.7-flash
+
+**Status:** DONE — branch `claude/gemini-3-7-flash-upgrade-8c3dc1`, 2026-08-29
+**One sentence:** Move every text-generation call in the pipeline from
+`gemini-2.5-flash` to `gemini-3.7-flash`.
+
+## Done
+
+- [x] Verify the model ID against the live API before editing anything —
+      `gemini-3.7-flash` is GA on the project key (version `3.7-flash-08-2026`,
+      no `-preview` suffix). Guessing `gemini-3-7-flash` from the model-card slug
+      would have shipped a 404 into the Sunday cron.
+- [x] Diff model metadata vs. the outgoing model — identical 1M input / 65K output
+      limits and `supportedGenerationMethods`. No context regression for the
+      podcast extractor, which sends whole hour-long transcripts in one call.
+- [x] Smoke-test both call shapes the pipeline uses (plain + `systemInstruction`;
+      JSON mode via `responseMimeType`). Both return parseable output.
+- [x] Swap 8 call sites + 1 log string across 6 files. Simon chose the plain string
+      swap over a `GEMINI_MODEL` env-override constant — smallest diff.
+- [x] `npm test` — 14 + 18 + bookmark suites pass, exit 0.
+- [x] Live end-to-end run of `critique-briefing.js` against Edition #24 — valid
+      JSON, correct report structure, found a real hard failure on its own.
+- [x] Docs: CHANGELOG entry under Unreleased/Changed; FOR_SIMON.md model names
+      updated + new section "Swapping the Engine Mid-Flight (2026-08-29)".
+
+## Deliberately not changed
+
+- `scripts/generate-audio.js` — `gemini-2.5-pro-tts` is the Cloud Text-to-Speech
+  surface (`@google-cloud/text-to-speech`), a different API with no 3.7
+  equivalent; the Fenrir voice is tuned to it.
+- `tasks/lessons.md`, `CHANGELOG.md` history, `docs/plans/`, published editions —
+  historical records of what ran at the time. The line-261 lesson (no
+  `maxOutputTokens` cap, because thinking tokens share the budget) still holds:
+  3.7 Flash cannot disable thinking either.
+- `scripts/generate-briefing.test.js:213` comment — accurately records a failure
+  observed against 2.5-flash.
+
+## Watch on the next unattended run (Sunday 2026-08-30)
+
+- Stage 4b word count / `grep -c '^## TLDR'` = 1 — the repetition loop guard
+  (`truncateRepetition`) was written against 2.5-flash behaviour.
+- Podcast extractor JSON parse rate across a full 60-80 episode batch. Only two
+  calls were live-tested; the batch is where shape drift would show.
+- Cost: thinking burn is unchanged (425 → 436 tokens on an identical prompt) but
+  the rate card is higher, and doubles 1 Jan 2027.
+
+**Rollback:** revert the model string in the 6 files (one-line change each).
+
+---
+
 # Editorial gate — surface the lineup BEFORE the edition is written
 
 **Status:** BUILT — approved by Simon 2026-08-09; gate defaults OFF per his call

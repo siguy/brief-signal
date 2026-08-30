@@ -39,7 +39,7 @@ If an episode has no subtitles (rare for English content, but it happens), the s
 
 ### Step 4: Level 1 Extraction (Every Episode)
 
-This is where the AI magic happens. The transcript gets sent to **Gemini 2.5 Flash** with a carefully crafted system prompt (`scripts/podcast-extraction-prompt.md`). Gemini returns a structured JSON object containing:
+This is where the AI magic happens. The transcript gets sent to **Gemini 3.7 Flash** with a carefully crafted system prompt (`scripts/podcast-extraction-prompt.md`). Gemini returns a structured JSON object containing:
 
 - **Notable quotes** -- verbatim, with speaker names and timestamps
 - **Consensus signals** -- things hosts/guests treat as obvious ("everyone agrees agents are the next platform shift")
@@ -141,7 +141,7 @@ This fault tolerance is a professional engineering pattern worth internalizing: 
 | Tool | What It Does | Why This One |
 |------|-------------|--------------|
 | **yt-dlp** | Downloads video metadata and subtitles from YouTube | Free, open source, actively maintained. The standard tool for YouTube data extraction. |
-| **Gemini 2.5 Flash** | Reads transcripts and extracts structured intelligence | Fast, cheap, good at following detailed JSON schemas. The Flash model handles long transcripts (1-hour podcast = ~15K words) within its context window without issue. |
+| **Gemini 3.7 Flash** | Reads transcripts and extracts structured intelligence | Fast, cheap, good at following detailed JSON schemas. The Flash model handles long transcripts (1-hour podcast = ~15K words) within its context window without issue. |
 | **Node.js** | Runs the extraction and briefing scripts | Matches the rest of the project (build.js, audio pipeline). Keeps the stack consistent. |
 | **VTT parsing (pure JS)** | Converts YouTube subtitle files to clean text | No external dependency needed. The format is simple enough that a 15-line parser handles it. |
 
@@ -484,3 +484,60 @@ we'd missed.
   the original plan were already implemented, and one had already failed in
   production. Reading the code first would have saved the effort.
 - **When a check and its subject share a brain, it isn't a check.**
+
+## Swapping the Engine Mid-Flight (2026-08-29)
+
+We moved every text-generation call in the pipeline from `gemini-2.5-flash` to
+`gemini-3.7-flash` — eight call sites across six files (both briefing stages, the
+critic, the repairer, the audio-script writer, and both podcast extractors).
+
+On the surface this is find-and-replace. The reason it deserves a section is that
+**this pipeline runs unattended at 9 PM on a Sunday.** Nobody is watching. If a
+model string is wrong, or the new model returns a slightly different shape, the
+first symptom is a missing briefing on Monday morning — and by then the week's
+knowledge bases are already stale.
+
+### The order the checks were run in
+
+The instinct is to edit the files first and find out later. Do it backwards:
+
+1. **Confirm the model exists — from the API, not from memory.** A `ListModels`
+   call against the real key returned `gemini-3.7-flash`, version
+   `3.7-flash-08-2026`, with no `-preview` suffix. That last detail matters: a
+   preview model can be withdrawn or renamed under you. Guessing a plausible ID
+   like `gemini-3-7-flash` would have shipped a 404 into a cron job.
+2. **Diff the metadata against the outgoing model.** Same 1,048,576-token input
+   limit, same 65,536 output limit, same `supportedGenerationMethods`. If the
+   context window had shrunk, the podcast extractor — which stuffs whole
+   hour-long transcripts into one call — would have started failing on the
+   longest episodes only. That is the nastiest class of bug: the one that looks
+   like flakiness.
+3. **Exercise every call *shape* the code actually uses.** The pipeline makes two
+   kinds of request: plain text with a `systemInstruction`, and JSON mode with
+   `responseMimeType: "application/json"`. Both were smoke-tested against the new
+   model before a single file changed. Testing "does the model respond" is not
+   the same as testing "does it respond the way my code parses."
+4. **Run a real stage end-to-end.** Unit tests pass without ever touching the
+   API — they cover our fence-stripping and truncation logic, not Google's
+   behaviour. So the critic was run live against a published edition. It came
+   back with valid JSON, a correctly structured report, and a real hard failure
+   it found on its own. *That* is the evidence the swap works.
+
+### The thing worth internalising
+
+**A green test suite and a working pipeline are different claims.** `npm test`
+passed identically before and after this change, because not one of those 14
+tests makes a network call. They were never going to catch a bad model ID. When
+you change the boundary between your code and someone else's service, your own
+tests go quiet exactly when you most want them talking — so you have to go
+touch the real thing.
+
+### One cost note
+
+Gemini 3.7 Flash cannot turn thinking off, and reasoning bills at the output
+rate. That sounds alarming until you measure it: on an identical prompt, 2.5
+Flash burned 425 thinking tokens and 3.7 Flash burned 436. The behaviour is not
+new — 2.5 Flash was thinking all along. What actually changed is the rate card
+($0.75/$3.75 per million introductory, doubling on 1 January 2027), so the
+weekly run gets more expensive per token even though it uses about the same
+number of them. Worth knowing before the January invoice, not after.
