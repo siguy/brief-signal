@@ -13,12 +13,13 @@
     "notify": "node scripts/send-email.js",
     "featured": "node scripts/get-featured-topics.js",
     "analytics": "node scripts/fetch-analytics.js",
+    "bootstrap": "./scripts/bootstrap-worktree.sh",
     "snapshot": "./scripts/snapshot-briefing.sh",
     "lineup": "node scripts/generate-briefing.js --lineup-only",
     "redraft": "node scripts/generate-briefing.js --from-lineup",
     "signal": "node scripts/signal-digest.js",
     "labnews": "node scripts/fetch-lab-news.js",
-    "test": "node scripts/generate-briefing.test.js && node scripts/lint-briefing.test.js && node scripts/signal-digest.test.js && node scripts/lineup-digest.test.js && node scripts/fetch-lab-news.test.js && node fetch-og.test.js && python3 scripts/fetch-bookmarks.test.py && bash scripts/generate-weekly.test.sh"
+    "test": "node scripts/generate-briefing.test.js && node scripts/lint-briefing.test.js && node scripts/signal-digest.test.js && node scripts/lineup-digest.test.js && node scripts/fetch-lab-news.test.js && node fetch-og.test.js && python3 scripts/fetch-bookmarks.test.py && bash scripts/generate-weekly.test.sh && bash scripts/bootstrap-worktree.test.sh"
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^6.4.0",
