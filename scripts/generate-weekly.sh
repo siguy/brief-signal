@@ -47,7 +47,22 @@ export LOOKBACK_DAYS=${LOOKBACK_DAYS:-7}
 
 REPO="siguy/brief-signal"
 INFO_AGG_DIR="$HOME/info-agg"
-BRIEF_SIGNAL_DIR="$HOME/brief-signal"
+# Operate on the checkout this script actually lives in, NOT a hardcoded path.
+# When run from a git worktree, the old `$HOME/brief-signal` sent every stage to
+# the main checkout instead — so the worktree was silently bypassed, and Stage 4's
+# `git checkout main` then failed because the main checkout already held `main`.
+# REPO_ROOT is computed from $0 at the top of this file. In the launchd run it
+# resolves to $HOME/brief-signal, so scheduled behaviour is unchanged.
+BRIEF_SIGNAL_DIR="$REPO_ROOT"
+
+# Return the checkout to a safe base. A branch can only be checked out in ONE
+# worktree at a time, so inside a linked worktree `git checkout main` fails with
+# "already used by worktree" whenever the main checkout holds main. Detaching at
+# origin/main always works and leaves nothing half-switched. In the main checkout
+# the first branch succeeds and behaviour is exactly as before.
+checkout_base() {
+  git checkout main 2>/dev/null || git checkout --detach origin/main
+}
 
 log "=== Brief Signal Weekly Generation ==="
 log "Target date: ${MONDAY_DATE}"
@@ -223,9 +238,11 @@ fi
 # ---------------------------------------------------------------------------
 log "--- Stage 4: Generating briefing ---"
 cd "$BRIEF_SIGNAL_DIR"
-git checkout main
-git pull origin main
-git checkout -b "$BRANCH"
+# Branch straight off the freshly fetched remote tip. The old
+# `checkout main && pull && checkout -b` needed `main` checked out here, which a
+# linked worktree cannot do while the main checkout holds it.
+git fetch origin main
+git checkout -b "$BRANCH" origin/main
 
 # LINEUP_GATE=1 stops the run after Stage 4a: the lineup and the proposed theme
 # registry are committed and a PR is opened for them, with no briefing written.
@@ -245,7 +262,7 @@ if [ "$LINEUP_GATE" = "1" ]; then
     log "Stage 4a complete: lineup generated (no draft)."
   else
     log "ERROR: Stage 4a failed (lineup generation). Cleaning up."
-    git checkout main
+    checkout_base
     git branch -D "$BRANCH"
     exit 1
   fi
@@ -253,7 +270,7 @@ elif BRIEFING_DATE="$MONDAY_DATE" node scripts/generate-briefing.js >> "$LOG_FIL
   log "Stage 4 complete: briefing generated."
 else
   log "ERROR: Stage 4 failed (briefing generation). Cleaning up."
-  git checkout main
+  checkout_base
   git branch -D "$BRANCH"
   exit 1
 fi
@@ -541,6 +558,6 @@ gh pr create \
   --title "$PR_TITLE" \
   --body "$PR_BODY"
 
-log "PR created. Returning to main."
-git checkout main
+log "PR created. Returning to base."
+checkout_base
 log "=== Done ==="

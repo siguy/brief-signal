@@ -131,6 +131,43 @@ assert_contains "PR body leads with themes, ends with the digest" \
 assert_contains "signal digest is collapsed behind a details block" \
   "$(grep -c '<summary><b>📊 Signal digest</b>' "$PIPELINE")" "1"
 
+# --- Worktree safety -------------------------------------------------------
+# The pipeline used to hardcode BRIEF_SIGNAL_DIR="$HOME/brief-signal" and drive
+# git with `checkout main && pull && checkout -b`. Both break inside a linked
+# worktree: every stage silently retargeted the MAIN checkout, and `checkout
+# main` then failed outright because a branch can only be checked out in one
+# worktree at a time. These pin the fixes.
+
+assert_contains "repo root is derived from the script's own location" \
+  "$(grep -c 'BRIEF_SIGNAL_DIR="\$REPO_ROOT"' "$PIPELINE")" "1"
+
+assert_contains "no hardcoded \$HOME/brief-signal path remains" \
+  "$(grep -c 'BRIEF_SIGNAL_DIR="\$HOME/brief-signal"' "$PIPELINE")" "0"
+
+assert_contains "the briefing branch is cut from origin/main" \
+  "$(grep -c 'git checkout -b "\$BRANCH" origin/main' "$PIPELINE")" "1"
+
+# Every `git checkout main` must go through checkout_base, which falls back to a
+# detached HEAD. A bare one anywhere else re-introduces the worktree failure.
+assert_contains "checkout_base defines the detached-HEAD fallback" \
+  "$(grep -c 'git checkout main 2>/dev/null || git checkout --detach origin/main' "$PIPELINE")" "1"
+
+assert_contains "no bare 'git checkout main' outside checkout_base" \
+  "$(grep -vE '^\s*#' "$PIPELINE" | grep -c '^\s*git checkout main$')" "0"
+
+# checkout_base must actually fall back rather than abort. Under `set -e` a
+# non-zero first branch would kill the run mid-cleanup, stranding the checkout on
+# the briefing branch with the PR never opened.
+out="$(bash -c "
+  set -euo pipefail
+  git() { [ \"\$1 \$2\" = 'checkout main' ] && return 1; echo \"git \$*\"; }
+  $(awk '/^checkout_base\(\) \{/{f=1} f{print} f && /^\}$/{exit}' scripts/generate-weekly.sh)
+  checkout_base
+  echo CONTINUED
+" 2>&1)"
+assert_contains "checkout_base detaches when main is held elsewhere" "$out" "--detach origin/main"
+assert_contains "checkout_base does not abort the run" "$out" "CONTINUED"
+
 if [ "$failed" -gt 0 ]; then
   echo ""
   echo "generate-weekly.test.sh: $failed FAILED, $passed passed"
