@@ -21,37 +21,56 @@ from datetime import datetime, timezone
 from pathlib import Path
 from urllib.parse import urlparse
 
-# MONKEY PATCH: twikit 2.3.3 ON_DEMAND_FILE_REGEX broken since ~March 18 2026
-# X changed their JS bundle format. Remove when twikit releases a fix.
-# See: https://github.com/d60/twikit/issues/408
-_tx_mod = __import__('twikit.x_client_transaction.transaction', fromlist=['ClientTransaction'])
-_tx_mod.ON_DEMAND_FILE_REGEX = re.compile(
-    r""",(\d+):["']ondemand\.s["']""", flags=(re.VERBOSE | re.MULTILINE))
-_tx_mod.ON_DEMAND_HASH_PATTERN = r',{}:"([0-9a-f]+)"'
+# Third-party imports live inside the functions that use them, NOT at module
+# scope. scripts/fetch-bookmarks.test.py imports this file to exercise two pure
+# helpers (load_existing_keys, should_stop_early) that need nothing but the
+# stdlib — and `npm test` gates the GitHub Pages deploy. With twikit imported at
+# module scope the import raised ModuleNotFoundError on the CI runner, which has
+# no twikit, so `npm test` exited 1 and the site stopped deploying entirely
+# (three consecutive failed deploys, 2026-08-24 to 2026-08-30; the live site sat
+# on Edition #27 while later merges silently never shipped).
+#
+# Installing twikit in CI would fix the symptom, but the tests genuinely do not
+# need it: paying a network install on every deploy to satisfy an import nothing
+# under test calls is the wrong trade. A real run imports these on the first line
+# of fetch_all_bookmarks(), so a missing dependency still fails immediately and
+# loudly — just not at import time.
 
-async def _patched_get_indices(self, home_page_response, session, headers):
-    key_byte_indices = []
-    response = self.validate_response(home_page_response) or self.home_page_response
-    on_demand_file_index = _tx_mod.ON_DEMAND_FILE_REGEX.search(str(response)).group(1)
-    regex = re.compile(_tx_mod.ON_DEMAND_HASH_PATTERN.format(on_demand_file_index))
-    filename = regex.search(str(response)).group(1)
-    on_demand_file_url = f"https://abs.twimg.com/responsive-web/client-web/ondemand.s.{filename}a.js"
-    on_demand_file_response = await session.request(method="GET", url=on_demand_file_url, headers=headers)
-    key_byte_indices_match = _tx_mod.INDICES_REGEX.finditer(str(on_demand_file_response.text))
-    for item in key_byte_indices_match:
-        key_byte_indices.append(item.group(2))
-    if not key_byte_indices:
-        raise Exception("Couldn't get KEY_BYTE indices")
-    key_byte_indices = list(map(int, key_byte_indices))
-    return key_byte_indices[0], key_byte_indices[1:]
 
-_tx_mod.ClientTransaction.get_indices = _patched_get_indices
-# END MONKEY PATCH
+def _patch_twikit():
+    """Apply the twikit 2.3.3 ON_DEMAND_FILE_REGEX fix, then return its module.
 
-from dotenv import load_dotenv
-from twikit import Client
-from twikit.errors import TooManyRequests, Unauthorized
-from twikit.media import AnimatedGif, Photo, Video
+    twikit 2.3.3's regex broke around 2026-03-18 when X changed their JS bundle
+    format. Remove when twikit releases a fix.
+    See: https://github.com/d60/twikit/issues/408
+
+    Idempotent: re-applying the same patch is harmless, so callers need not
+    track whether it has already run.
+    """
+    _tx_mod = __import__(
+        'twikit.x_client_transaction.transaction', fromlist=['ClientTransaction'])
+    _tx_mod.ON_DEMAND_FILE_REGEX = re.compile(
+        r""",(\d+):["']ondemand\.s["']""", flags=(re.VERBOSE | re.MULTILINE))
+    _tx_mod.ON_DEMAND_HASH_PATTERN = r',{}:"([0-9a-f]+)"'
+
+    async def _patched_get_indices(self, home_page_response, session, headers):
+        key_byte_indices = []
+        response = self.validate_response(home_page_response) or self.home_page_response
+        on_demand_file_index = _tx_mod.ON_DEMAND_FILE_REGEX.search(str(response)).group(1)
+        regex = re.compile(_tx_mod.ON_DEMAND_HASH_PATTERN.format(on_demand_file_index))
+        filename = regex.search(str(response)).group(1)
+        on_demand_file_url = f"https://abs.twimg.com/responsive-web/client-web/ondemand.s.{filename}a.js"
+        on_demand_file_response = await session.request(method="GET", url=on_demand_file_url, headers=headers)
+        key_byte_indices_match = _tx_mod.INDICES_REGEX.finditer(str(on_demand_file_response.text))
+        for item in key_byte_indices_match:
+            key_byte_indices.append(item.group(2))
+        if not key_byte_indices:
+            raise Exception("Couldn't get KEY_BYTE indices")
+        key_byte_indices = list(map(int, key_byte_indices))
+        return key_byte_indices[0], key_byte_indices[1:]
+
+    _tx_mod.ClientTransaction.get_indices = _patched_get_indices
+    return _tx_mod
 
 
 # ---------------------------------------------------------------------------
@@ -193,6 +212,8 @@ def extract_external_links(tweet) -> list[str]:
 
 def has_media_type(tweet, media_type: str) -> bool:
     """Check if tweet has media of given type (photo or video)."""
+    from twikit.media import AnimatedGif, Photo, Video
+
     if not tweet.media:
         return False
     for m in tweet.media:
@@ -292,6 +313,14 @@ def tweet_key(tweet) -> str:
 
 async def fetch_all_bookmarks() -> dict:
     """Fetch all bookmarks, deduplicate, return as keyed dict."""
+    # Imported here rather than at module scope so this file stays importable
+    # without twikit installed — see the note at the top. A real run still fails
+    # immediately and loudly if the dependency is missing.
+    from dotenv import load_dotenv
+    from twikit import Client
+    from twikit.errors import TooManyRequests, Unauthorized
+
+    _patch_twikit()
 
     # Load environment
     load_dotenv(PROJECT_DIR / ".env")

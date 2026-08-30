@@ -9,6 +9,8 @@ routine weekly run returned the entire 2,472-entry bookmark archive back to
 """
 import importlib.util
 import json
+import os
+import subprocess
 import sys
 import tempfile
 from pathlib import Path
@@ -94,10 +96,53 @@ def test_threshold_is_a_run_not_a_total():
     check("streak resumed from zero after new page", n, 2)
 
 
+
+def test_imports_without_twikit():
+    """This file must be importable on a machine with no twikit installed.
+
+    `npm test` gates the GitHub Pages deploy, and this file imports
+    fetch-bookmarks.py. When twikit was imported at that file's module scope it
+    raised ModuleNotFoundError on the CI runner (which has no twikit), `npm
+    test` exited 1, and the site stopped deploying — three consecutive failed
+    deploys from 2026-08-24 to 2026-08-30, with the live site stuck on Edition
+    #27 while later merges silently never shipped.
+
+    Runs in a subprocess under an import hook that hides twikit and dotenv, so
+    this asserts the real CI condition instead of trusting that this machine
+    resembles it. Touches nothing needing network or credentials.
+    """
+    blocker = (
+        "import sys\n"
+        "class B:\n"
+        "    def find_spec(self, name, path=None, target=None):\n"
+        "        if name.split('.')[0] in ('twikit', 'dotenv'):\n"
+        "            raise ImportError('No module named ' + name)\n"
+        "        return None\n"
+        "sys.meta_path.insert(0, B())\n"
+    )
+    target = Path(__file__).resolve().parent / "fetch-bookmarks.py"
+    probe = (
+        "import importlib.util\n"
+        "spec = importlib.util.spec_from_file_location('fb', r'%s')\n"
+        "m = importlib.util.module_from_spec(spec)\n"
+        "spec.loader.exec_module(m)\n"
+        "assert callable(m.load_existing_keys) and callable(m.should_stop_early)\n"
+    ) % target
+    with tempfile.TemporaryDirectory() as d:
+        Path(d, "sitecustomize.py").write_text(blocker)
+        r = subprocess.run([sys.executable, "-c", probe],
+                           env=dict(os.environ, PYTHONPATH=d),
+                           capture_output=True, text=True)
+    check("module imports with twikit unavailable", r.returncode, 0)
+    if r.returncode != 0 and r.stderr.strip():
+        print("      " + r.stderr.strip().splitlines()[-1])
+
+
 print("fetch-bookmarks tests")
 test_load_existing_keys_reads_every_file_shape()
 test_should_stop_early()
 test_threshold_is_a_run_not_a_total()
+test_imports_without_twikit()
 
 if failures:
     print(f"\n{len(failures)} failure(s): {', '.join(failures)}")
