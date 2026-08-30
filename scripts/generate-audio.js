@@ -22,9 +22,11 @@ const AUDIO_DIR = path.join(__dirname, "..", "content", "audio");
 const MAX_BYTES = 3800; // Stay safely under 4,000-byte API limit for Gemini TTS
 
 const DEFAULT_VOICE = "Fenrir";
-// Preview model — Cloud TTS may withdraw or rename it. Roll back to
-// "gemini-2.5-pro-tts" if a run fails on the model name.
-const MODEL = "gemini-3.1-flash-tts-preview";
+// Stays on 2.5 Pro TTS deliberately. gemini-3.1-flash-tts-preview synthesises
+// faster, but renders the SAME voice name differently — "Fenrir" on 3.1 sits
+// ~40Hz higher with almost no low end, i.e. an audibly different reader.
+// See CHANGELOG / FOR_SIMON.md before trying a TTS model swap again.
+const MODEL = "gemini-2.5-pro-tts";
 const VOICE_PROMPT =
   "Read aloud like a sharp colleague casually catching you up on industry news over coffee. Warm, curious.";
 

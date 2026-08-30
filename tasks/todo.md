@@ -25,9 +25,10 @@
 
 ## Deliberately not changed
 
-- (superseded) `scripts/generate-audio.js` was initially left on
-  `gemini-2.5-pro-tts`; Simon then asked to try `gemini-3.1-flash-tts-preview`,
-  which is now wired in. See "Follow-ups" below.
+- `scripts/generate-audio.js` — stays on `gemini-2.5-pro-tts`. It is the Cloud
+  Text-to-Speech surface (`@google-cloud/text-to-speech`), a different API with no
+  3.7 equivalent. `gemini-3.1-flash-tts-preview` was tried at Simon's request and
+  reverted — it changes the voice. See "Follow-ups" below.
 - `tasks/lessons.md`, `CHANGELOG.md` history, `docs/plans/`, published editions —
   historical records of what ran at the time. The line-261 lesson (no
   `maxOutputTokens` cap, because thinking tokens share the budget) still holds:
@@ -44,11 +45,14 @@
       the flat one would have crashed `extract-rss-podcasts.py` at runtime.
       Measured: thinking tokens 677 → 957 (+41%), output 156 → 181, latency
       unchanged, JSON mode still parses.
-- [x] **TTS → `gemini-3.1-flash-tts-preview`** as `voice.modelName` on the Cloud
-      TTS request. Verified live with Fenrir + the existing style prompt:
-      26% faster synthesis (48.5s vs 65.4s on a 254-word chunk), same 32 kbps,
-      delivery 4.9% slower (98.4s → 103.2s ≈ +15s on a 5-min briefing). Samples
-      of both sent to Simon for a listen.
+- [x] **TTS: tried `gemini-3.1-flash-tts-preview`, REVERTED to `gemini-2.5-pro-tts`.**
+      Cloud TTS accepts it with Fenrir and it synthesises 26% faster, but it
+      renders the same voice *name* as a different reader. Simon heard it in the
+      A/B; pitch analysis confirmed: median F0 ~180Hz vs ~140Hz on 2.5, ~0% of
+      voiced frames below 100Hz vs 5.7%. Of the 16 male Gemini-TTS voices on 3.1,
+      Fenrir is the highest-pitched — the furthest match to the current sound.
+      Algieba / Sadachbia / Umbriel land within 1Hz if a 3.1 move is ever wanted;
+      samples of all four sent to Simon. Simon's call: revert, keep the voice.
 - [x] Corrected the call-site count: **9**, not 8 (`generate-briefing.js` has two).
       Fixed in the commit message, FOR_SIMON.md and this file.
 
@@ -58,12 +62,9 @@
   it runs on every episode (60-80/week), unlike the once-weekly briefing stages.
   If the weekly spend jumps, narrow `HIGH` to the briefing/critique/repair stages
   and leave the extractors on default thinking.
-- **TTS is a preview model.** Cloud TTS can withdraw or rename it. Rollback is the
-  one-line constant in `generate-audio.js` (comment is in place). Contained risk:
-  audio is a manual step, not part of the Sunday cron.
-- `generate-audio.js` was NOT run end-to-end (it would overwrite the shipped
-  Edition #24 MP3). The direct test used an identical request shape — good
-  evidence, not proof. First real run is Edition #25's audio.
+- **TTS is unchanged**, so audio carries no new risk this cycle. If a future TTS
+  model swap is proposed, A/B the voice before shipping it — same `voice.name`
+  does NOT mean same voice across model generations.
 
 - **Stage 4b word count** / `grep -c '^## TLDR'` = 1 — the repetition-loop guard
   (`truncateRepetition`) was written against 2.5-flash behaviour, and `HIGH`

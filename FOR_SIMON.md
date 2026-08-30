@@ -561,23 +561,52 @@ habit as checking the model ID, applied one level down. **When two SDKs wrap the
 same API, verify the config shape per language. Symmetry is an assumption, not a
 guarantee.**
 
-**TTS.** We also moved the audio step to `gemini-3.1-flash-tts-preview`. This is a
-genuinely different API from everything above — Cloud Text-to-Speech, via
-`@google-cloud/text-to-speech`, where the model rides in as `voice.modelName`. The
-fact that a model ID appears in the Generative Language API's model list tells you
-nothing about whether Cloud TTS accepts it. It had to be tried.
+**TTS — tried, measured, rejected.** We also tried moving the audio step to
+`gemini-3.1-flash-tts-preview`. This is a genuinely different API from everything
+above — Cloud Text-to-Speech, via `@google-cloud/text-to-speech`, where the model
+rides in as `voice.modelName`. That a model ID appears in the Generative Language
+API's model list tells you nothing about whether Cloud TTS accepts it, so it had to
+be tried. It was accepted, with Fenrir and the existing style prompt, and it
+synthesised 26% faster.
 
-It works, with Fenrir and the existing style prompt, and synthesises 26% faster.
-But the first measurement nearly sent us the wrong way: a single test sentence took
-33% longer to speak, which on a five-minute briefing would have been a real
-regression. On a 254-word chunk of an actual script the gap collapsed to 4.9%. The
-one-sentence clip was mostly lead-in silence, and a fixed overhead looks enormous
-when you divide it by four seconds. **Benchmark on a payload the size of the real
-one.** Small samples don't just add noise — they systematically exaggerate whatever
-is constant.
+Two measurements nearly sent us the wrong way in opposite directions.
+
+The first was a false alarm. A single test sentence took 33% longer to speak, which
+on a five-minute briefing would be a real regression. On a 254-word chunk of an
+actual script the gap collapsed to 4.9%. The one-sentence clip was mostly lead-in
+silence, and a fixed overhead looks enormous when you divide it by four seconds.
+**Benchmark on a payload the size of the real one.** Small samples don't just add
+noise — they systematically exaggerate whatever is constant.
+
+The second was the one that mattered, and Simon caught it by ear before the
+numbers did: the two samples didn't sound like the same person. They shouldn't
+have differed at all — same `voice.name`, same prompt, same text. And the API
+wasn't ignoring us: it validates voice names (a bogus one is rejected outright)
+and `Puck` produces audibly different output, so "Fenrir" really was honoured.
+
+Measuring pitch settled it. Fenrir on 2.5 Pro TTS has a median fundamental
+frequency of about 140 Hz with a real low end (5.7% of voiced frames below
+100 Hz). Fenrir on 3.1 Flash TTS sits at about 180 Hz with essentially nothing
+below 100 and 16% above 250 — roughly four semitones higher and much thinner.
+Scanning all 16 male Gemini-TTS voices on 3.1 made it starker: Fenrir is the
+*highest-pitched of the sixteen*, the furthest available voice from the show's
+existing sound. Three others (Algieba, Sadachbia, Umbriel) land within 1 Hz of the
+old median.
+
+We reverted. A weekly show's voice is part of its identity, and 26% faster
+synthesis on a step you run by hand is not worth changing who reads the briefing
+to listeners who know it.
+
+**The lesson: an identifier is not an identity.** "Fenrir" is a label the API
+accepts, not a guarantee of the same voice across model generations — exactly the
+same trap as assuming two SDKs take the same config shape, one level further out.
+Anything whose *output* is the product — a voice, a writing style, a rendering —
+needs to be checked by the sense that consumes it, not just by whether the call
+returned 200. The pitch analysis is what turned "sounds different to me" into
+something decidable, but the ear got there first.
 
 One honest limit: `generate-audio.js` was never run end-to-end, because it writes
 to `content/audio/{date}.mp3` and would have overwritten a published episode. The
-test issued the identical request shape directly instead. That is good evidence,
+tests issued the identical request shape directly instead. That is good evidence,
 not proof, and the difference is worth naming rather than glossing.
 
