@@ -10,6 +10,7 @@
 const assert = require("assert");
 const {
   splitEntries,
+  renderSummary,
   normalizeUrl,
   parseArgs,
   cited,
@@ -261,6 +262,134 @@ test("splitEntries excludes t.co shorteners from an entry's urls", () => {
 test("parseArgs reads --lineup for the pre-draft sweep", () => {
   const args = parseArgs(["--lineup", "drafts/2026-08-10-lineup.md"]);
   assert.strictEqual(args.lineup, "drafts/2026-08-10-lineup.md");
+});
+
+test("parseArgs reads --summary", () => {
+  assert.strictEqual(parseArgs(["--summary"]).summary, true);
+  assert.strictEqual(parseArgs(["--date", "2026-08-24"]).summary, false);
+});
+
+// --- the --summary roll-up -------------------------------------------------
+// This is the half of "what got left out" that no model touches: KB grades
+// against the lineup's own URLs. It goes uncollapsed in the PR body next to
+// Stage 4a's own cut ledger, so it has to be short and it has to be only misses.
+
+const entry = (header, url, grade, signal) => ({
+  source: "Podcasts",
+  header,
+  url,
+  urls: [url],
+  grade,
+  editorialSignal: signal,
+  text: "",
+});
+
+const CITED = new Set(["https://example.com/ran"]);
+
+test("renderSummary lists only the graded items that did NOT land", () => {
+  const out = renderSummary({
+    highSignal: [
+      entry("Ran this week", "https://example.com/ran", "HIGH", "HIGH"),
+      entry("Left out", "https://example.com/dropped", "MEDIUM", "HIGH"),
+    ],
+    laneA: [],
+    laneB: [],
+    labNews: [],
+    urls: CITED,
+    against: "the lineup",
+  });
+  assert.match(out, /1 of 2 HIGH editorial-signal episodes did not make the lineup/);
+  assert.match(out, /Left out/);
+  assert.ok(!out.includes("Ran this week"), "a summary that repeats the hits is just a shorter table");
+});
+
+test("renderSummary labels the GCP grade so it cannot be read as the signal grade", () => {
+  // An unlabelled [MEDIUM] under a "HIGH editorial-signal" heading is exactly
+  // the collision the label exists to remove.
+  const out = renderSummary({
+    highSignal: [entry("Left out", "https://example.com/dropped", "MEDIUM", "HIGH")],
+    laneA: [],
+    laneB: [],
+    labNews: [],
+    urls: CITED,
+    against: "the lineup",
+  });
+  assert.match(out, /\[GCP: MEDIUM\]/);
+});
+
+test("renderSummary counts lab news instead of listing it", () => {
+  // Uniformly first-party and high volume: a dozen uncited announcements is a
+  // normal week, and pasting 30 rows here would bury the sections that matter.
+  const out = renderSummary({
+    highSignal: [],
+    laneA: [],
+    laneB: [],
+    labNews: [
+      entry("Lab A", "https://example.com/lab-a", null, null),
+      entry("Lab B", "https://example.com/lab-b", null, null),
+    ],
+    urls: CITED,
+    against: "the lineup",
+  });
+  assert.match(out, /Lab news: \*\*2 of 2\*\*/);
+  assert.ok(!out.includes("Lab A"), "lab news is counted, never enumerated");
+});
+
+test("renderSummary says so plainly when nothing was dropped", () => {
+  const out = renderSummary({
+    highSignal: [entry("Ran this week", "https://example.com/ran", "HIGH", "HIGH")],
+    laneA: [],
+    laneB: [],
+    labNews: [],
+    urls: CITED,
+    against: "the draft",
+  });
+  assert.match(out, /Nothing was dropped silently/);
+});
+
+test("renderSummary will not call an empty check a clean one", () => {
+  // Happens when the podcast KB is missing or ungraded: nothing to sweep. A
+  // green light there is a pass handed back by a check that never ran.
+  const out = renderSummary({
+    highSignal: [],
+    laneA: [],
+    laneB: [],
+    labNews: [],
+    urls: CITED,
+    against: "the lineup",
+  });
+  assert.match(out, /empty check, not a clean one/);
+});
+
+test("renderSummary's all-clear does not overclaim past the lab-news count", () => {
+  const out = renderSummary({
+    highSignal: [entry("Ran this week", "https://example.com/ran", "HIGH", "HIGH")],
+    laneA: [],
+    laneB: [],
+    labNews: [entry("Lab A", "https://example.com/lab-a", null, null)],
+    urls: CITED,
+    against: "the lineup",
+  });
+  assert.match(out, /Every HIGH-signal episode and every first-party item reached the lineup\./);
+  assert.ok(
+    !out.includes("Nothing was dropped silently"),
+    "a lab-news miss is listed right above — the verdict must not contradict it"
+  );
+});
+
+test("renderSummary refuses to claim a sweep it could not run", () => {
+  // No draft and no lineup means no URL set. Reporting "nothing was dropped"
+  // there would be a clean bill of health from a check that never ran.
+  const out = renderSummary({
+    highSignal: [entry("Anything", "https://example.com/x", "HIGH", "HIGH")],
+    laneA: [],
+    laneB: [],
+    labNews: [],
+    urls: null,
+    against: "the lineup",
+  });
+  assert.match(out, /Sweep skipped/);
+  assert.ok(!out.includes("Nothing was dropped"), "a skipped sweep is not a pass");
 });
 
 if (failed > 0) {

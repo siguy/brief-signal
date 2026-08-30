@@ -291,6 +291,47 @@ test("stripRegistryFooter removes the admin block Stage 4b must not see", () => 
   assert.ok(!result.includes("themes-proposed"), "registry fence must be stripped");
 });
 
+test("stripRegistryFooter cuts the whole review-notes block, not just the registry", () => {
+  // Recommended reads, the cut ledger and the coverage self-check are written
+  // for the human reviewing the selection. Feeding them to Stage 4b bills the
+  // same tokens twice — the mistake the removed HIGH-signal disposition made.
+  const lineup = [
+    "## Proposed Lineup",
+    "",
+    "1. Lead story",
+    "",
+    "**Quick Hits:** things",
+    "",
+    "---",
+    "",
+    "## Editorial review notes — not part of the draft",
+    "",
+    "**Recommended reads (3-5):**",
+    "- something worth reading",
+    "",
+    "**Considered but cut (and why):**",
+    "- a reject — quality: HIGH — cut: no event",
+    "",
+    "**Proposed registry update:** add a theme",
+  ].join("\n");
+  const result = stripRegistryFooter(lineup);
+  assert.ok(result.includes("Lead story"), "story selection must survive");
+  assert.ok(result.includes("Quick Hits"), "Quick Hits must survive");
+  assert.ok(!result.includes("Recommended reads"), "review notes must be stripped");
+  assert.ok(!result.includes("Considered but cut"), "the cut ledger must be stripped");
+});
+
+test("stripRegistryFooter still strips a lineup written before the review-notes heading", () => {
+  // Archived lineups stay redraftable. They have no review-notes heading, so
+  // they must fall through to the older markers and strip exactly as before.
+  const legacy =
+    "## Proposed Lineup\n\n1. Lead story\n\n**Quick Hits:** things\n\n" +
+    "**Considered but cut (and why):**\n- a reject\n\n**Proposed registry update:** add a theme";
+  const result = stripRegistryFooter(legacy);
+  assert.ok(result.includes("Quick Hits"), "Quick Hits must survive");
+  assert.ok(!result.includes("Proposed registry update"), "registry footer must be stripped");
+});
+
 test("stripRegistryFooter leaves a hand-edited lineup with no footer untouched", () => {
   // A lineup you edited by hand won't have the registry block — stripping must
   // be a no-op rather than eating the last section.

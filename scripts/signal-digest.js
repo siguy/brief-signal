@@ -18,8 +18,10 @@
  *   Tier 2 — per-story depth.    (pending)
  *   Tier 3 — dropped figures.    (pending)
  *
- * Run: npm run signal            (newest KBs vs the latest briefing)
+ * Run: npm run signal                  (newest KBs vs the latest briefing)
  *      npm run signal -- --date 2026-08-03
+ *      npm run signal -- --lineup <file>  (sweep a Stage 4a lineup, pre-draft)
+ *      npm run signal -- --summary        (only what was left on the floor)
  */
 
 const fs = require("fs");
@@ -69,7 +71,15 @@ const COMPETITOR_MENTION =
   /\b(claude|llama|mistral|grok|deepseek|qwen|kimi)[\d.]*\b|\bGPT-?\d|\bazure\b|\bbedrock\b|\bsagemaker\b|\bcopilot\b/i;
 
 function parseArgs(argv) {
-  const args = { date: null, lineup: null };
+  // `--summary` prints only the "left on the floor" roll-up: the graded items
+  // that did NOT reach the edition, and nothing else. The full digest runs to
+  // several hundred lines and lives behind a <details> in the PR body, which
+  // makes it a lookup table — fine for "was X covered?", useless for the
+  // question the reviewer actually has at the gate, which is "did we drop
+  // something good?". That question deserves to be above the fold, and it is
+  // the deterministic counterpart to the lineup's own `quality:` ratings: this
+  // one reads the KB's grades and the lineup's URLs with no model in the loop.
+  const args = { date: null, lineup: null, summary: argv.includes("--summary") };
   const i = argv.indexOf("--date");
   if (i !== -1 && argv[i + 1]) args.date = argv[i + 1];
   // `--lineup <file>` sweeps against a Stage 4a lineup instead of a finished
@@ -209,6 +219,93 @@ function line(entry, urls, label = "") {
   return `- ${grade}${entry.header}${mark(entry, urls)}\n  ${entry.source}${entry.url ? ` · ${entry.url}` : ""}`;
 }
 
+// The --summary block: what the graded sources carried that the edition did not
+// take. Deliberately only the misses — the full digest already lists everything,
+// and a summary that repeats the hits is just a shorter lookup table.
+//
+// It sits next to the lineup's own "Considered but cut" ledger in the PR body
+// and answers the same question from the opposite direction. The ledger is
+// Stage 4a explaining its rejects; this is arithmetic over grades the extractors
+// assigned before any selection happened. Where they disagree — an item the
+// ledger never mentions showing up here — the disagreement is the finding, which
+// is why the two are labelled and never merged.
+function renderSummary({ highSignal, laneA, laneB, labNews, urls, against }) {
+  const out = ["### 🔎 Left on the floor — deterministic sweep", ""];
+  out.push(
+    "_The knowledge bases' own grades checked against " +
+      `${against}'s own URLs. No model in the loop: nothing here is Stage 4a's ` +
+      "opinion of its own work._"
+  );
+  out.push("");
+
+  if (!urls) {
+    out.push(`_Nothing to compare against — no ${against.replace(/^the /, "")} found. Sweep skipped._`);
+    return out.join("\n");
+  }
+
+  const dropped = (list) => list.filter((e) => cited(e, urls) === false);
+  const missedHigh = dropped(highSignal);
+  const missedFirstParty = dropped([...laneA, ...laneB]);
+  const missedLab = dropped(labNews);
+  let quiet = true;
+
+  if (missedHigh.length) {
+    quiet = false;
+    out.push(
+      `**${missedHigh.length} of ${highSignal.length} HIGH editorial-signal episodes did not make ${against}:**`
+    );
+    out.push(missedHigh.map((e) => line(e, urls, "GCP")).join("\n"));
+    out.push("");
+  }
+
+  if (missedFirstParty.length) {
+    quiet = false;
+    out.push(
+      `**${missedFirstParty.length} first-party or Google-specific item(s) did not make ${against}:**`
+    );
+    out.push(missedFirstParty.map((e) => line(e, urls)).join("\n"));
+    out.push("");
+  }
+
+  // Lab news is high-volume and uniformly first-party, so a dozen uncited
+  // announcements is the normal week, not a finding. It gets a count and a
+  // pointer, never a list — the full digest below already enumerates them, and
+  // pasting 30 rows here would bury the two sections above that do matter.
+  if (missedLab.length) {
+    out.push(
+      `Lab news: **${missedLab.length} of ${labNews.length}** announcements did not make ${against} — ` +
+        "listed in the full digest below."
+    );
+    out.push("");
+  }
+
+  if (quiet && !highSignal.length && !laneA.length && !laneB.length) {
+    // Nothing graded to sweep is not a clean sweep. This happens when the
+    // podcast KB is missing or ungraded, and reporting it as "all clear" would
+    // hand back a pass from a check that had nothing to check.
+    out.push(
+      "> No graded items to sweep this week — the sources carried no HIGH-signal episodes and no " +
+        "first-party items. That is an empty check, not a clean one."
+    );
+    out.push("");
+  } else if (quiet) {
+    // Precise about what it clears: lab news is counted above and deliberately
+    // outside this verdict, so the sentence must not imply it too.
+    out.push(
+      `> Every HIGH-signal episode and every first-party item reached ${against}.` +
+        (missedLab.length ? "" : " Nothing was dropped silently.")
+    );
+    out.push("");
+  } else {
+    out.push(
+      "_Advisory. A miss here can be the right call — but it should be a call, not an oversight._"
+    );
+    out.push("");
+  }
+
+  return out.join("\n").replace(/\n{3,}/g, "\n\n").trimEnd();
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const kbs = findKnowledgeBases();
@@ -226,6 +323,42 @@ function main() {
   const urls = draftUrls(draftPath);
   const against = args.lineup ? "the lineup" : "the draft";
   const entries = kbs.flatMap(splitEntries);
+
+  // Lane membership is computed before anything renders so that --summary and
+  // the full digest are guaranteed to be reading the same sets. Two code paths
+  // that each recompute "what was dropped" is exactly how a summary starts
+  // disagreeing with the table it summarises.
+  //
+  // Lane A is provenance, so it is never suppressed — a first-party announcement
+  // surfaces whatever the extractor thought of it. Lanes B and C are mere
+  // mentions, so an explicit LOW grade (a judgment made with that one item in
+  // full context) is allowed to filter them out; otherwise a 90-minute episode
+  // that says "Google" once floods the lane. Ungraded entries always show —
+  // which is why Step 3a matters: today that means every bookmark.
+  // Lab news is excluded from every lane and reported separately. Lane A exists
+  // to FIND first-party items hiding among curated sources; every lab-news entry
+  // is first-party by construction, so folding them in would add 30-50 rows a
+  // week and make the closing advisory read "38 items are not cited" every time
+  // — destroying the signal the lane exists to produce.
+  const isLabNews = (e) => e.source === "Lab news";
+  const curated = entries.filter((e) => !isLabNews(e));
+  const labNews = entries.filter(isLabNews);
+
+  const isLow = (e) => e.grade === "LOW";
+  const laneA = curated.filter((e) => FIRST_PARTY_HANDLE.test(e.text) || FIRST_PARTY_DOMAIN.test(e.text));
+  const laneB = curated.filter((e) => !laneA.includes(e) && !isLow(e) && GOOGLE_MENTION.test(e.text));
+  const laneC = curated.filter(
+    (e) => !laneA.includes(e) && !laneB.includes(e) && !isLow(e) && COMPETITOR_MENTION.test(e.text)
+  );
+
+  // Reads `curated`, not `entries`: lab news carries no editorial signal, and
+  // saying so explicitly beats relying on a missing field to filter it out.
+  const highSignal = curated.filter((e) => e.editorialSignal === "HIGH");
+
+  if (args.summary) {
+    console.log(renderSummary({ highSignal, laneA, laneB, labNews, urls, against }));
+    return;
+  }
 
   const out = [];
   out.push(`## Signal digest${date ? ` — ${date}` : ""}${args.lineup ? " (lineup)" : ""}`);
@@ -259,28 +392,6 @@ function main() {
   }
   out.push("");
 
-  // Lane A is provenance, so it is never suppressed — a first-party announcement
-  // surfaces whatever the extractor thought of it. Lanes B and C are mere
-  // mentions, so an explicit LOW grade (a judgment made with that one item in
-  // full context) is allowed to filter them out; otherwise a 90-minute episode
-  // that says "Google" once floods the lane. Ungraded entries always show —
-  // which is why Step 3a matters: today that means every bookmark.
-  // Lab news is excluded from every lane and reported separately. Lane A exists
-  // to FIND first-party items hiding among curated sources; every lab-news entry
-  // is first-party by construction, so folding them in would add 30-50 rows a
-  // week and make the closing advisory read "38 items are not cited" every time
-  // — destroying the signal the lane exists to produce.
-  const isLabNews = (e) => e.source === "Lab news";
-  const curated = entries.filter((e) => !isLabNews(e));
-  const labNews = entries.filter(isLabNews);
-
-  const isLow = (e) => e.grade === "LOW";
-  const laneA = curated.filter((e) => FIRST_PARTY_HANDLE.test(e.text) || FIRST_PARTY_DOMAIN.test(e.text));
-  const laneB = curated.filter((e) => !laneA.includes(e) && !isLow(e) && GOOGLE_MENTION.test(e.text));
-  const laneC = curated.filter(
-    (e) => !laneA.includes(e) && !laneB.includes(e) && !isLow(e) && COMPETITOR_MENTION.test(e.text)
-  );
-
   out.push("### Tier 0 — Google & competitors (advisory)");
   out.push("");
   out.push("**First-party announcements** — from Google or a named competitor's own account");
@@ -311,9 +422,6 @@ function main() {
   // strictly stronger than the audit: an episode the model "dispositioned" but
   // silently dropped shows up here as NOT CITED.
   //
-  // Reads `curated`, not `entries`: lab news carries no editorial signal, and
-  // saying so explicitly beats relying on a missing field to filter it out.
-  const highSignal = curated.filter((e) => e.editorialSignal === "HIGH");
   if (highSignal.length) {
     const uncitedHigh = highSignal.filter((e) => cited(e, urls) === false);
     out.push("### HIGH editorial-signal episodes (advisory)");
@@ -363,6 +471,7 @@ if (require.main === module) main();
 
 module.exports = {
   splitEntries,
+  renderSummary,
   EMPTY_MARKER_RE,
   normalizeUrl,
   cited,

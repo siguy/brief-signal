@@ -171,6 +171,95 @@ that a pre-draft review would likely have caught.
 
 ---
 
+# Editorial checkpoint — say what was selected, what was excluded, what to read
+
+**Status:** BUILT — Simon 2026-08-30; recommended reads scoped to the checkpoint, not the edition
+**Branch:** `claude/editorial-checkpoint-visibility-r9x0v0`
+**One sentence:** The lineup already contained the answers; the PR body rendered
+almost none of them.
+
+## Why
+
+Simon on the checkpoint: *"It doesn't give me enough info about what's been
+selected, what's been excluded but high quality. I also noticed that sometimes
+there's high value content that should be recommended reads."*
+
+Three gaps, two of them pure rendering:
+
+1. **Selection was a title and two fields.** `lineup-digest.js` printed the story
+   title, `advances:` and `gravity:`. The `event`, `changed this week`, `merges`
+   and `seller play` lines — the actual argument for a story leading — were in
+   the lineup file and never rendered. The Quick Hits, half the edition, were not
+   rendered at all.
+2. **Exclusions were rendered nowhere.** "Considered but cut (and why)" has been
+   written by Stage 4a since the lineup pass shipped and appeared in no PR body
+   ever. The only exclusion view was the signal digest's NOT CITED marks, behind
+   a `<details>`, several hundred lines down, and mechanical: it knows what was
+   uncited, not what was good.
+3. **No third disposition.** A candidate could only run or be cut, so a piece
+   worth a reader's time that fit no slot landed in the reject pile with the
+   noise.
+
+## What was built
+
+### 1. Stage 4a writes review notes (`scripts/generate-briefing.js`)
+- [x] `## Editorial review notes — not part of the draft` closes the lineup; a
+      rule and a heading mark the boundary
+- [x] **Recommended reads (3-5)** — high-value items with no slot, each with
+      "worth reading:" and "no slot because:"
+- [x] Cut ledger enriched: a URL per item and `quality: HIGH|MEDIUM|LOW` that is
+      about the item's merit, NOT about whether it won. The prompt says so
+      explicitly — flattening every reject to LOW to justify the cut is the one
+      failure mode the field exists to prevent
+- [x] `stripRegistryFooter` cuts at the first review-only marker, so none of it
+      reaches Stage 4b. Old lineups fall through to the previous markers and
+      strip unchanged — archived lineups stay redraftable
+
+### 2. Render the whole decision (`scripts/lineup-digest.js`)
+- [x] Counts line: Big Picture · Quick Hits · recommended reads · cut (n HIGH)
+- [x] Every story field, plus the lead rationale and continuity lines
+- [x] Quick Hits inline
+- [x] 📚 Recommended reads, with how to promote one
+- [x] ✂️ Cut — HIGH rejects above the fold, the rest collapsed
+- [x] Degrades on an older lineup: renders the ungraded ledger, says it is
+      unsorted, and reports no recommended-reads count rather than inventing a 0
+
+### 3. The independent exclusion view (`scripts/signal-digest.js --summary`)
+- [x] Misses only — HIGH-signal episodes, first-party/Google items, lab-news count
+- [x] Uncollapsed in the PR body, directly under the editorial section
+- [x] Lane membership computed once and shared with the full digest, so the two
+      can never disagree
+
+## Decisions
+
+1. **Recommended reads stop at the checkpoint.** Simon's call, 2026-08-30. No
+   published section, no template/lint/audio/email changes. Promoting one is
+   editing the lineup's Quick Hits and redrafting.
+2. **The cut ledger's `quality:` is a claim, not a check.** A model rating its own
+   rejects is the shape that already failed once (the HIGH-signal disposition
+   audit). It ships anyway because bookmarks carry no grades and it is the only
+   signal available for them — but it sits next to the deterministic sweep, both
+   labelled, never merged. Where they disagree, that is the finding.
+
+## Acceptance criteria
+
+- [x] The PR body answers "what's in, what's out, what should I read" without
+      opening the lineup file
+- [x] A HIGH-rated cut is visible above the fold
+- [x] Stage 4b's input does not grow — it shrinks by the review notes
+- [x] `npm test` green (the Python bookmark suite needs `twikit`, unrelated)
+
+## Not done
+
+- `docs/diagrams/editorial-gate.{mmd,svg}` untouched: the gate's *flow* is
+  unchanged by this, and the `.svg` is an export that cannot be regenerated
+  without `@mermaid-js/mermaid-cli`. Editing the `.mmd` alone would desync them.
+- Bookmarks still carry no grades (Step 3a). Until they do, the deterministic
+  sweep can only cross-check podcasts, which is why the model's `quality:` rating
+  is load-bearing rather than merely corroborating.
+
+---
+
 # Archive — Editorial hardening (approved 2026-07-26, all merged)
 
 

@@ -124,12 +124,43 @@ assert_contains "gate sweeps the digest against the lineup, not a draft" \
 
 # The editorial section must precede the critique and the digest in the PR body.
 # This is the whole point of the reorder; an accidental swap restores the bug.
-body_order=$(grep -o '${THEME_SECTION}${CRITIQUE_SECTION}${SIGNAL_SECTION}' "$PIPELINE" | head -1)
-assert_contains "PR body leads with themes, ends with the digest" \
-  "$body_order" '${THEME_SECTION}${CRITIQUE_SECTION}${SIGNAL_SECTION}'
+# The left-on-the-floor summary sits directly after it: the two exclusion views —
+# Stage 4a's own cut ledger inside THEME_SECTION, and this mechanical sweep —
+# have to be readable together or the reviewer cannot tell them apart.
+body_order=$(grep -o '${THEME_SECTION}${SIGNAL_SUMMARY}${CRITIQUE_SECTION}${SIGNAL_SECTION}' "$PIPELINE" | head -1)
+assert_contains "PR body leads with the editorial decision, ends with the digest" \
+  "$body_order" '${THEME_SECTION}${SIGNAL_SUMMARY}${CRITIQUE_SECTION}${SIGNAL_SECTION}'
+
+# Same ordering under the gate, where there is no critique to sit between them.
+gate_order=$(grep -o '${THEME_SECTION}${SIGNAL_SUMMARY}${SIGNAL_SECTION}' "$PIPELINE" | head -1)
+assert_contains "gate PR body pairs the editorial section with the misses summary" \
+  "$gate_order" '${THEME_SECTION}${SIGNAL_SUMMARY}${SIGNAL_SECTION}'
+
+# The summary reuses SIGNAL_ARGS so it can never sweep a different target than
+# the full digest it summarises — two computations of "what got dropped" that
+# disagree is worse than one that is merely long.
+assert_contains "the misses summary sweeps the same target as the full digest" \
+  "$(grep -c 'signal-digest.js "${SIGNAL_ARGS\[@\]}" --summary' "$PIPELINE")" "1"
+
+# The summary's failure branch must end on an assignment, not on `log`. `log`
+# pipes through `tee -a "$LOG_FILE"` and returns non-zero once that file is
+# unwritable; a function-final non-zero under `set -e` aborts two lines before
+# `gh pr create`. Same class of bug as the run_lint()/run_critique() cases above.
+summary_fallback=$(grep -A 2 'WARN: Signal summary failed' "$PIPELINE" | grep -c 'SIGNAL_SUMMARY=')
+assert_contains "the summary's failure branch ends on an assignment, not on log" \
+  "$summary_fallback" "1"
+
+# And it must SAY the sweep did not run. A silently absent all-clear reads as an
+# all-clear — the same overclaim renderSummary refuses to make.
+assert_contains "a failed sweep is reported, not silently omitted" \
+  "$(grep -c 'Sweep failed to run, so nothing here says' "$PIPELINE")" "1"
 
 assert_contains "signal digest is collapsed behind a details block" \
   "$(grep -c '<summary><b>📊 Signal digest</b>' "$PIPELINE")" "1"
+
+# ...and the summary is NOT, which is the entire reason it exists separately.
+assert_contains "the misses summary is not collapsed" \
+  "$(grep -c 'SIGNAL_SUMMARY=$.\\n\\n."\$SUMMARY_OUT"' "$PIPELINE")" "1"
 
 if [ "$failed" -gt 0 ]; then
   echo ""

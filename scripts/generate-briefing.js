@@ -230,10 +230,19 @@ For each story:
 **Quick Hits (3-6 candidates):**
 - {one-liner} — {source}
 
-**Considered but cut (and why):**
-- {story} — {no seller play / no new development / too old / thin / already led a prior edition}
+---
 
-**Model-release coverage self-check:** list EVERY major model release or benchmark milestone found anywhere in the KBs, and where each landed (lead / big picture / quick hit / cut). Nothing major may be silently dropped — this is how we avoid missing a release like Kimi K3.
+## Editorial review notes — not part of the draft
+
+Everything below this line is for the human reviewing the selection. It is stripped before the prose pass, so write it for a reader deciding whether this lineup is right, not for a model expanding it.
+
+**Recommended reads (3-5, or "none this week"):** the high-value items you did NOT give a slot to — a Big Picture story or a Quick Hit — but which a reader of this briefing would genuinely be better off reading. This is a real editorial recommendation, not a consolation list: an item earns a place here on its own merit, never because it needs somewhere to go. Typical shapes: the strategic argument behind a story we ran as an event; a deep technical piece too long to compress into a one-liner; a primary source the edition only cites second-hand. Rank them best-first. For each:
+- **{title}** — [{source name}]({url}) — worth reading: {one line — what the reader gets that the edition does not give them} — no slot because: {one line — why it lost to what we ran}
+
+**Considered but cut (and why):** every candidate that lost, best-first. Include the URL so the reviewer can judge it without hunting, and be honest about quality: \`quality:\` is how good the item is on its own merits, which is NOT the same as whether it earned a slot. A HIGH-quality item cut for a good reason (no new development, already led) is a normal outcome and must still be marked HIGH — flattening everything to LOW to justify the cut is the one failure mode this line exists to prevent. Anything you marked HIGH here should usually be a recommended read above; if it is not, say why in the reason.
+- **{story}** — [{source}]({url}) — quality: {HIGH|MEDIUM|LOW} — cut: {no seller play / no new development / too old / thin / already led a prior edition / merged into story N}
+
+**Model-release coverage self-check:** list EVERY major model release or benchmark milestone found anywhere in the KBs, and where each landed (lead / big picture / quick hit / recommended read / cut). Nothing major may be silently dropped — this is how we avoid missing a release like Kimi K3.
 
 **Proposed registry update:** if no "## Theme Registry" section was provided to you above, write "No registry provided this run" and skip straight to your Quick Hits — do not fabricate one. Otherwise: the registry informs selection — it never gates it (a new thread or standalone one-off may always lead on its own merits). For each Theme Registry arc that led or advanced this edition, one line: {theme name} — moved to: {new one-line "where it stands"}. Then, only where earned, list births and retirements:
 - NEW THEME: {name} — {why it earns a slot: gravity across ≥2 sources AND plausible staying power, not a one-off}
@@ -249,11 +258,36 @@ If nothing changed, write "No registry changes this edition."
 }
 
 // Stage 4b only needs the story selection to expand into prose — never the
-// registry admin footer (proposed update + the full themes.md block, which can
-// run several KB and has its own "## " headings right before "generate a
+// review-only footer (recommended reads, the cut ledger, the coverage
+// self-check, the proposed registry update and the full themes.md block, which
+// can run several KB and has its own "## " headings right before "generate a
 // complete briefing"). The saved lineup file keeps the footer for the reviewer.
+//
+// Cut at the FIRST marker present, not a fixed one. Two reasons:
+//
+//   1. The review notes now start well above the registry block. Enriching the
+//      cut ledger with URLs and a quality call made it much longer, and none of
+//      it is input to the prose — feeding it to 4b would repeat the mistake the
+//      removed HIGH-signal disposition block made (see the note above
+//      lineupTask): review material billed twice, once to write and once to read.
+//   2. Lineups written before the review-notes heading existed are still on disk
+//      and still redraftable. They fall through to the old registry marker and
+//      strip exactly as they always did.
+const REVIEW_FOOTER_MARKERS = [
+  /\n---\n+## Editorial review notes\b[\s\S]*$/,
+  /\n\*\*Recommended reads\b[\s\S]*$/,
+  /\n\*\*Considered but cut\b[\s\S]*$/,
+  /\n\*\*Model-release coverage self-check:\*\*[\s\S]*$/,
+  /\n\*\*Proposed registry update:\*\*[\s\S]*$/,
+];
+
 function stripRegistryFooter(lineupText) {
-  return lineupText.replace(/\n\*\*Proposed registry update:\*\*[\s\S]*$/, "").trimEnd();
+  let earliest = lineupText.length;
+  for (const marker of REVIEW_FOOTER_MARKERS) {
+    const hit = lineupText.search(marker);
+    if (hit !== -1 && hit < earliest) earliest = hit;
+  }
+  return lineupText.slice(0, earliest).trimEnd();
 }
 
 // Pulls the fenced ```themes-proposed block out of a raw Stage 4a lineup
