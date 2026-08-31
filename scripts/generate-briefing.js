@@ -221,7 +221,7 @@ For each story:
    - merges: {what's merged + the tension, or "single"}
    - seller play: {one line, or "context-only — no angle"}
    - advances: {the Theme Registry arc this story moves forward, by name} OR NEW THREAD — candidate theme? {a name, or "one-off, no arc"}
-   - braids in: {the bookmark handles/items from the X KB this story will weave in alongside its podcast anchors — or "none available in KB"}
+   - braids in: {2-3 bookmark citations from the X KB this story weaves in alongside its podcast anchors. EXACT FORMAT, comma-separated: \`@handle (what it carries)\` — e.g. \`@steren (Cloud Run Sandboxes at ~500ms cold start), @dair_ai (WikiSkill — the persistent wiki carries most of the gain)\`. The @handle is REQUIRED and must come from the bookmarks KB. Never a podcast or show name (those are this story's anchors, cited in the body). Never a markdown link. Never a read time or date in the parenthetical — it must say what the bookmark carries. If nothing in the KB fits, write exactly: none available in KB}
 
 **Why the lead beats the runner-up:** {one line}
 

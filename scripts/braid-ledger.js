@@ -106,7 +106,12 @@ function parseBraids(lineupText) {
     if (!/braids in:/i.test(line)) continue;
 
     const body = line.slice(line.toLowerCase().indexOf("braids in:") + 10);
+    // An explicit "none available in KB" is a real answer, not an unreadable
+    // line. Counting it as unreadable would report a phantom planned braid for
+    // every story that honestly had no bookmark to weave in.
+    if (/^\W*none\b/i.test(body)) continue;
     for (const seg of splitSegments(body)) {
+      if (/^\W*none\b/i.test(seg)) continue;
       const m = seg.match(/@([A-Za-z0-9_]+)\s*(?:\(([^)]*)\))?/);
       if (!m) {
         unparsed.push({ story: story || null, text: seg.replace(/\s+/g, " ").trim() });
@@ -274,9 +279,9 @@ function render(result, date) {
     out.push("");
     out.push(
       `**${unparsed.length} braid${unparsed.length === 1 ? "" : "s"} could not be checked.** ` +
-        "These segments name a show or article in prose without an `@handle` or " +
-        "permalink, so there is nothing to match against the draft. Pinning the " +
-        "`braids in:` format in `scripts/briefing-prompt.md` would make them checkable."
+        "These segments name a show or article in prose with no `@handle`, so there " +
+        "is nothing to match against the draft. The `braids in:` format is now pinned " +
+        "in `scripts/briefing-prompt.md`; lineups written before that predate it."
     );
     out.push("");
     for (const u of unparsed) {
