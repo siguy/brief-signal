@@ -35,6 +35,7 @@
     --text-6xl: 3.75rem;
     --text-6xl--line-height: 1;
     --font-weight-normal: 400;
+    --font-weight-medium: 500;
     --font-weight-semibold: 600;
     --font-weight-bold: 700;
     --tracking-tighter: -0.05em;
@@ -828,6 +829,55 @@ html, body {
     --em-italic: var(--color-brand-accent);
     --em-link: var(--color-brand-accent);
     --em-link-hover: var(--color-brand-primary);
+  }
+  article .table-scroll, article table {
+    margin-bottom: calc(var(--spacing) * 6);
+  }
+  article table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--text-base);
+    line-height: var(--tw-leading, var(--text-base--line-height));
+    color: var(--color-brand-text);
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+  article thead th {
+    padding-inline: calc(var(--spacing) * 3);
+    padding-block: calc(var(--spacing) * 2);
+    text-align: left;
+    vertical-align: bottom;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    --tw-font-weight: var(--font-weight-normal);
+    font-weight: var(--font-weight-normal);
+    --tw-tracking: var(--tracking-widest);
+    letter-spacing: var(--tracking-widest);
+    text-transform: uppercase;
+    color: var(--color-brand-accent);
+    border-bottom: 1px solid var(--color-brand-border);
+    white-space: nowrap;
+  }
+  article tbody td {
+    padding-inline: calc(var(--spacing) * 3);
+    padding-block: calc(var(--spacing) * 3);
+    vertical-align: top;
+    --tw-leading: var(--leading-relaxed);
+    line-height: var(--leading-relaxed);
+    border-bottom: 1px solid color-mix(in srgb, rgba(250, 248, 245, 0.1) 55%, transparent);
+    @supports (color: color-mix(in lab, red, red)) {
+      border-bottom: 1px solid color-mix(in srgb, var(--color-brand-border) 55%, transparent);
+    }
+  }
+  article tbody tr:last-child td {
+    border-bottom: none;
+  }
+  article tbody td:first-child {
+    --tw-font-weight: var(--font-weight-medium);
+    font-weight: var(--font-weight-medium);
+    color: var(--color-brand-primary);
+    white-space: nowrap;
   }
   article strong {
     --tw-font-weight: var(--font-weight-bold);
