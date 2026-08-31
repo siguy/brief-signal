@@ -346,3 +346,26 @@ Concrete rules:
 
   The durable fix landed in `scripts/briefing-prompt.md` ("Concede what
   nobody sells" + a Quality Checklist item), not just here.
+- **The same overclaim will be sitting in Our Play.** Fixing the angle block is
+  half the job: Edition #28's Our Play repeated the exact failure one section
+  later — a *Signal* saying agents "bypass prompt-level safety instructions"
+  answered by a *Why GCP wins* leading with Model Armor, a prompt-level filter.
+  It also omitted per-agent identity entirely, which the revised angle calls
+  the control that actually bites. Rule: when an angle block changes, re-read
+  the Our Play motion that traces to the same story and make the two agree on
+  which control leads.
+- **Unverified isolation adjectives are how product claims drift.** Our Play
+  described Cloud Run Sandboxes as "hardware-isolated." Nothing supports that —
+  the edition's own source calls them "lightweight execution boundaries," the
+  angle says gVisor (a userspace kernel, i.e. software isolation), and
+  "microVM" belongs to the *different* product in motion 3, Cloud Run
+  Instances. No prior edition had ever used the phrase. Rule: isolation-level
+  adjectives (hardware-isolated, kernel-level, microVM) are product claims and
+  need the playbook or a KB source behind them; when unsure, name the
+  mechanism (gVisor) rather than grading its strength.
+- **Our Play must not re-ask the angle's question.** Motion 1 asked "if your
+  model provider restricts API access next month, how long does migration
+  take?" — the story's angle had already left behind a sharper version of the
+  same question 80 lines earlier. Our Play's job is the *execution* the answer
+  implies (mark every hard-coded provider on the whiteboard; the count is the
+  migration estimate), not the question again.
