@@ -370,6 +370,15 @@ This is the dedicated space for Google Cloud in each briefing. Everything else i
 
 **Anchor to the week's stories.** Each motion should trace back to a Big Picture story or Quick Hit, so Our Play reads as the answer to what the edition just described — not a generic capability list. Naming a fresh Google Cloud release is a bonus, not a requirement; the founder-content KBs rarely contain GCP announcements, so it is fine (and expected) for Our Play to apply existing GCP surfaces to this week's themes.
 
+**Our Play must agree with the angle block it traces to.** The motion answering a story and that story's "Your angle" are read minutes apart by the same person. If the angle says per-agent identity is the control that bites, the motion cannot lead with a content filter and omit identity. Two failure patterns, both shipped in Edition #28:
+
+- **Re-asking the angle's question.** Motion 1 asked "if your model provider restricts API access next month, how long does migration take?" — the angle had already left behind a sharper version 80 lines earlier. Our Play's job is the EXECUTION the answer implies: mark every place a provider is hard-coded (SDK client, prompt format, tool-call schema, eval harness) and the count is the migration estimate. Never the question again.
+- **Reproducing an overclaim the angle just conceded.** Motion 2's *Signal* said agents "bypass prompt-level safety instructions" and its *Why GCP wins* then led with Model Armor — a prompt-level filter. See "Concede what nobody sells" in the Section Voice Guide; it governs Our Play motions too.
+
+**Isolation and capacity adjectives are product claims and need a source.** "Hardware-isolated," "kernel-level," "microVM," "dedicated," "air-gapped" grade a mechanism's strength and are checkable by the founder's infra engineer. Edition #28 called Cloud Run Sandboxes "hardware-isolated" — unsupported: they are gVisor-backed (a userspace kernel, i.e. software isolation), the week's own source called them "lightweight execution boundaries," and "microVM" belonged to a different product in another motion. When the playbook or a KB does not support the grade, **name the mechanism instead of grading it.**
+
+**Cost levers run together in one motion.** Do not credit an architecture change to a commercial instrument or the reverse. Routing complex steps to a stronger model is what kills retry loops; Provisioned Throughput prices the steady state that falls out of the decomposition. Decompose first, then commit — in that order, in the same motion.
+
 **What to avoid:**
 - Generic "Google Cloud is great" filler
 - Repeating the same data points every week (60% stat, $350K credits) unless there's new context
@@ -483,6 +492,8 @@ Before finalizing, verify:
 - [ ] Every "Your angle" is present ONLY on stories with a real seller play (context-only stories like energy/power have no angle block), and meets the four obligations (grant what is true, move to something testable on their workload, compete where the news cannot reach, close with "Where GCP wins:") — and NO TWO angle blocks in this edition use the same shape or the same lead-in pattern; at most ONE question in the whole block, and only if it reframes
 - [ ] **GCP product positioning appears only in three allowed places: (a) "Our Play", (b) the "Where GCP wins:" line that closes a Big Picture angle block, and (c) the optional single "GCP plays this week" TLDR summary bullet. (b) and (c) are permitted features, NOT violations.** Elsewhere, *news* about Google releases is fine, but a pitch/"use this" line is not. Test: would this read as sales copy in TechCrunch?
 - [ ] Our Play's three motions are execution detail anchored to the week's stories (not generic filler; a fresh GCP source is a bonus, not required)
+- [ ] **Each Our Play motion agrees with the angle block for the same story** — same control leading, no re-asking the angle's question, no overclaim the angle just conceded
+- [ ] **No ungrounded isolation/capacity adjective** ("hardware-isolated", "kernel-level", "microVM", "dedicated") — name the mechanism unless the playbook or a KB backs the grade
 - [ ] **No bare "Vertex AI" and no "GEAP" — "Gemini Enterprise Agent Platform (FKA Vertex AI)" on first mention, "Agent Platform" after; no deprecated names (Duet AI, Bard, PaLM)**
 - [ ] **Anthropic on the Agent Platform framed as founder optionality; no raw-capacity overclaim; no Google loss spun as a win**
 - [ ] **On any safety/containment/oversight story: no "Where GCP wins:" line that reads as "this would not have happened on GCP."** The claim is blast radius and evidence, at least one product limit is named out loud, and a failure of prompt-level guardrails is not answered by leading with a prompt filter
