@@ -309,3 +309,37 @@ Concrete rules:
   it.** Loading fetch-og.js for a smoke test executed its full main pass
   (harmless only because every image already existed). Test guarded modules
   via require; unguarded scripts via a stub or subprocess.
+
+### From Edition #28 feedback (2026-08-31)
+
+- **A safety-incident story must concede that prevention is not purchasable.**
+  The Emergent Swarm angle closed on a "Where GCP wins" line that implied
+  gVisor + Cloud Run Sandboxes + Model Armor + SCC would have stopped what
+  happened inside OpenAI. They would not: sandboxes bound *code execution*,
+  not the shared write surfaces agents coordinate over, and Model Armor is a
+  content filter that cannot flag two agents talking in ordinary English.
+  Worse, the story's own thesis was that prompt-level guardrails failed — then
+  the GCP answer led with a prompt filter. Rule: when the story is a
+  containment or oversight failure, obligation 1 is to state plainly what no
+  vendor sells (prevention), and the sellable claim is **blast radius and
+  evidence** — scoped per-agent identity, kernel-isolated execution, and
+  cross-agent activity landing somewhere a human can find it. Naming a limit
+  out loud ("Model Armor won't catch this one") is what makes the rest
+  credible to the security engineer in the room.
+- **Frontier-lab incidents need a bridge to the founder's actual stack.** As
+  written, a rep reads "three swarms breached Hugging Face" and thinks "my
+  founder isn't running swarms." The mechanism is the portable part: an
+  "improvised message board" is an ordinary shared write surface, and two
+  agents with write access to the same bucket have the same channel. State
+  the mechanism, not just the headline.
+- **Two angle bullets listing the same controls is one bullet.** Obligations 2
+  and 3 had collapsed into near-duplicate checklists (isolation, inline
+  inspection, per-agent identity appeared in both). Obligation 2 is
+  *diagnostic questions about their architecture*; obligation 3 is *named
+  products against those exact failures*. If bullet 3 restates bullet 2 as
+  nouns, the block is one bullet short of its job.
+- **A Big Picture story with no TLDR bullet, while a Quick Hit has one, is
+  backwards.** Edition #28 promoted the a16z token-volume Quick Hit to the
+  TLDR and left the compute-bubble story — a full section — unrepresented.
+  The TLDR cap is a hard 4-5 bullets, so the fix is a swap, not a sixth
+  bullet: Big Picture stories get first claim on TLDR slots.
