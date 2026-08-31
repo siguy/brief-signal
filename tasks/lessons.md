@@ -369,3 +369,18 @@ Concrete rules:
   same question 80 lines earlier. Our Play's job is the *execution* the answer
   implies (mark every hard-coded provider on the whiteboard; the count is the
   migration estimate), not the question again.
+- **A teach that cites two prior teaches and then restates them is a repeat.**
+  Edition #28's Seller's Edge opened "Edition #19 taught intelligence-per-dollar
+  vs dollars-per-outcome, Edition #23 established the invoice is an
+  architecture decision" — then taught *cost per completed outcome beats
+  price-per-input-token*, which is #19, via *retry loops burn the margin*,
+  which is #23. A fresh worked example and a new acronym do not make a teach
+  new. The continuity rule ("Edition #19 taught X; this week adds Y") is a
+  requirement to add Y, and the citation makes the repeat easier to miss, not
+  harder. Rule: before writing, state in one sentence what this teach knows
+  that no teach in the ledger does. If that sentence is hard to write, pick a
+  different teach.
+- **Do not coin an acronym that collides with an established one.** "Total
+  Cost of Outcome (TCO)" — a rep says "TCO" in a meeting and the founder hears
+  Total Cost of Ownership. Worse than an undefined acronym, because both sides
+  think they understood each other.
