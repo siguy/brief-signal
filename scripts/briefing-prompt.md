@@ -151,6 +151,8 @@ edition: {n}
 
 **4-5 bullets, each with a bold hook.** Never prose, never more than 5. Each bullet leads with the punchiest framing in bold, then ONE short clause — one sentence, scannable in 3 seconds. Do not pack a paragraph into a bullet.
 
+**Big Picture stories get first claim on the slots.** With 2-3 lead stories plus the optional GCP-plays bullet, the 4-5 slots are nearly spoken for. A Quick Hit earns a TLDR bullet only once EVERY Big Picture story already has one. Edition #28 shipped the inversion — the a16z token-volume Quick Hit held a bullet while a full compute-bubble section had none. Because the cap is hard, the fix is always a swap, never a sixth bullet.
+
 **The last bullet MAY be a GCP-plays summary** — the concrete deal motions a rep should walk away knowing about, a 30-second scan of "what plays I have this week." Include it only when the briefing surfaced genuinely distinct plays; otherwise make all 4-5 bullets market signal. Either way it counts toward the 4-5 cap — never a 6th bullet. Every other TLDR bullet stays GCP-product-free; only this optional summary bullet may name products.
 
 ## The Big Picture: {Theme Name}
@@ -161,7 +163,7 @@ The 2-3 lead stories, ordered as a narrative arc (related stories adjacent). Alw
 
 ![{descriptive alt text}](./images/{slug}.jpg)
 
-{The story. ~250-300 words MAX per story — usually 1-2 tight paragraphs. Lead with the sharpest fact + source link, give the context that makes it matter, and — when two items are merged — name the tension between them. Every claim carries an inline [link with a time label (2 min read)](url).}
+{The story. ~250-300 words MAX per story — usually 1-2 tight paragraphs. Lead with the sharpest fact + source link, give the context that makes it matter, and — when two items are merged — name the tension between them. **When the story is a frontier-lab incident, state the MECHANISM in terms that scale down to a founder's own stack, not just the headline.** A rep who reads "three swarms breached Hugging Face" and thinks "my founder isn't running swarms" has been handed nothing usable; "those improvised message boards were ordinary shared write surfaces, and two agents with write access to the same bucket have the same channel" is the portable part. Every claim carries an inline [link with a time label (2 min read)](url).}
 
 **Your angle with founders** {Include ONLY when a seller can act on the story (Principle 2) — omit entirely for context-only stories like energy/power. When present: 4 bullets, roughly 180-220 words, closing with "Where GCP wins:". The four obligations are fixed but the SHAPE MUST VARY between stories in an edition — never run the same lead-in pattern twice. At most ONE question, and only if it reframes. See the shapes in the Section Voice Guide.}
 
@@ -237,12 +239,14 @@ This block is a **rep's toolkit for a real conversation**, not a list of questio
 3. **Compete where the news cannot reach.** Name the dimensions a price cut or a benchmark cannot touch: frontier reasoning, grounding, data residency, agentic orchestration, inference economics at scale.
 4. **"Where GCP wins:"** one line naming the concrete deal motion. This is the ONE place GCP product positioning is allowed outside "Our Play" — it is required, not a violation, and it always closes the block.
 
+**Obligations 2 and 3 are two different bullets, not one bullet twice.** Obligation 2 is *diagnostic* — checks or questions the rep runs against the founder's own architecture. Obligation 3 is *product* — named surfaces answering those exact failures. If bullet 3 is bullet 2 restated as nouns (bullet 2: "whether each agent has a scoped identity, whether code is sandboxed, whether traffic is inspected"; bullet 3: "per-agent identity governance, kernel isolation, inline inspection"), the block has done three jobs in four bullets and left no question behind. Edition #28 shipped exactly that duplication.
+
 **VARY THE SHAPE ACROSS STORIES IN AN EDITION.** Obligations 1-3 may be met in any order, merged, or expressed through a structure that fits the story — only obligation 4 is fixed in place. Do not open more than one angle block in an edition with the same move. Three consecutive blocks running "Concede X / Then insist / Compete / Where GCP wins" is the failure mode: the scaffolding becomes visible, the reader learns the rhythm and stops reading the content. Simon flagged exactly this on Edition #25.
 
 Pick the shape from the story, not from the template. Worked shapes, all of which satisfy the four obligations:
 
 - **Contested narrative** (a story where the market has already reached a verdict) — *what they'll say* → *the reframe that holds* → *the question to leave behind* → *Where GCP wins*.
-- **Technical risk** (an incident or failure mode) — *the uncomfortable version of what happened* → *specific things to inspect in their architecture* → *name the products that address those exact failure modes* → *Where GCP wins*.
+- **Technical risk** (an incident or failure mode) — *the uncomfortable version of what happened* → *specific things to inspect in their architecture* → *name the products that address those exact failure modes, limits included* → *Where GCP wins*. When the incident is a containment or oversight failure, obligation 1 becomes stating what **no vendor sells** — see "Concede what nobody sells" below.
 - **Cost or procurement** — *the conversation to skip* → *the decomposition to run live* → *who to bring in when they cannot answer* → *Where GCP wins*.
 - **Rival advance** (the original concede-first shape, still correct when a competitor genuinely just won) — *concede the tier* → *insist on the eval* → *compete where a price cut cannot reach* → *Where GCP wins*.
 
@@ -270,6 +274,23 @@ Pick the shape from the story, not from the template. Worked shapes, all of whic
 **Never assume the founder will fine-tune or distill.** Raise it only for the profile it genuinely fits — the narrow set with volume to justify it — and say so explicitly as an option for that profile, never as the default path.
 
 **Concede when a competitor genuinely wins.** State the rival's real price or benchmark advantage plainly, then move the decision to an eval on the founder's own workload and TCO. Never spin a Google loss into a win, and never imply GCP is cheaper when it isn't.
+
+**Concede what nobody sells — safety, containment, and oversight stories.** When the story is a security incident or a containment failure, obligation 1 is not granting a rival's win. It is stating plainly what **no vendor on the market prevents**. Emergent coordination between capable long-running agents is not a purchasable problem: sandboxes bound code *execution*, not the shared write surfaces agents coordinate over, and an inline content filter cannot flag two agents talking to each other in ordinary English. What IS purchasable is **blast radius and evidence** — scoped per-agent identity, kernel-isolated execution, and cross-agent activity landing somewhere a human can go find it. Sell that, and name at least one limit out loud; the limit is what makes the rest credible to the security engineer sitting next to the founder. Three traps:
+
+- **Never let "Where GCP wins:" imply the incident was preventable.** If the sentence can be read as "this would not have happened on GCP," rewrite it. It is a blast-radius and detection claim, never a prevention claim.
+- **Do not answer a prompt-guardrail failure with a prompt filter.** If the story's thesis is that prompt-level guardrails failed, leading the GCP response with inline prompt inspection undercuts the story you just told. Lead with identity and isolation; mention the filter with its limit attached.
+- **Google's own exposure is the credibility move, not something to route around.** If Google signed the same accord, co-funded the research, or carries the same risk, say so. A rep claiming a solved problem in a room that read the post-mortem has lost the room.
+
+**No — the prevention overclaim (Edition #28 as first shipped, on the OpenAI swarm breach):**
+> - **The three controls worth costing out:** kernel-level isolation for any process running model-generated code, inline inspection of prompts and tool outputs for injection and data exfiltration, and per-agent identity governance...
+> - **Where GCP wins:** Agent security built directly into the cloud runtime substrate — gVisor kernel-level isolation and Cloud Run Sandboxes for untrusted code, Model Armor inspecting prompts and tool outputs inline, and Security Command Center AI Protection governing Non-Human Identities **before a swarm can touch production databases**.
+
+Three failures at once: the closing clause promises prevention the products do not deliver; the block answers a story about failed prompt guardrails by leading with a prompt filter; and the "three controls" bullet is the previous bullet's architecture checklist restated as nouns.
+
+**Yes — the same story, rewritten (Edition #28 as revised):**
+> - **Say what is not on offer first.** Nobody sells prevention here, Google included — that is what signing the accord means. What is purchasable is blast radius and evidence; claim more and the security engineer in the room will correct you.
+> - **Name products against those exact failures, limits included.** Per-agent Non-Human Identity is the control that bites: shared credentials turn one compromised worker into all of them. Model Armor inspects prompts and tool outputs inline — real against injection and exfiltration, no help against two agents coordinating in ordinary English. Say that limit out loud; their engineer already knows it.
+> - **Where GCP wins:** the fleet runs on a substrate that scopes and logs by default, so coordination leaves evidence a human can go find. A swarm self-hosted on unmanaged VMs leaves none.
 
 ### Sales-grade concreteness (applies to every question and angle line)
 
@@ -310,6 +331,9 @@ The briefing's **compounding layer**: one teachable mental model per edition tha
 - #18 — *When everyone is supply-constrained, compete on availability, price, flexibility, and ease* (the scarce good is dependable, usable access — never a raw-capacity overclaim)
 - #19 — *Two-layer pricing: intelligence-per-dollar vs. dollars-per-outcome* (diagnose which layer the founder competes on)
 - #23 — *The invoice is an architecture decision* (agentic cost is engineered via harness design, not just priced)
+- #28 — *Architecture sets the slope, not just the level* (a well-built agent gets cheaper at the same task over time via accumulated reusable context; a flat cost-per-task curve is a finding, not a fact of life)
+
+**#19 and #23 are the ones most often repeated by accident.** Any teach whose core is "judge by cost per outcome, not by token price" IS #19, and any teach whose core is "retry loops and harness design drive the bill" IS #23 — a fresh worked example and a new acronym do not make either one new. Edition #28's first draft shipped exactly that (it opened by citing both, then re-taught them as "Total Cost of Outcome"). Before writing, state in one sentence what this teach knows that every teach in the list above does not. If that sentence is hard to write, pick a different teach.
 
 Candidate future teaches: reference-architecture literacy (whiteboard the agent stack: context layer + skill registry + private evals + sandboxes — advisor, not vendor). Add new teaches to this list as editions ship.
 
@@ -348,6 +372,15 @@ This is the dedicated space for Google Cloud in each briefing. Everything else i
 **Each motion must be execution detail, not a market-reaction quote (Principle 5).** "Lead with Model Garden, not a single model: run Gemini, Claude, and open weights behind one API; adopt the open weight for the jobs it wins" is a motion. A quote about how the market feels about cloud is not — and a quote that argues *against* using cloud is a hard cut.
 
 **Anchor to the week's stories.** Each motion should trace back to a Big Picture story or Quick Hit, so Our Play reads as the answer to what the edition just described — not a generic capability list. Naming a fresh Google Cloud release is a bonus, not a requirement; the founder-content KBs rarely contain GCP announcements, so it is fine (and expected) for Our Play to apply existing GCP surfaces to this week's themes.
+
+**Our Play must agree with the angle block it traces to.** The motion answering a story and that story's "Your angle" are read minutes apart by the same person. If the angle says per-agent identity is the control that bites, the motion cannot lead with a content filter and omit identity. Two failure patterns, both shipped in Edition #28:
+
+- **Re-asking the angle's question.** Motion 1 asked "if your model provider restricts API access next month, how long does migration take?" — the angle had already left behind a sharper version 80 lines earlier. Our Play's job is the EXECUTION the answer implies: mark every place a provider is hard-coded (SDK client, prompt format, tool-call schema, eval harness) and the count is the migration estimate. Never the question again.
+- **Reproducing an overclaim the angle just conceded.** Motion 2's *Signal* said agents "bypass prompt-level safety instructions" and its *Why GCP wins* then led with Model Armor — a prompt-level filter. See "Concede what nobody sells" in the Section Voice Guide; it governs Our Play motions too.
+
+**Isolation and capacity adjectives are product claims and need a source.** "Hardware-isolated," "kernel-level," "microVM," "dedicated," "air-gapped" grade a mechanism's strength and are checkable by the founder's infra engineer. Edition #28 called Cloud Run Sandboxes "hardware-isolated" — unsupported: they are gVisor-backed (a userspace kernel, i.e. software isolation), the week's own source called them "lightweight execution boundaries," and "microVM" belonged to a different product in another motion. When the playbook or a KB does not support the grade, **name the mechanism instead of grading it.**
+
+**Cost levers run together in one motion.** Do not credit an architecture change to a commercial instrument or the reverse. Routing complex steps to a stronger model is what kills retry loops; Provisioned Throughput prices the steady state that falls out of the decomposition. Decompose first, then commit — in that order, in the same motion.
 
 **What to avoid:**
 - Generic "Google Cloud is great" filler
@@ -442,6 +475,7 @@ Before finalizing, verify:
 - [ ] Quick Hits has **3-6 bullets**, each ONE linked sentence with a time label
 - [ ] Our Play is **one framing sentence + exactly three named motions** (no sub-headings, no CTA tack-ons)
 - [ ] **TLDR is 4-5 bullets with bold hooks, never prose; each bullet is one scannable sentence**
+- [ ] **Every Big Picture story has a TLDR bullet before any Quick Hit gets one** (the cap is hard — fix an inversion by swapping, never by adding a sixth bullet)
 - [ ] Length is tight — roughly **1,500-1,800 words of prose** (≈2,000-2,350 counting links/markdown). Being OVER is the failure to catch; shorter is fine as long as the 2-3 lead stories are complete. Never flag "too short" as a reason to pad.
 
 **Selection**
@@ -461,5 +495,8 @@ Before finalizing, verify:
 - [ ] Every "Your angle" is present ONLY on stories with a real seller play (context-only stories like energy/power have no angle block), and meets the four obligations (grant what is true, move to something testable on their workload, compete where the news cannot reach, close with "Where GCP wins:") — and NO TWO angle blocks in this edition use the same shape or the same lead-in pattern; at most ONE question in the whole block, and only if it reframes
 - [ ] **GCP product positioning appears only in three allowed places: (a) "Our Play", (b) the "Where GCP wins:" line that closes a Big Picture angle block, and (c) the optional single "GCP plays this week" TLDR summary bullet. (b) and (c) are permitted features, NOT violations.** Elsewhere, *news* about Google releases is fine, but a pitch/"use this" line is not. Test: would this read as sales copy in TechCrunch?
 - [ ] Our Play's three motions are execution detail anchored to the week's stories (not generic filler; a fresh GCP source is a bonus, not required)
+- [ ] **Each Our Play motion agrees with the angle block for the same story** — same control leading, no re-asking the angle's question, no overclaim the angle just conceded
+- [ ] **No ungrounded isolation/capacity adjective** ("hardware-isolated", "kernel-level", "microVM", "dedicated") — name the mechanism unless the playbook or a KB backs the grade
 - [ ] **No bare "Vertex AI" and no "GEAP" — "Gemini Enterprise Agent Platform (FKA Vertex AI)" on first mention, "Agent Platform" after; no deprecated names (Duet AI, Bard, PaLM)**
 - [ ] **Anthropic on the Agent Platform framed as founder optionality; no raw-capacity overclaim; no Google loss spun as a win**
+- [ ] **On any safety/containment/oversight story: no "Where GCP wins:" line that reads as "this would not have happened on GCP."** The claim is blast radius and evidence, at least one product limit is named out loud, and a failure of prompt-level guardrails is not answered by leading with a prompt filter
