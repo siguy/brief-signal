@@ -122,11 +122,19 @@ assert_contains "draft-only checks are skipped under the gate" \
 assert_contains "gate sweeps the digest against the lineup, not a draft" \
   "$(grep -c 'SIGNAL_ARGS=(--date "\$MONDAY_DATE" --lineup "\$LINEUP_FILE")' "$PIPELINE")" "1"
 
-# The editorial section must precede the critique and the digest in the PR body.
-# This is the whole point of the reorder; an accidental swap restores the bug.
-body_order=$(grep -o '${THEME_SECTION}${CRITIQUE_SECTION}${SIGNAL_SECTION}' "$PIPELINE" | head -1)
-assert_contains "PR body leads with themes, ends with the digest" \
-  "$body_order" '${THEME_SECTION}${CRITIQUE_SECTION}${SIGNAL_SECTION}'
+# The EDITORIAL sections must precede the mechanical ones in the PR body. Themes
+# and the braid ledger both answer questions about the lineup — what the edition
+# set out to do, and whether it did it — so they lead; the critique and the
+# several-hundred-line digest follow. An accidental swap buries the editorial
+# call behind a ratings table, which is the bug this ordering fixed.
+body_order=$(grep -o '${THEME_SECTION}${BRAID_SECTION}${CRITIQUE_SECTION}${SIGNAL_SECTION}' "$PIPELINE" | head -1)
+assert_contains "PR body leads with themes and braids, ends with the digest" \
+  "$body_order" '${THEME_SECTION}${BRAID_SECTION}${CRITIQUE_SECTION}${SIGNAL_SECTION}'
+
+# The ledger must be skipped under the lineup gate: there is no draft to compare
+# the plan against, and running it would grade the previously published edition.
+assert_contains "braid ledger is skipped under the lineup gate" \
+  "$(grep -c 'if \[ -n "${TODAY:-}" \] && \[ "$LINEUP_GATE" != "1" \]; then' "$PIPELINE")" "1"
 
 assert_contains "signal digest is collapsed behind a details block" \
   "$(grep -c '<summary><b>📊 Signal digest</b>' "$PIPELINE")" "1"
