@@ -195,17 +195,37 @@ def should_stop_early(page_new: int, consecutive_dupe_pages: int) -> tuple[bool,
 # Tweet → output format
 # ---------------------------------------------------------------------------
 
+# An X Article lives on x.com but is long-form content, not a self-link:
+#   https://x.com/i/article/<id>   or   https://x.com/<handle>/article/<id>
+X_ARTICLE_PATH = re.compile(r"^/(?:i|[A-Za-z0-9_]+)/article/\d+", re.IGNORECASE)
+
+
+def is_x_article_url(url: str) -> bool:
+    """True for an X Article permalink."""
+    parts = urlparse(url or "")
+    if parts.netloc.lower() not in SELF_DOMAINS:
+        return False
+    return bool(X_ARTICLE_PATH.match(parts.path or ""))
+
+
 def extract_external_links(tweet) -> list[str]:
-    """Extract expanded URLs, filtering out Twitter/X self-links."""
+    """Extract expanded URLs, filtering out Twitter/X self-links.
+
+    X ARTICLES ARE NOT SELF-LINKS. They live on x.com, so the domain filter
+    used to discard them — and a bookmark whose entire body is a t.co pointing
+    at an article therefore captured NOTHING: empty external_links, empty
+    card_link, nothing for enrich-bookmarks.py to fetch, and a knowledge-base
+    entry reading as a bare link with no caption (graded LOW on 2026-08-30,
+    which is how a 25,000-word semiconductor analysis was nearly missed).
+    """
     links = []
     raw_urls = tweet.urls or []
     for url_entity in raw_urls:
         expanded = url_entity.get("expanded_url", "")
         if not expanded:
             continue
-        # Filter out self-referential links
         domain = urlparse(expanded).netloc.lower()
-        if domain not in SELF_DOMAINS:
+        if domain not in SELF_DOMAINS or is_x_article_url(expanded):
             links.append(expanded)
     return links
 
@@ -247,14 +267,69 @@ def extract_x_article(tweet) -> dict:
         if not result:
             return {"title": "", "body": ""}
         title = result.get("title", "") or ""
-        blocks = (result.get("content_state", {}) or {}).get("blocks", []) or []
-        body = "\n\n".join(
-            b.get("text", "") for b in blocks if b.get("text")
-        ).strip()
-        return {"title": title, "body": body}
+        preview = result.get("preview_text", "") or ""
+        body = blocks_to_text(result.get("content_state"))
+        return {"title": title, "body": body, "preview": preview}
     except Exception as e:  # noqa: BLE001 — never let article parsing kill the fetch
         log(f"  WARN: X-article extraction failed for a tweet, keeping preview text: {e}")
-        return {"title": "", "body": ""}
+        return {"title": "", "body": "", "preview": ""}
+
+
+def _walk_for_content_state(node):
+    """Depth-first search for the article's content_state node."""
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key == "content_state":
+                return value
+            found = _walk_for_content_state(value)
+            if found is not None:
+                return found
+    elif isinstance(node, list):
+        for value in node:
+            found = _walk_for_content_state(value)
+            if found is not None:
+                return found
+    return None
+
+
+def blocks_to_text(content_state) -> str:
+    """Join an article's rich-text blocks into plaintext."""
+    blocks = (content_state or {}).get("blocks") or []
+    return "\n\n".join(b.get("text", "") for b in blocks if b.get("text")).strip()
+
+
+async def fetch_x_article_body(client, tweet_id: str) -> str:
+    """Fetch the FULL body of an X Article.
+
+    The bookmarks feed carries only article metadata — title, preview_text,
+    cover_media, ids — and no `content_state`, so extract_x_article() below can
+    recover a title but never a body. The TweetDetail-family endpoint requests
+    `withArticleRichContentState`, which does return it: 135 blocks / ~25,800
+    characters for the article that exposed this gap.
+
+    One extra request per article bookmark, and articles are rare (roughly one
+    a week). Never fatal: on any failure we keep the preview text, which is
+    exactly the behaviour before this function existed.
+    """
+    try:
+        out = await client.gql.tweet_result_by_rest_id(str(tweet_id))
+        data = None
+        if isinstance(out, tuple):
+            for part in out:
+                if isinstance(part, dict):
+                    data = part
+            if data is None:
+                for part in out:
+                    if hasattr(part, "json"):
+                        data = part.json()
+        elif isinstance(out, dict):
+            data = out
+        else:
+            data = out.json()
+        return blocks_to_text(_walk_for_content_state(data))
+    except Exception as e:  # noqa: BLE001 — an article fetch must never kill the run
+        log(f"  WARN: could not fetch X-article body for {tweet_id}: {e}")
+        return ""
 
 
 def tweet_to_record(tweet) -> dict:
@@ -268,6 +343,17 @@ def tweet_to_record(tweet) -> dict:
     if article["body"] and len(article["body"]) > len(text):
         header = f"[X Article] {article['title']}\n\n" if article["title"] else "[X Article]\n\n"
         text = header + article["body"]
+    elif article["title"]:
+        # Bookmarks-feed payload: title and preview only. Use them now so the
+        # entry is never a bare link, and mark it so the caller can fetch the
+        # full body in a second pass.
+        preview = article.get("preview", "")
+        text = f"[X Article] {article['title']}".strip() + (f"\n\n{preview}" if preview else "")
+        needs_article_body = True
+    else:
+        needs_article_body = False
+    if article["body"]:
+        needs_article_body = False
 
     # Date: twikit provides created_at_datetime as a datetime object
     if tweet.created_at_datetime:
@@ -296,6 +382,8 @@ def tweet_to_record(tweet) -> dict:
         "external_links": external_links,
         "card_link": external_links[0] if external_links else "",
         "is_article": len(text) > 280,
+        "is_x_article": bool(article["title"]),
+        "needs_article_body": needs_article_body,
         "views": view_count,
     }
 
@@ -428,6 +516,33 @@ async def fetch_all_bookmarks() -> dict:
                 break
             log_error(f"Pagination error: {e}")
             break
+
+    # ---------------------------------------------------------------------
+    # Second pass: fill in X Article bodies.
+    #
+    # The bookmarks feed returns article METADATA only (title, preview_text,
+    # cover_media, ids) — no content_state, so the first pass can name an
+    # article but not read it. One extra authenticated request per article
+    # recovers the full text. Articles are rare (about one a week), so this
+    # costs a request or two, and every failure degrades to the preview.
+    # ---------------------------------------------------------------------
+    pending = [(k, v) for k, v in bookmarks.items() if v.get("needs_article_body")]
+    if pending:
+        log(f"Fetching {len(pending)} X-article {'body' if len(pending) == 1 else 'bodies'}...")
+        for key, record in pending:
+            tweet_id = key.rsplit("/", 1)[-1]
+            body = await fetch_x_article_body(client, tweet_id)
+            if body and len(body) > len(record["text"]):
+                title = record["text"].split("\n", 1)[0].replace("[X Article]", "").strip()
+                header = f"[X Article] {title}\n\n" if title else "[X Article]\n\n"
+                record["text"] = header + body
+                record["is_article"] = True
+                log(f"    {record['handle']}: {len(body)} chars")
+            else:
+                log(f"    {record['handle']}: body unavailable, keeping preview")
+            record.pop("needs_article_body", None)
+    for record in bookmarks.values():
+        record.pop("needs_article_body", None)
 
     return bookmarks
 
