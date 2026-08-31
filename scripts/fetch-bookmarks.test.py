@@ -138,11 +138,68 @@ def test_imports_without_twikit():
         print("      " + r.stderr.strip().splitlines()[-1])
 
 
+
+def test_x_article_urls_are_not_self_links():
+    """An X Article is long-form CONTENT that happens to live on x.com.
+
+    The domain filter treated it as a self-link, so a bookmark whose whole body
+    is a t.co pointing at an article captured nothing: no external_links, no
+    card_link, nothing for enrich-bookmarks.py to fetch, and a KB entry reading
+    as a bare link with no caption. That is how a 25,000-word semiconductor
+    analysis graded LOW on 2026-08-30.
+    """
+    check("i/article form", fb.is_x_article_url("https://x.com/i/article/2092862654117498880"), True)
+    check("handle/article form", fb.is_x_article_url("https://x.com/fi56622380/article/209304017"), True)
+    check("twitter.com host", fb.is_x_article_url("https://twitter.com/i/article/123"), True)
+    # Ordinary X links must STILL be filtered out.
+    check("plain status is not an article", fb.is_x_article_url("https://x.com/user/status/123"), False)
+    check("profile is not an article", fb.is_x_article_url("https://x.com/user"), False)
+    check("outside host is not an x article", fb.is_x_article_url("https://example.com/i/article/1"), False)
+
+
+def test_extract_external_links_keeps_articles_and_drops_self_links():
+    class FakeTweet:
+        urls = [
+            {"expanded_url": "https://x.com/i/article/2092862654117498880"},
+            {"expanded_url": "https://x.com/someone/status/999"},
+            {"expanded_url": "https://www.dwarkesh.com/p/openai-huggingface"},
+            {"expanded_url": ""},
+        ]
+    links = fb.extract_external_links(FakeTweet())
+    check("article link kept", "https://x.com/i/article/2092862654117498880" in links, True)
+    check("plain status link dropped", "https://x.com/someone/status/999" in links, False)
+    check("outside link kept", "https://www.dwarkesh.com/p/openai-huggingface" in links, True)
+    check("empty url skipped", len(links), 2)
+
+
+def test_blocks_to_text_joins_only_real_text():
+    cs = {"blocks": [{"text": "One"}, {"text": ""}, {}, {"text": "Two"}]}
+    check("blocks joined", fb.blocks_to_text(cs), "One\n\nTwo")
+    check("missing content_state is empty", fb.blocks_to_text(None), "")
+    check("no blocks key is empty", fb.blocks_to_text({}), "")
+
+
+def test_walk_finds_content_state_at_any_depth():
+    """The real payload nests it at
+    /data/tweetResult/result/article/article_results/result/content_state, so
+    the search must not assume a fixed path."""
+    payload = {"data": {"tweetResult": {"result": {"article": {"article_results":
+              {"result": {"content_state": {"blocks": [{"text": "deep"}]}}}}}}}}
+    check("found when deeply nested", fb.blocks_to_text(fb._walk_for_content_state(payload)), "deep")
+    check("absent returns None", fb._walk_for_content_state({"a": {"b": 1}}), None)
+    check("survives lists", fb.blocks_to_text(fb._walk_for_content_state(
+        {"x": [{"content_state": {"blocks": [{"text": "in-list"}]}}]})), "in-list")
+
+
 print("fetch-bookmarks tests")
 test_load_existing_keys_reads_every_file_shape()
 test_should_stop_early()
 test_threshold_is_a_run_not_a_total()
 test_imports_without_twikit()
+test_x_article_urls_are_not_self_links()
+test_extract_external_links_keeps_articles_and_drops_self_links()
+test_blocks_to_text_joins_only_real_text()
+test_walk_finds_content_state_at_any_depth()
 
 if failures:
     print(f"\n{len(failures)} failure(s): {', '.join(failures)}")
