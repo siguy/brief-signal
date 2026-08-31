@@ -49,6 +49,45 @@ body {
     --em-link: var(--color-brand-accent);
     --em-link-hover: var(--color-brand-primary);
   }
+  /* Tables in an edition. Table styles previously existed ONLY under
+     .reference-page, because no edition had ever used one — so a table
+     authored in a briefing rendered completely bare: no borders, no padding,
+     columns collapsed together. Edition #28's compute-bubble comparison is the
+     first, and these are scoped to `article` so the reference page keeps its
+     own denser treatment.
+
+     The wrapper scrolls rather than the page: a two-column comparison still
+     needs ~34rem, and without this the body scrolls sideways on a phone. */
+  article .table-scroll,
+  article table {
+    @apply mb-6;
+  }
+  article table {
+    @apply w-full border-collapse text-base text-brand-text;
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+  article thead th {
+    @apply font-mono text-[11px] uppercase tracking-widest font-normal text-left align-bottom px-3 py-2;
+    color: var(--color-brand-accent);
+    border-bottom: 1px solid var(--color-brand-border);
+    white-space: nowrap;
+  }
+  article tbody td {
+    @apply px-3 py-3 align-top leading-relaxed;
+    border-bottom: 1px solid color-mix(in srgb, var(--color-brand-border) 55%, transparent);
+  }
+  article tbody tr:last-child td {
+    border-bottom: none;
+  }
+  /* The first column is the row label — it names the axis being compared. */
+  article tbody td:first-child {
+    @apply font-medium;
+    color: var(--color-brand-primary);
+    white-space: nowrap;
+  }
+
   article strong {
     @apply font-bold;
     color: var(--em-strong);
