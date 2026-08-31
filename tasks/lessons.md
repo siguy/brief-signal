@@ -343,3 +343,6 @@ Concrete rules:
   TLDR and left the compute-bubble story — a full section — unrepresented.
   The TLDR cap is a hard 4-5 bullets, so the fix is a swap, not a sixth
   bullet: Big Picture stories get first claim on TLDR slots.
+
+  The durable fix landed in `scripts/briefing-prompt.md` ("Concede what
+  nobody sells" + a Quality Checklist item), not just here.
