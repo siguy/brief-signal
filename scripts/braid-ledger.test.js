@@ -13,6 +13,8 @@
  */
 
 const assert = require("assert");
+const fs = require("fs");
+const path = require("path");
 const {
   parseBraids,
   splitSegments,
@@ -274,6 +276,54 @@ test("render states the unreadable count and names the fix", () => {
   const md = render(ledger(line, "no citations here"), "2026-08-24");
   assert.ok(md.includes("2 unreadable"), md.slice(0, 240));
   assert.ok(md.includes("briefing-prompt.md"), "does not point at the durable fix");
+});
+
+test("an explicit 'none available in KB' is not counted as a braid", () => {
+  // A story that honestly had no bookmark to weave in must not show up as a
+  // phantom planned braid, nor as an unreadable line.
+  for (const line of [
+    "   - braids in: none available in KB",
+    "   - **braids in:** None available in KB.",
+  ]) {
+    const { braids, unparsed } = parseBraids(line);
+    assert.strictEqual(braids.length, 0, line);
+    assert.strictEqual(unparsed.length, 0, line);
+  }
+});
+
+test("'none' mixed into a real list does not swallow the real braids", () => {
+  const { braids, unparsed } = parseBraids("   - braids in: @steren (sandboxes), none available");
+  assert.deepStrictEqual(braids.map((b) => b.handle), ["steren"]);
+  assert.strictEqual(unparsed.length, 0);
+});
+
+/**
+ * COUPLING — the prompt and this parser must not drift apart.
+ *
+ * scripts/briefing-prompt.md tells the model exactly how to write `braids in:`,
+ * and carries a worked example. If that example stops parsing, the pinned
+ * format and the checker have diverged and every braid silently becomes
+ * "unreadable" again. Reading the real file (rather than restating the example
+ * here) is the point: a copy would drift with it.
+ */
+test("the format example in briefing-prompt.md parses as the parser expects", () => {
+  const prompt = fs.readFileSync(path.join(__dirname, "briefing-prompt.md"), "utf8");
+  const m = prompt.match(/`(@[A-Za-z0-9_]+ \([^`]*?\)(?:, @[A-Za-z0-9_]+ \([^`]*?\))+)`/);
+  assert.ok(m, "no worked braid example found in briefing-prompt.md");
+
+  const { braids, unparsed } = parseBraids(`   - braids in: ${m[1]}`);
+  assert.strictEqual(unparsed.length, 0, `example did not parse: ${m[1]}`);
+  assert.ok(braids.length >= 2, `expected 2+ braids, got ${braids.length}`);
+  for (const b of braids) {
+    assert.ok(b.handle, "a braid parsed without a handle");
+    assert.ok(b.description, `@${b.handle} parsed with an empty description`);
+  }
+});
+
+test("briefing-prompt.md forbids the two shapes that broke the checker", () => {
+  const prompt = fs.readFileSync(path.join(__dirname, "briefing-prompt.md"), "utf8");
+  assert.ok(/never name a podcast or show/i.test(prompt), "prose/show form not forbidden");
+  assert.ok(/never write a markdown link/i.test(prompt), "markdown-link form not forbidden");
 });
 
 console.log("");
