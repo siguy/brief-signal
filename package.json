@@ -23,11 +23,11 @@
     "test": "node scripts/generate-briefing.test.js && node scripts/lint-briefing.test.js && node scripts/signal-digest.test.js && node scripts/lineup-digest.test.js && node scripts/braid-ledger.test.js && node scripts/fetch-lab-news.test.js && node fetch-og.test.js && python3 scripts/fetch-bookmarks.test.py && bash scripts/generate-weekly.test.sh && bash scripts/bootstrap-worktree.test.sh"
   },
   "dependencies": {
-    "@google-cloud/text-to-speech": "^6.4.0",
-    "@google/genai": "^1.43.0",
+    "@google-cloud/text-to-speech": "^7.0.0",
+    "@google/genai": "^2.19.0",
     "autoprefixer": "^10.4.24",
     "dotenv": "^17.4.2",
-    "marked": "^15.0.0",
+    "marked": "^18.0.11",
     "postcss": "^8.5.23",
     "tailwindcss": "^4.2.1"
   },
