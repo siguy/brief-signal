@@ -1,33 +1,267 @@
-# Editorial Length Makeover — 2026-09-07
+# Gemini model upgrade → gemini-3.7-flash
 
-## Problem
-Editions grew 855w (March) → 2,890w (#28). PR #136 (#29) = 2,356w while its
-subtitle claims "~5 min read" (really ~10). Story prose is fine (220-266w vs a
-250-300 budget); the bloat is in accessory layers, led by Our Play at 432w
-against a ~150w budget.
+**Status:** DONE — branch `claude/gemini-3-7-flash-upgrade-8c3dc1`, 2026-08-29
+**One sentence:** Move every text-generation call in the pipeline from
+`gemini-2.5-flash` to `gemini-3.7-flash`.
 
-## Root causes
-1. Our Play's budget was arithmetically impossible (9 substantive clauses in
-   150 words = 16 words/clause), so the model ignored it — and learned the
-   word counts are decorative.
-2. Length was the ONLY numbered rule with no machine check. Every checked rule
-   held; the unchecked one drifted. build.js never computed read time, so the
-   "~5 min read" label never contradicted the drift.
+## Done
 
-## Target (approved by Simon)
-Total target ~1,500, HARD ceiling 1,650. Seller's Edge protected at ~300 (the
-compounding differentiator). Cuts come from angle blocks and Our Play.
+- [x] Verify the model ID against the live API before editing anything —
+      `gemini-3.7-flash` is GA on the project key (version `3.7-flash-08-2026`,
+      no `-preview` suffix). Guessing `gemini-3-7-flash` from the model-card slug
+      would have shipped a 404 into the Sunday cron.
+- [x] Diff model metadata vs. the outgoing model — identical 1M input / 65K output
+      limits and `supportedGenerationMethods`. No context regression for the
+      podcast extractor, which sends whole hour-long transcripts in one call.
+- [x] Smoke-test both call shapes the pipeline uses (plain + `systemInstruction`;
+      JSON mode via `responseMimeType`). Both return parseable output.
+- [x] Swap 9 call sites + 1 log string across 6 files. Simon chose the plain string
+      swap over a `GEMINI_MODEL` env-override constant — smallest diff.
+- [x] `npm test` — 14 + 18 + bookmark suites pass, exit 0.
+- [x] Live end-to-end run of `critique-briefing.js` against Edition #24 — valid
+      JSON, correct report structure, found a real hard failure on its own.
+- [x] Docs: CHANGELOG entry under Unreleased/Changed; FOR_SIMON.md model names
+      updated + new section "Swapping the Engine Mid-Flight (2026-08-29)".
 
-Budgets: TLDR ≤140 · story ≤220 · angle ≤150 · Quick Hits ≤5 bullets/160
-· Seller's Edge ≤310 · Our Play ≤240 · ≤3 stories · TOTAL ≤1650
+## Deliberately not changed
 
-## Tasks
-- [ ] 1. Rewrite budgets in scripts/briefing-prompt.md (make Our Play achievable)
-- [ ] 2. Add checkLength to scripts/lint-briefing.js (hard fails → repair pass)
-- [ ] 3. Add tests to scripts/lint-briefing.test.js
-- [ ] 4. Compute read time from word count in build.js (stop trusting subtitle)
-- [ ] 5. Run npm test
-- [ ] 6. Regenerate PR #136 against the 2026-09-06 KBs; verify it lands under 1,650
+- `scripts/generate-audio.js` — stays on `gemini-2.5-pro-tts`. It is the Cloud
+  Text-to-Speech surface (`@google-cloud/text-to-speech`), a different API with no
+  3.7 equivalent. `gemini-3.1-flash-tts-preview` was tried at Simon's request and
+  reverted — it changes the voice. See "Follow-ups" below.
+- `tasks/lessons.md`, `CHANGELOG.md` history, `docs/plans/`, published editions —
+  historical records of what ran at the time. The line-261 lesson (no
+  `maxOutputTokens` cap, because thinking tokens share the budget) still holds:
+  3.7 Flash cannot disable thinking either.
+- `scripts/generate-briefing.test.js:213` comment — accurately records a failure
+  observed against 2.5-flash.
 
-## Review
-(filled in at completion)
+## Follow-ups (Simon, 2026-08-30)
+
+- [x] **Thinking level `HIGH` on all 9 Gemini 3.7 call sites.** JS uses
+      `thinkingConfig: { thinkingLevel: "HIGH" }`; Python needs a **nested**
+      `"thinking_config": {"thinking_level": "HIGH"}` — the flat key raises a
+      pydantic `ValidationError`. Both forms were tried live before editing;
+      the flat one would have crashed `extract-rss-podcasts.py` at runtime.
+      Measured: thinking tokens 677 → 957 (+41%), output 156 → 181, latency
+      unchanged, JSON mode still parses.
+- [x] **TTS: tried `gemini-3.1-flash-tts-preview`, REVERTED to `gemini-2.5-pro-tts`.**
+      Cloud TTS accepts it with Fenrir and it synthesises 26% faster, but it
+      renders the same voice *name* as a different reader. Simon heard it in the
+      A/B; pitch analysis confirmed: median F0 ~180Hz vs ~140Hz on 2.5, ~0% of
+      voiced frames below 100Hz vs 5.7%. Of the 16 male Gemini-TTS voices on 3.1,
+      Fenrir is the highest-pitched — the furthest match to the current sound.
+      Algieba / Sadachbia / Umbriel land within 1Hz if a 3.1 move is ever wanted;
+      samples of all four sent to Simon. Simon's call: revert, keep the voice.
+- [x] Corrected the call-site count: **9**, not 8 (`generate-briefing.js` has two).
+      Fixed in the commit message, FOR_SIMON.md and this file.
+
+## Watch on the next runs
+
+- **Cost.** `HIGH` thinking on `extract-podcasts.js` L1 is the real exposure —
+  it runs on every episode (60-80/week), unlike the once-weekly briefing stages.
+  If the weekly spend jumps, narrow `HIGH` to the briefing/critique/repair stages
+  and leave the extractors on default thinking.
+- **TTS is unchanged**, so audio carries no new risk this cycle. If a future TTS
+  model swap is proposed, A/B the voice before shipping it — same `voice.name`
+  does NOT mean same voice across model generations.
+
+- **Stage 4b word count** / `grep -c '^## TLDR'` = 1 — the repetition-loop guard
+  (`truncateRepetition`) was written against 2.5-flash behaviour, and `HIGH`
+  thinking changes generation dynamics.
+- **Podcast extractor JSON parse rate** across a full 60-80 episode batch. Only a
+  handful of calls were live-tested; the batch is where shape drift would show.
+- **Rate card**, separate from thinking level: 3.7 Flash is $0.75/$3.75 per 1M
+  introductory, doubling 1 Jan 2027.
+
+**Rollback:** model string is a one-line revert per file (6 files); thinking level
+is a one-line removal per call site (9); TTS is the one constant in
+`generate-audio.js`. All three are independent.
+
+---
+
+# Editorial gate — surface the lineup BEFORE the edition is written
+
+**Status:** BUILT — approved by Simon 2026-08-09; gate defaults OFF per his call
+**Branch (proposed):** `feat/editorial-gate-before-draft`
+**One sentence:** Move Simon's editorial judgement from after the draft to before it,
+and make the Stage 4a output readable when it arrives.
+
+## Why
+
+The gate in `docs/editorial-process.md` is real but late. Stage 4a plans the lineup
+and Stage 4b immediately expands it into prose — no pause. Simon reviews on Monday
+with the edition already written, and corrects by editing the lineup and running
+`npm run redraft`. He sees the selection, but only after the thing is made.
+
+Two failures observed on Edition #25 (PR #111):
+1. **No pre-draft stop.** `--from-lineup` runs Stage 4b only; nothing runs Stage 4a
+   and halts.
+2. **The output is unreadable on arrival.** `generate-weekly.sh` orders the PR body
+   `SIGNAL_SECTION` → `CRITIQUE_SECTION` → `THEME_SECTION`, so ~270 lines of ratings
+   table land first and the theme registry diff lands at line 329. Simon's words:
+   *"I just see the ratings."* The themes↔stories mapping (`advances:` per story)
+   only exists inside the committed lineup file and is never inlined.
+
+Editorial cost this week: seven HIGH stories absent from the edition, including
+Gurley's "Google should embrace open models" — the strategic prescription for the
+lead story. They converge on one unbuilt thread (open weights as Google's answer)
+that a pre-draft review would likely have caught.
+
+## Steps
+
+### 1. `--lineup-only` mode in `scripts/generate-briefing.js`
+- [x] Add `--lineup-only`: run Stage 4a, write `drafts/{date}-lineup.md` and
+      `drafts/{date}-themes-proposed.md`, then exit 0 without calling Stage 4b
+- [x] Mirrors the existing `--from-lineup` arg parsing (`:54-63`); the two compose
+      into a full stop/resume loop
+- [x] `npm run lineup` script entry
+
+### 2. Make the digest work before a draft exists
+- [x] `scripts/signal-digest.js` currently diffs KB items against a written briefing.
+      Add a no-briefing mode: report all graded items with no cited/uncited column
+- [x] When a lineup exists but no draft, match against the lineup's `braids in:` URLs
+      so the gate answers "what did 4a leave on the floor?"
+
+### 3. Fix the digest's false positives
+- [x] Match a bookmark as cited when the briefing cites **its linked article**, not
+      only its permalink. Edition #25 flagged Eric Wallace, Cloudflare Kitesurf and
+      WeatherNext as NOT CITED though all three ran — the citation used the
+      `blog.google` / `blog.cloudflare.com` / YouTube URL
+- [x] Bookmarks carry `external_links` in the raw JSON; match on those too
+- [x] Overcounting trains the reader to ignore the section — the reason it reads as
+      noise today
+
+### 4. Reorder and compress the PR body (`scripts/generate-weekly.sh`)
+- [x] New order: **lineup summary → theme registry → critique → signal digest**
+- [x] Wrap the digest in `<details><summary>` so it stops burying everything
+- [x] Inline a compact lineup summary: each Big Picture story with its `advances:`
+      themes and gravity, so "which story drives this registry change?" is answerable
+      without opening a file
+- [x] Keep the full lineup file committed and linked
+
+### 5. Wire the gate into the Sunday run
+- [x] Decide the default (see Open questions) and implement in `generate-weekly.sh`
+- [x] Update `docs/editorial-process.md` + `docs/diagrams/editorial-gate.mmd` — the
+      diagram currently shows review only after `pr`
+
+## Decisions (resolved 2026-08-09)
+
+1. **Sunday does not stop by default.** `LINEUP_GATE=1` opts in. The reordered PR
+   body and the digest fix improve every unattended run immediately; the hard stop
+   is used on weeks there is time for it. Simon's call.
+2. **Themes ↔ stories mapping and the full proposed registry go at the TOP** of the
+   PR body — Simon's explicit instruction. Registry is inside a `<details>`.
+3. **Same branch, not a separate PR.** `npm run redraft` writes the draft onto the
+   lineup branch, so the lineup PR becomes the edition PR.
+
+## Acceptance criteria
+
+- [x] `npm run lineup` produces lineup + themes-proposed and writes no briefing
+- [x] `npm run redraft -- <lineup>` still expands an edited lineup (unchanged behaviour)
+- [x] PR body leads with lineup + themes; digest is collapsed
+- [x] Digest reports zero false "NOT CITED" for Edition #25's three known cases
+- [x] `docs/editorial-process.md` and the mermaid diagram match the built behaviour
+
+## Out of scope
+
+- `todos/001-*` — the `extract-podcasts.js` URL bug. Separate, already filed.
+- The podcast recency leak (Valar Atomics 2026-07-02, BG2 2026-03-15, ChinaTalk
+  2026-06-30 all cleared a 7-day window). Needs its own todo.
+
+---
+
+# Archive — Editorial hardening (approved 2026-07-26, all merged)
+
+
+Four workstreams approved via Q&A (session 2026-07-26). Order: A (Monday deadline) → B → C → D.
+
+## A. Edition #23 fixes (branch: briefing/2026-07-27) — URGENT, review is Monday
+- [x] Fix 2 broken Quick Hit URLs (KB had no permalinks; real URLs recovered from raw JSON):
+  - gregisenberg → https://x.com/gregisenberg/status/2081088155793465783
+  - KanikaBK → https://x.com/KanikaBK/status/2080578327786746242
+- [x] Decenter OpenAI in the Value Maxing story (BP3) so OpenAI isn't the headline
+  subject of 2 of 3 Big Picture stories (open critique hard failure). Lead with the
+  industry economics shift; OpenAI's GPT-5.6 guidance becomes evidence, not protagonist.
+- [x] Fix Our Play bullet 2: currently recommends hosting Kimmy K3 while the story above
+  reports Treasury sanction threats against it. Reframe as model optionality/portability
+  = de-risking sanctions exposure; open-weight example → Gemma.
+- [x] Add Seller's Edge section to #23 (new teach — all 3 founding frameworks used in
+  editions 6/08, 6/15, 6/22). This week's teach: agentic AI cost is engineered
+  (caching/routing/harness design), not just priced.
+- [x] Re-run critique to verify; commit + push to PR #73.
+
+## B. Restore Seller's Edge into the process (new branch, separate PR)
+- [x] Write Seller's Edge spec into scripts/briefing-prompt.md (template section,
+  voice guide, quality checklist item). Source: memory project_sellers_edge_section.md.
+  Spec was never in the rebuilt prompt — silently lost in the v2 rebuild (PR #63).
+- [x] Update memory file: restoration done + all 3 founding frameworks now used.
+
+## C. Deterministic linter + repair loop (new branch, separate PR)
+- [x] scripts/lint-briefing.js — mechanical checks, no LLM:
+  - no `...`/malformed URLs
+  - TLDR bullets all start with a bold hook
+  - every "Your angle" block has a "Where the GCP opportunity is" line
+  - no same-source-URL anchoring two Big Picture stories
+- [x] Repair loop in the pipeline: on critique/linter hard failure, ONE targeted
+  Gemini revision pass with the failures as input, then re-verify, then PR.
+- [x] Root-cause fix: bookmarks KB build must include the tweet permalink per entry
+  (raw JSON has them as keys; the KB drops them → Gemini fabricated `...` URLs).
+
+## D. GCP playbook — two layers
+- [x] content/gcp-playbook.md (public-safe): differentiators GCP can honestly claim,
+  Agent Platform component glossary, approved framings. Feeds Stage 4 like themes.md.
+- [x] Internal deeper layer: gitignored local file (repo is public) — flag backup
+  tradeoff to Simon.
+- [x] Restructure Our Play format in prompt: Signal → Why GCP wins → The move.
+
+## Review notes (session 2026-07-26, all merged)
+
+- ALL DONE and merged: PRs #73 (Edition #23), #74 (Seller's Edge spec), #75
+  (linter + repair loop), #76 (GCP playbook v2, research-verified), #77
+  (HIGH-signal disposition), #78 (playbook staleness check), #79 (within-story
+  citation clarification).
+- Also shipped beyond the original plan: 6-agent research sweep verifying the
+  playbook (official/execs/community/analysts/competitive/pricing-tuning);
+  /refresh-gcp-playbook skill + 90-day staleness warning as the standing
+  refresh process; HIGH-episode Quick Hit swaps in #23 (Open Code, Lin Qiao,
+  Dark Factory); grounding price corrected to $14/1K + 5K free (community's
+  $35 figure was legacy).
+- Key lesson captured in tasks/lessons.md: LLM repair passes fabricate URLs —
+  deterministic fabrication guard required; live-test LLM code in a sandbox.
+- Follow-ups for Simon: verify playbook claims flagged VERIFY-BEFORE-USE
+  (internal file); fill internal playbook TODOs + keep Drive master copy;
+  Monday: npm run audio:pr for Edition #23 audio.
+
+---
+
+# ARCHIVE — Briefing generation v2 (shipped, PR #63/#68)
+
+Goal: migrate 3 editions of Simon's accumulated corrections UPSTREAM into the generator.
+All items complete and merged; details preserved in git history of this file and in
+PR #63 / #68 descriptions. Key outcomes:
+- Template surgery (TLDR → Big Picture ×3 → Quick Hits → Our Play); Lead-Story Doctrine;
+  word budgets; Our Play = 3 named motions; critique coverage check (the Kimi-catcher);
+  Stage 4a lineup pass.
+- Living Theme Registry wired into Stage 4a (PR #68, squash-merged as 4ac8f76) after
+  3 rounds of fixes incl. two real fence-stripping bugs found via live dry-run.
+- Item 8 of registry wiring ("flag to Simon, open PR, hold merge") — done, merged.
+
+# Backlog (not started)
+
+- (empty — analytics report shipped as PR #67)
+
+## Review (2026-09-07)
+Done: prompt budgets rewritten (Our Play made achievable at ~200-240), checkLength
+added to lint-briefing.js with 10 tests, build.js computes read time. Full suite
+green. Edition #29 redrafted: 2,302 -> 1,797 words, every per-section budget passing.
+
+PRs: #139 (makeover), #136 (regenerated edition).
+
+Open: the 1,650 ceiling and "3 stories x 3 angle blocks" are not simultaneously
+satisfiable (floor ~1,750-1,800). Awaiting Simon's call between raising the
+ceiling to 1,800 or capping angle blocks at 2/edition. Recommended the latter.
+
+Found in passing: frontmatter `date:` is UTC-derived while the filename derives
+from the lineup — a manual evening redraft dates the edition a day forward.
+Patched in the file; durable fix not yet made.
