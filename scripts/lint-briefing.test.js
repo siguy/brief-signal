@@ -21,6 +21,7 @@ const {
   checkLength,
   readableWords,
   LENGTH_BUDGETS,
+  MAX_ANGLE_BLOCKS,
 } = require("./lint-briefing.js");
 
 // Catch per-test so one failure does not abort the file, and COUNT the tests
@@ -333,11 +334,11 @@ test("checkLinkSyntax does not fire on ordinary prose containing ] and (", () =>
 
 const words = (n, w = "word") => Array(n).fill(w).join(" ");
 
-function briefing({ story = 100, angle = 0, play = 50, qh = 3, stories = 1, edge = 100 } = {}) {
+function briefing({ story = 100, angle = 0, play = 50, qh = 3, stories = 1, edge = 100, angles = Infinity } = {}) {
   let md = "---\ntitle: t\n---\n\n## TLDR\n\n- **Hook** one\n- **Hook** two\n- **Hook** three\n- **Hook** four\n\n## The Big Picture: Theme\n\n";
   for (let i = 0; i < stories; i++) {
     md += `### Story ${i}\n\n${words(story)}\n\n`;
-    if (angle) md += `**Your angle with founders**\n\n${words(angle)}\n\nWhere GCP wins: yes.\n\n`;
+    if (angle && i < angles) md += `**Your angle with founders**\n\n${words(angle)}\n\nWhere GCP wins: yes.\n\n`;
   }
   md += "## Quick Hits\n\n";
   for (let i = 0; i < qh; i++) md += `- **[Claim ${i} (2 min read)](https://x.com/a)** — one sentence.\n`;
@@ -364,14 +365,19 @@ test("checkLength hard-fails an over-ceiling total even when every section is le
   // The case the TOTAL cap exists for: each section sits inside its own budget,
   // yet the edition still adds up to a 10-minute read. Per-section caps alone
   // would pass this.
-  const md = briefing({
-    story: LENGTH_BUDGETS.story,
-    angle: LENGTH_BUDGETS.angle - 5, // the fixture's mandatory "Where GCP wins:" closer counts too
-    stories: 3,
-    qh: 5,
-    play: LENGTH_BUDGETS.ourPlay,
-    edge: LENGTH_BUDGETS.sellersEdge,
-  });
+  // With every section maxed the briefing now sums to ~1,550 — the budgets are
+  // internally consistent. So the total is breached here by prose no per-section
+  // budget covers: the Big Picture intro that sits above the first ### story.
+  const md =
+    briefing({
+      story: LENGTH_BUDGETS.story,
+      angle: LENGTH_BUDGETS.angle - 5, // the mandatory "Where GCP wins:" closer counts too
+      stories: 3,
+      angles: MAX_ANGLE_BLOCKS,
+      qh: 5,
+      play: LENGTH_BUDGETS.ourPlay,
+      edge: LENGTH_BUDGETS.sellersEdge,
+    }).replace("## The Big Picture: Theme\n\n", `## The Big Picture: Theme\n\n${words(200)}\n\n`);
   const r = checkLength(md);
   assert.ok(readableWords(md) > LENGTH_BUDGETS.total, `fixture only ${readableWords(md)}w`);
   assert.deepStrictEqual(
@@ -393,6 +399,16 @@ test("checkLength budgets a story separately from its angle block", () => {
   const r = checkLength(briefing({ story: 210, angle: 140 }));
   assert.ok(!r.hard.some((h) => /^Story /.test(h)), r.hard.join("|"));
   assert.ok(!r.hard.some((h) => /^Angle block/.test(h)), r.hard.join("|"));
+});
+
+test("checkLength hard-fails a third angle block", () => {
+  const r = checkLength(briefing({ story: 50, angle: 50, stories: 3, angles: 3 }));
+  assert.ok(r.hard.some((h) => /3 "Your angle" blocks \(max 2\)/.test(h)), r.hard.join("|"));
+});
+
+test("checkLength allows exactly two angle blocks across three stories", () => {
+  const r = checkLength(briefing({ story: 50, angle: 50, stories: 3, angles: 2 }));
+  assert.ok(!r.hard.some((h) => /angle" blocks/.test(h)), r.hard.join("|"));
 });
 
 test("checkLength hard-fails an over-budget angle block", () => {

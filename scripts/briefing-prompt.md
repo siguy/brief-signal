@@ -146,10 +146,10 @@ Podcast sources provide opinion, analysis, and predictions — not news. Handle 
 | **TOTAL** | **≤1,650** (target ~1,500) |
 | TLDR | ≤140 (4-5 bullets) |
 | Big Picture | **2-3 stories**, ≤220 words each |
-| — its angle block | ≤150 each |
+| — its angle block | ≤150 each, **max 2 per edition** |
 | Quick Hits | ≤160 (3-5 bullets) |
 | Seller's Edge | ≤310 (target ~280-300) |
-| Our Play | ≤240 (target ~200-240) |
+| Our Play | ≤200 |
 
 The per-section caps and the TOTAL bind **independently**: sections may trade against each other, but the total may not be traded away. When you are over, the cut comes from the longest angle block, a Quick Hit, or a fourth story — **never** from a Big Picture story's reporting, which is the one thing the reader cannot get elsewhere. Being over is the failure to catch; being short is fine.
 
@@ -181,7 +181,7 @@ The 2-3 lead stories, ordered as a narrative arc (related stories adjacent). Alw
 
 {The story. ~200-220 words MAX per story (machine-checked) — usually 1-2 tight paragraphs. Lead with the sharpest fact + source link, give the context that makes it matter, and — when two items are merged — name the tension between them. **When the story is a frontier-lab incident, state the MECHANISM in terms that scale down to a founder's own stack, not just the headline.** A rep who reads "three swarms breached Hugging Face" and thinks "my founder isn't running swarms" has been handed nothing usable; "those improvised message boards were ordinary shared write surfaces, and two agents with write access to the same bucket have the same channel" is the portable part. Every claim carries an inline [link with a time label (2 min read)](url).}
 
-**Your angle with founders** {Include ONLY when a seller can act on the story (Principle 2) — omit entirely for context-only stories like energy/power. When present: 3-4 bullets, roughly 120-150 words (machine-checked), closing with "Where GCP wins:". The four obligations are fixed but the SHAPE MUST VARY between stories in an edition — never run the same lead-in pattern twice. At most ONE question, and only if it reframes. See the shapes in the Section Voice Guide.}
+**Your angle with founders** {Include ONLY when a seller can act on the story (Principle 2) — omit entirely for context-only stories like energy/power. When present: 3-4 bullets, roughly 120-150 words (machine-checked), closing with "Where GCP wins:". **At most TWO angle blocks per edition (machine-checked)** — so the third story carries none. Choose the two stories a seller can act on most; do not spread the budget evenly. The four obligations are fixed but the SHAPE MUST VARY between stories in an edition — never run the same lead-in pattern twice. At most ONE question, and only if it reframes. See the shapes in the Section Voice Guide.}
 
 ### {Item Title}
 
@@ -202,7 +202,7 @@ ONE teachable mental model that upgrades how a rep *thinks* about selling into t
 
 ## Our Play
 
-One framing sentence that ties the edition's themes to a single Google Cloud position, then **exactly three bold, named motions** — each: the play → the specific product surface → what the rep actually does. **~200-240 words total, machine-checked** — roughly 70 words per motion. Concrete execution detail, not market-reaction quotes (Principle 5). No sub-headings, no CTA tack-ons.
+One framing sentence that ties the edition's themes to a single Google Cloud position, then **exactly three bold, named motions** — each: the play → the specific product surface → what the rep actually does. **~180-200 words total, machine-checked** — roughly 55 words per motion. Concrete execution detail, not market-reaction quotes (Principle 5). No sub-headings, no CTA tack-ons.
 
 Every thread this edition — {name them in a clause} — points to one GCP position: **{the one-line position}.** Three concrete motions:
 
@@ -381,7 +381,7 @@ The dedicated home for **product positioning** — connecting the week's market 
 
 This is the dedicated space for Google Cloud in each briefing. Everything else is pure market intelligence.
 
-**Length: ~200-240 words, hard-checked by the linter.** One framing sentence (~20 words) plus three motions at ~70 words each. This budget is now *achievable* — the previous spec asked for nine substantive clauses in ~150 words (16 words per clause), which no writer can meet, so the section drifted to 432-480 words in Editions #28 and #29. If a motion cannot be made in ~70 words, the play is too abstract: name a narrower surface and a single concrete action rather than writing longer.
+**Length: ~180-200 words, hard-checked by the linter.** One framing sentence (~20 words) plus three motions at ~55 words each. This budget is now *achievable* — the previous spec asked for nine substantive clauses in ~150 words (16 words per clause), which no writer can meet, so the section drifted to 432-480 words in Editions #28 and #29. If a motion cannot be made in ~55 words, the play is too abstract: name a narrower surface and a single concrete action rather than writing longer.
 
 **Format (strict):** one framing sentence that ties the edition's themes to a single GCP position, then **exactly three bold, named motions**. Each motion follows **Signal → Why GCP wins → The move**: the concrete thing this week's stories show a founder saying or facing → ONE differentiator (with its "why") from the GCP Playbook provided in your context → the specific action the rep takes next (the question to ask, the thing to whiteboard, the eval to propose). No sub-headings. No CTA tack-ons ("Conversation starter", "Try this week"). No standalone product list.
 
@@ -469,7 +469,7 @@ When in doubt: every hyperscaler is squeezed. The GCP story is about *workload m
 - **Opinionated** — Take a stance on what matters and what's noise
 - **Connective** — Link patterns across items. "This reminds me of..." energy.
 - **Action-oriented** — Every section should make the reader want to do something
-- **Concise** — Target **~1,500 words total, HARD ceiling 1,650**. These budgets are **machine-checked by `scripts/lint-briefing.js`** and a breach is a hard failure that triggers a repair pass — they are not aspirations. Per section: Big Picture **2-3 stories, ~200-220 words each** (angle block a further ~120-150 on top); TLDR ≤140; Quick Hits 3-5 bullets, ≤160 total; Seller's Edge ~280-300; Our Play ~200-240. If you're over, cut a Quick Hit or tighten the longest angle block — never pad, and never trim a story to a stub to buy room for positioning.
+- **Concise** — Target **~1,500 words total, HARD ceiling 1,650**. These budgets are **machine-checked by `scripts/lint-briefing.js`** and a breach is a hard failure that triggers a repair pass — they are not aspirations. Per section: Big Picture **2-3 stories, ~200-220 words each** (angle block a further ~120-150 on top, **max 2 blocks per edition**); TLDR ≤140; Quick Hits 3-5 bullets, ≤160 total; Seller's Edge ~280-300; Our Play ~180-200. If you're over, cut a Quick Hit or tighten the longest angle block — never pad, and never trim a story to a stub to buy room for positioning.
 
 ## Writing Pattern
 

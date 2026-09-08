@@ -434,10 +434,16 @@ const LENGTH_BUDGETS = {
   angle: 150, // per "Your angle with founders" block
   quickHits: 160,
   sellersEdge: 310,
-  ourPlay: 240,
+  ourPlay: 200,
 };
 const MAX_STORIES = 3;
 const MAX_QUICK_HITS = 5;
+// At most two angle blocks per edition. This is a length lever that doubles as
+// an editorial one: the prompt already says an angle belongs ONLY where a seller
+// can act on the story and must never be manufactured to fill the template. Left
+// unchecked, every story got one anyway. Capping the count forces the third
+// story to earn its angle against the other two.
+const MAX_ANGLE_BLOCKS = 2;
 
 // Count words the way a reader meets them: link URLs, image markup and heading
 // hashes are not read aloud, so they must not consume budget. Link *labels*
@@ -506,6 +512,13 @@ function checkLength(md) {
         );
       }
     }
+  }
+
+  const angleCount = stories.filter((s) => ANGLE_HEADING.test(s.body)).length;
+  if (angleCount > MAX_ANGLE_BLOCKS) {
+    hard.push(
+      `${angleCount} "Your angle" blocks (max ${MAX_ANGLE_BLOCKS}) — drop the one on the story a seller can act on least`
+    );
   }
 
   const qh = sectionBody(md, /^##\s+Quick Hits/);
@@ -595,4 +608,5 @@ module.exports = {
   checkLength,
   readableWords,
   LENGTH_BUDGETS,
+  MAX_ANGLE_BLOCKS,
 };
