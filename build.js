@@ -96,6 +96,36 @@ function renderMarkdown(md) {
   return html;
 }
 
+// Read time is COMPUTED, never trusted from frontmatter.
+//
+// The model writes the subtitle, and it wrote "~5 min read" onto every edition
+// regardless of length — including Edition #29 at 2,356 words (~10 minutes).
+// Because nothing ever contradicted the label, six months of length drift went
+// unnoticed. Computing it here means the page can never again claim a read time
+// the briefing doesn't have.
+const WORDS_PER_MINUTE = 225;
+
+function readTimeMinutes(body) {
+  const words = body
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/^#+\s+/gm, '')
+    .replace(/[*_`>]/g, ' ')
+    .split(/\s+/)
+    .filter(Boolean).length;
+  return Math.max(1, Math.round(words / WORDS_PER_MINUTE));
+}
+
+// Replace the read-time claim in a subtitle with the computed one, or append it
+// when the subtitle carries none.
+function withReadTime(subtitle, body) {
+  const label = `~${readTimeMinutes(body)} min read`;
+  if (!subtitle) return label;
+  return /~?\s*\d+\s*min read/i.test(subtitle)
+    ? subtitle.replace(/~?\s*\d+\s*min read/i, label)
+    : `${subtitle} | ${label}`;
+}
+
 // Check if an audio file exists for a given briefing slug
 function getAudioPath(slug) {
   const mp3 = path.join(AUDIO_DIR, `${slug}.mp3`);
@@ -227,7 +257,7 @@ function build() {
 
     const html = render(template, {
       title: b.title || b.slug,
-      subtitle: b.subtitle || '',
+      subtitle: withReadTime(b.subtitle, b.body),
       url: `/briefings/${b.slug}/`,
       sources: b.sources || '',
       audio_player: audioPlayer,

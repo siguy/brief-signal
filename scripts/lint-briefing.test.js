@@ -18,6 +18,9 @@ const {
   checkBannedWords,
   checkNaming,
   labelTimestamps,
+  checkLength,
+  readableWords,
+  LENGTH_BUDGETS,
 } = require("./lint-briefing.js");
 
 // Catch per-test so one failure does not abort the file, and COUNT the tests
@@ -323,6 +326,93 @@ test("checkLinkSyntax passes a correct 11-char id and well-formed link", () => {
 
 test("checkLinkSyntax does not fire on ordinary prose containing ] and (", () => {
   const r = checkLinkSyntax("A sentence [with brackets] and (parentheses) but no links.");
+  assert.deepStrictEqual(r.hard, []);
+});
+
+// --- length ----------------------------------------------------------------
+
+const words = (n, w = "word") => Array(n).fill(w).join(" ");
+
+function briefing({ story = 100, angle = 0, play = 50, qh = 3, stories = 1, edge = 100 } = {}) {
+  let md = "---\ntitle: t\n---\n\n## TLDR\n\n- **Hook** one\n- **Hook** two\n- **Hook** three\n- **Hook** four\n\n## The Big Picture: Theme\n\n";
+  for (let i = 0; i < stories; i++) {
+    md += `### Story ${i}\n\n${words(story)}\n\n`;
+    if (angle) md += `**Your angle with founders**\n\n${words(angle)}\n\nWhere GCP wins: yes.\n\n`;
+  }
+  md += "## Quick Hits\n\n";
+  for (let i = 0; i < qh; i++) md += `- **[Claim ${i} (2 min read)](https://x.com/a)** — one sentence.\n`;
+  md += `\n## Seller's Edge: Teach\n\n${words(edge)}\n\n## Our Play\n\n${words(play)}\n`;
+  return md;
+}
+
+test("readableWords ignores URLs and markup but counts link labels", () => {
+  // "the sharp claim" = 3 words; the URL and the image must not be counted.
+  const n = readableWords("![alt](./images/a.jpg)\n\n**[the sharp claim](https://example.com/very/long/path)**");
+  assert.strictEqual(n, 3);
+});
+
+test("readableWords strips frontmatter", () => {
+  assert.strictEqual(readableWords("---\ntitle: a b c d e\n---\none two"), 2);
+});
+
+test("checkLength passes a briefing inside every budget", () => {
+  const r = checkLength(briefing({ story: 150, angle: 100, play: 50, qh: 3, stories: 2 }));
+  assert.deepStrictEqual(r.hard, []);
+});
+
+test("checkLength hard-fails an over-ceiling total even when every section is legal", () => {
+  // The case the TOTAL cap exists for: each section sits inside its own budget,
+  // yet the edition still adds up to a 10-minute read. Per-section caps alone
+  // would pass this.
+  const md = briefing({
+    story: LENGTH_BUDGETS.story,
+    angle: LENGTH_BUDGETS.angle - 5, // the fixture's mandatory "Where GCP wins:" closer counts too
+    stories: 3,
+    qh: 5,
+    play: LENGTH_BUDGETS.ourPlay,
+    edge: LENGTH_BUDGETS.sellersEdge,
+  });
+  const r = checkLength(md);
+  assert.ok(readableWords(md) > LENGTH_BUDGETS.total, `fixture only ${readableWords(md)}w`);
+  assert.deepStrictEqual(
+    r.hard.filter((h) => !/ceiling 1650/.test(h)),
+    [],
+    "only the total should fire"
+  );
+  assert.ok(r.hard.some((h) => /ceiling 1650/.test(h)), r.hard.join("|"));
+});
+
+test("checkLength hard-fails an over-budget Our Play", () => {
+  const r = checkLength(briefing({ play: LENGTH_BUDGETS.ourPlay + 10 }));
+  assert.ok(r.hard.some((h) => /^Our Play is \d+ words/.test(h)), r.hard.join("|"));
+});
+
+test("checkLength budgets a story separately from its angle block", () => {
+  // Story and angle are each inside budget; their SUM exceeds the story budget.
+  // Splitting on the angle heading is what keeps this from false-firing.
+  const r = checkLength(briefing({ story: 210, angle: 140 }));
+  assert.ok(!r.hard.some((h) => /^Story /.test(h)), r.hard.join("|"));
+  assert.ok(!r.hard.some((h) => /^Angle block/.test(h)), r.hard.join("|"));
+});
+
+test("checkLength hard-fails an over-budget angle block", () => {
+  const r = checkLength(briefing({ story: 100, angle: LENGTH_BUDGETS.angle + 20 }));
+  assert.ok(r.hard.some((h) => /^Angle block/.test(h)), r.hard.join("|"));
+});
+
+test("checkLength hard-fails a 4th Big Picture story", () => {
+  const r = checkLength(briefing({ story: 50, stories: 4 }));
+  assert.ok(r.hard.some((h) => /4 stories \(max 3\)/.test(h)), r.hard.join("|"));
+});
+
+test("checkLength hard-fails more than 5 Quick Hits", () => {
+  const r = checkLength(briefing({ qh: 6 }));
+  assert.ok(r.hard.some((h) => /6 bullets \(max 5\)/.test(h)), r.hard.join("|"));
+});
+
+test("checkLength is silent about sections that are absent", () => {
+  // Presence is other checks' business; length must not double-report it.
+  const r = checkLength("---\nt: x\n---\n\n## Our Play\n\nshort.\n");
   assert.deepStrictEqual(r.hard, []);
 });
 

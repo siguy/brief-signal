@@ -411,7 +411,116 @@ function checkCrossEditionLead(md, baseDir = BRIEFINGS_DIR) {
   return { hard, warn };
 }
 
+// --- length ----------------------------------------------------------------
+//
+// Length was the one editorial rule that carried a number in the prompt and no
+// machine check, and it is the one rule that drifted: editions grew from 855
+// words (March) to 2,890 (Edition #28), while every machine-checked rule held.
+// Edition #29 shipped 2,356 words under a subtitle claiming "~5 min read".
+//
+// Two budgets bind independently and that is deliberate. The per-section caps
+// stop any single section from ballooning (Our Play ran 432w against a 150w
+// budget); the TOTAL cap stops an edition that satisfies every section
+// individually from still adding up to a 10-minute read. Their sum exceeds the
+// total on purpose — sections may trade against each other, the total may not
+// be traded away.
+//
+// These are HARD failures so they route into the same repair pass as every
+// other mechanical rule, rather than relying on the prompt being obeyed.
+const LENGTH_BUDGETS = {
+  total: 1650,
+  tldr: 140,
+  story: 220, // per Big Picture story, EXCLUDING its angle block
+  angle: 150, // per "Your angle with founders" block
+  quickHits: 160,
+  sellersEdge: 310,
+  ourPlay: 240,
+};
+const MAX_STORIES = 3;
+const MAX_QUICK_HITS = 5;
+
+// Count words the way a reader meets them: link URLs, image markup and heading
+// hashes are not read aloud, so they must not consume budget. Link *labels*
+// are read, so they stay.
+function readableWords(md) {
+  const prose = md
+    .replace(/^---\n[\s\S]*?\n---\n/, "") // frontmatter
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, " ") // images
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, "$1") // links -> label only
+    .replace(/^#+\s+/gm, "")
+    .replace(/[*_`>]/g, " ");
+  return prose.split(/\s+/).filter(Boolean).length;
+}
+
+function checkLength(md) {
+  const hard = [];
+  const warn = [];
+
+  const total = readableWords(md);
+  if (total > LENGTH_BUDGETS.total) {
+    hard.push(
+      `Briefing is ${total} words (ceiling ${LENGTH_BUDGETS.total}, target ~1500) — ` +
+        `over by ${total - LENGTH_BUDGETS.total}. Cut the longest angle block or a Quick Hit; never trim a story to a stub.`
+    );
+  }
+
+  const sections = [
+    ["TLDR", /^##\s+TLDR/, LENGTH_BUDGETS.tldr],
+    ["Quick Hits", /^##\s+Quick Hits/, LENGTH_BUDGETS.quickHits],
+    ["Seller's Edge", /^##\s+Seller's Edge/, LENGTH_BUDGETS.sellersEdge],
+    ["Our Play", /^##\s+Our Play/, LENGTH_BUDGETS.ourPlay],
+  ];
+  for (const [name, re, budget] of sections) {
+    const body = sectionBody(md, re);
+    if (body === null) continue; // presence is other checks' business
+    const n = readableWords(body);
+    if (n > budget) {
+      hard.push(`${name} is ${n} words (budget ${budget}) — over by ${n - budget}`);
+    }
+  }
+
+  const stories = bigPictureStories(md);
+  if (stories.length > MAX_STORIES) {
+    hard.push(
+      `The Big Picture has ${stories.length} stories (max ${MAX_STORIES}) — demote the weakest to a Quick Hit`
+    );
+  }
+  for (const s of stories) {
+    // The angle block runs to the end of the story, so splitting on its heading
+    // separates reporting from positioning and each gets its own budget.
+    const parts = s.body.split(ANGLE_HEADING);
+    // bigPictureStories keeps the "### Title" line on the body. Titles run
+    // 10-15 words in practice, so counting them would charge the story budget
+    // for the headline — the budget governs prose.
+    const storyWords = readableWords(parts[0].split("\n").slice(1).join("\n"));
+    if (storyWords > LENGTH_BUDGETS.story) {
+      hard.push(
+        `Story "${s.title}" is ${storyWords} words (budget ${LENGTH_BUDGETS.story})`
+      );
+    }
+    if (parts.length > 1) {
+      const angleWords = readableWords(parts.slice(1).join(" "));
+      if (angleWords > LENGTH_BUDGETS.angle) {
+        hard.push(
+          `Angle block in "${s.title}" is ${angleWords} words (budget ${LENGTH_BUDGETS.angle})`
+        );
+      }
+    }
+  }
+
+  const qh = sectionBody(md, /^##\s+Quick Hits/);
+  if (qh !== null) {
+    const bullets = qh.split("\n").filter((l) => /^\s*-\s+/.test(l));
+    if (bullets.length > MAX_QUICK_HITS) {
+      hard.push(`Quick Hits has ${bullets.length} bullets (max ${MAX_QUICK_HITS})`);
+    }
+  }
+
+  return { hard, warn };
+}
+
 // --- main ------------------------------------------------------------------
+
 
 function lint(md) {
   const checks = [
@@ -424,6 +533,7 @@ function lint(md) {
     ["naming", checkNaming],
     ["images", checkImages],
     ["cross-edition-lead", checkCrossEditionLead],
+    ["length", checkLength],
   ];
   const hard = [];
   const warn = [];
@@ -482,4 +592,7 @@ module.exports = {
   checkNaming,
   checkImages,
   checkCrossEditionLead,
+  checkLength,
+  readableWords,
+  LENGTH_BUDGETS,
 };
