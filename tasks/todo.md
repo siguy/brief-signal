@@ -250,3 +250,18 @@ PR #63 / #68 descriptions. Key outcomes:
 # Backlog (not started)
 
 - (empty — analytics report shipped as PR #67)
+
+## Review (2026-09-07)
+Done: prompt budgets rewritten (Our Play made achievable at ~200-240), checkLength
+added to lint-briefing.js with 10 tests, build.js computes read time. Full suite
+green. Edition #29 redrafted: 2,302 -> 1,797 words, every per-section budget passing.
+
+PRs: #139 (makeover), #136 (regenerated edition).
+
+Open: the 1,650 ceiling and "3 stories x 3 angle blocks" are not simultaneously
+satisfiable (floor ~1,750-1,800). Awaiting Simon's call between raising the
+ceiling to 1,800 or capping angle blocks at 2/edition. Recommended the latter.
+
+Found in passing: frontmatter `date:` is UTC-derived while the filename derives
+from the lineup — a manual evening redraft dates the edition a day forward.
+Patched in the file; durable fix not yet made.

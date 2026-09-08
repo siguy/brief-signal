@@ -137,6 +137,22 @@ Podcast sources provide opinion, analysis, and predictions — not news. Handle 
 
 ## Briefing Template
 
+### Word budget — machine-checked, not aspirational
+
+`scripts/lint-briefing.js` counts these on every run with URLs and markdown stripped (the way a reader meets the page). A breach is a **hard failure** that triggers an automatic repair pass, exactly like a broken link or a banned word.
+
+| Section | Budget |
+|---|---|
+| **TOTAL** | **≤1,650** (target ~1,500) |
+| TLDR | ≤140 (4-5 bullets) |
+| Big Picture | **2-3 stories**, ≤220 words each |
+| — its angle block | ≤150 each, **max 2 per edition** |
+| Quick Hits | ≤160 (3-5 bullets) |
+| Seller's Edge | ≤310 (target ~280-300) |
+| Our Play | ≤200 |
+
+The per-section caps and the TOTAL bind **independently**: sections may trade against each other, but the total may not be traded away. When you are over, the cut comes from the longest angle block, a Quick Hit, or a fourth story — **never** from a Big Picture story's reporting, which is the one thing the reader cannot get elsewhere. Being over is the failure to catch; being short is fine.
+
 The briefing has exactly five parts, in this order: **TLDR → The Big Picture → Quick Hits → Seller's Edge → Our Play.** There is no Builder's Corner and no Founder Watch. Use this exact frontmatter and structure:
 
 ```markdown
@@ -163,9 +179,9 @@ The 2-3 lead stories, ordered as a narrative arc (related stories adjacent). Alw
 
 ![{descriptive alt text}](./images/{slug}.jpg)
 
-{The story. ~250-300 words MAX per story — usually 1-2 tight paragraphs. Lead with the sharpest fact + source link, give the context that makes it matter, and — when two items are merged — name the tension between them. **When the story is a frontier-lab incident, state the MECHANISM in terms that scale down to a founder's own stack, not just the headline.** A rep who reads "three swarms breached Hugging Face" and thinks "my founder isn't running swarms" has been handed nothing usable; "those improvised message boards were ordinary shared write surfaces, and two agents with write access to the same bucket have the same channel" is the portable part. Every claim carries an inline [link with a time label (2 min read)](url).}
+{The story. ~200-220 words MAX per story (machine-checked) — usually 1-2 tight paragraphs. Lead with the sharpest fact + source link, give the context that makes it matter, and — when two items are merged — name the tension between them. **When the story is a frontier-lab incident, state the MECHANISM in terms that scale down to a founder's own stack, not just the headline.** A rep who reads "three swarms breached Hugging Face" and thinks "my founder isn't running swarms" has been handed nothing usable; "those improvised message boards were ordinary shared write surfaces, and two agents with write access to the same bucket have the same channel" is the portable part. Every claim carries an inline [link with a time label (2 min read)](url).}
 
-**Your angle with founders** {Include ONLY when a seller can act on the story (Principle 2) — omit entirely for context-only stories like energy/power. When present: 4 bullets, roughly 180-220 words, closing with "Where GCP wins:". The four obligations are fixed but the SHAPE MUST VARY between stories in an edition — never run the same lead-in pattern twice. At most ONE question, and only if it reframes. See the shapes in the Section Voice Guide.}
+**Your angle with founders** {Include ONLY when a seller can act on the story (Principle 2) — omit entirely for context-only stories like energy/power. When present: 3-4 bullets, roughly 120-150 words (machine-checked), closing with "Where GCP wins:". **At most TWO angle blocks per edition (machine-checked)** — so the third story carries none. Choose the two stories a seller can act on most; do not spread the budget evenly. The four obligations are fixed but the SHAPE MUST VARY between stories in an edition — never run the same lead-in pattern twice. At most ONE question, and only if it reframes. See the shapes in the Section Voice Guide.}
 
 ### {Item Title}
 
@@ -175,18 +191,18 @@ The 2-3 lead stories, ordered as a narrative arc (related stories adjacent). Alw
 
 ## Quick Hits
 
-Everything else worth a mention — smaller releases, a founder/company move, a builder pattern, a sharp stat. 3-6 bullets, each ONE linked sentence with a time label. This is where former "founder watch" and "builder" items live now, as one-liners. Podcast items are allowed (attribute the take to the speaker). No GCP product positioning here.
+Everything else worth a mention — smaller releases, a founder/company move, a builder pattern, a sharp stat. 3-5 bullets, each ONE linked sentence with a time label. This is where former "founder watch" and "builder" items live now, as one-liners. Podcast items are allowed (attribute the take to the speaker). No GCP product positioning here.
 
 - **[{Bold claim} (2 min read)](source-url)** — one sentence expanding on it.
 - **[{Bold claim} (26 min watch)](source-url)** — one sentence, attributed to the speaker if it's a podcast take.
 
 ## Seller's Edge: {The Teach, as a Short Declarative Title}
 
-ONE teachable mental model that upgrades how a rep *thinks* about selling into the AI market — not what happened this week. ~300-350 words, three beats: (1) the model, grounded in this week's signal with citations (and continuity to a prior edition's teach when it connects); (2) a **worked example** — the model applied to one of this edition's actual stories, concrete enough to replay in a meeting; (3) **the behavior change** — what the rep does differently in the next meeting. See the dedicated rules in the Section Voice Guide.
+ONE teachable mental model that upgrades how a rep *thinks* about selling into the AI market — not what happened this week. ~280-300 words, three beats: (1) the model, grounded in this week's signal with citations (and continuity to a prior edition's teach when it connects); (2) a **worked example** — the model applied to one of this edition's actual stories, concrete enough to replay in a meeting; (3) **the behavior change** — what the rep does differently in the next meeting. See the dedicated rules in the Section Voice Guide.
 
 ## Our Play
 
-One framing sentence that ties the edition's themes to a single Google Cloud position, then **exactly three bold, named motions** — each: the play → the specific product surface → what the rep actually does. Concrete execution detail, not market-reaction quotes (Principle 5). No sub-headings, no CTA tack-ons.
+One framing sentence that ties the edition's themes to a single Google Cloud position, then **exactly three bold, named motions** — each: the play → the specific product surface → what the rep actually does. **~180-200 words total, machine-checked** — roughly 55 words per motion. Concrete execution detail, not market-reaction quotes (Principle 5). No sub-headings, no CTA tack-ons.
 
 Every thread this edition — {name them in a clause} — points to one GCP position: **{the one-line position}.** Three concrete motions:
 
@@ -230,7 +246,7 @@ Every thread this edition — {name them in a clause} — points to one GCP posi
 
 **First decide whether the story even has an angle (Principle 2):** include this block only when a cloud or frontier-lab seller could actually act on the story. For context-only stories — energy/power supply is the classic case — omit it entirely rather than manufacturing an angle.
 
-This block is a **rep's toolkit for a real conversation**, not a list of questions. It is four bullets, each with a bolded lead-in, **roughly 180-220 words total** — tight enough that a rep can hold it in their head walking into a meeting. Use **at most ONE question in the whole block, and only if it reframes the decision** — a question the founder can answer about something they control. Questions are not the unit of value here; the argument is.
+This block is a **rep's toolkit for a real conversation**, not a list of questions. It is 3-4 bullets, each with a bolded lead-in, **roughly 120-150 words total** (machine-checked) — tight enough that a rep can hold it in their head walking into a meeting. Use **at most ONE question in the whole block, and only if it reframes the decision** — a question the founder can answer about something they control. Questions are not the unit of value here; the argument is.
 
 **Four obligations, but NOT a fixed script.** Every angle block must do these four things:
 
@@ -324,7 +340,7 @@ The briefing's **compounding layer**: one teachable mental model per edition tha
 - **Build continuity:** when the teach extends a prior edition's teach, say so explicitly ("Edition #19 taught X; this week adds Y"). The section compounds only if it references its own history.
 - **Never build the teach on a strawman of how GCP reps actually sell.** (Documented correction: "stop competing on cluster size" was a caricature — reps never did that. Describe the real levers, not a cartoon to knock down.)
 
-**Format:** `## Seller's Edge: {Short Declarative Title}` — ~300-350 words, three beats: (1) the model, grounded in this week's signal; (2) a **worked example** applying the model to one of this edition's stories — concrete enough that a rep can replay it in a meeting; (3) **the behavior change** — the concrete thing the rep does differently in the next founder meeting. (Depth upgraded from ~150-200 words at Simon's request, 2026-07-27 — this is the briefing's compounding layer and it earns the space. Every teach also lands on the cumulative /sellers-edge page, so write it to stand alone there.)
+**Format:** `## Seller's Edge: {Short Declarative Title}` — ~280-300 words, three beats: (1) the model, grounded in this week's signal; (2) a **worked example** applying the model to one of this edition's stories — concrete enough that a rep can replay it in a meeting; (3) **the behavior change** — the concrete thing the rep does differently in the next founder meeting. (Depth upgraded from ~150-200 words at Simon's request, 2026-07-27 — this is the briefing's compounding layer and it earns the space. Every teach also lands on the cumulative /sellers-edge page, so write it to stand alone there.)
 
 **Teaches used so far (do not repeat; extend or add):**
 - #17 — *Don't sell the model, sell the substrate* (models commoditize; durable value is beneath and above them)
@@ -364,6 +380,8 @@ The dedicated home for **product positioning** — connecting the week's market 
 ## The "Our Play" Section — Detailed Rules
 
 This is the dedicated space for Google Cloud in each briefing. Everything else is pure market intelligence.
+
+**Length: ~180-200 words, hard-checked by the linter.** One framing sentence (~20 words) plus three motions at ~55 words each. This budget is now *achievable* — the previous spec asked for nine substantive clauses in ~150 words (16 words per clause), which no writer can meet, so the section drifted to 432-480 words in Editions #28 and #29. If a motion cannot be made in ~55 words, the play is too abstract: name a narrower surface and a single concrete action rather than writing longer.
 
 **Format (strict):** one framing sentence that ties the edition's themes to a single GCP position, then **exactly three bold, named motions**. Each motion follows **Signal → Why GCP wins → The move**: the concrete thing this week's stories show a founder saying or facing → ONE differentiator (with its "why") from the GCP Playbook provided in your context → the specific action the rep takes next (the question to ask, the thing to whiteboard, the eval to propose). No sub-headings. No CTA tack-ons ("Conversation starter", "Try this week"). No standalone product list.
 
@@ -451,7 +469,7 @@ When in doubt: every hyperscaler is squeezed. The GCP story is about *workload m
 - **Opinionated** — Take a stance on what matters and what's noise
 - **Connective** — Link patterns across items. "This reminds me of..." energy.
 - **Action-oriented** — Every section should make the reader want to do something
-- **Concise** — Target **~2,000-2,150 words total** (hard ceiling ~2,350). Big Picture stories ~250-300 words each (the angle block a further ~180-220 on top of that); Quick Hits one sentence each; Seller's Edge ~300-350 words; Our Play ~150 words. If you're over, cut a Quick Hit or tighten a story — never pad.
+- **Concise** — Target **~1,500 words total, HARD ceiling 1,650**. These budgets are **machine-checked by `scripts/lint-briefing.js`** and a breach is a hard failure that triggers a repair pass — they are not aspirations. Per section: Big Picture **2-3 stories, ~200-220 words each** (angle block a further ~120-150 on top, **max 2 blocks per edition**); TLDR ≤140; Quick Hits 3-5 bullets, ≤160 total; Seller's Edge ~280-300; Our Play ~180-200. If you're over, cut a Quick Hit or tighten the longest angle block — never pad, and never trim a story to a stub to buy room for positioning.
 
 ## Writing Pattern
 
@@ -460,7 +478,7 @@ Lead with the punch, link for depth. Within each Big Picture story:
 2. **Give the context that makes it matter** — and when two items are merged, name the tension between them + second link
 3. **The angle block** (if the story has a seller play)
 
-Readers are sales reps scanning on Monday morning — they need the "so what" instantly and the link if they want depth. Keep each story to 1-2 tight paragraphs; if it's sprawling past ~300 words, you're including detail the rep won't use.
+Readers are sales reps scanning on Monday morning — they need the "so what" instantly and the link if they want depth. Keep each story to 1-2 tight paragraphs; if it's sprawling past ~220 words, you're including detail the rep won't use.
 
 ---
 
@@ -470,13 +488,13 @@ Before finalizing, verify:
 
 **Structure & length**
 - [ ] Exactly five parts: TLDR → The Big Picture → Quick Hits → Seller's Edge → Our Play. **No Builder's Corner, no Founder Watch section.**
-- [ ] Seller's Edge is ONE teach (~300-350 words: model + worked example from this edition's stories + behavior change); it does not repeat a prior edition's teach (see the used-so-far list) and contains no product positioning
+- [ ] Seller's Edge is ONE teach (~280-300 words: model + worked example from this edition's stories + behavior change); it does not repeat a prior edition's teach (see the used-so-far list) and contains no product positioning
 - [ ] The Big Picture has **exactly 2-3 stories**, each with a themed heading and (one) image
-- [ ] Quick Hits has **3-6 bullets**, each ONE linked sentence with a time label
+- [ ] Quick Hits has **3-5 bullets**, each ONE linked sentence with a time label
 - [ ] Our Play is **one framing sentence + exactly three named motions** (no sub-headings, no CTA tack-ons)
 - [ ] **TLDR is 4-5 bullets with bold hooks, never prose; each bullet is one scannable sentence**
 - [ ] **Every Big Picture story has a TLDR bullet before any Quick Hit gets one** (the cap is hard — fix an inversion by swapping, never by adding a sixth bullet)
-- [ ] Length is tight — roughly **1,500-1,800 words of prose** (≈2,000-2,350 counting links/markdown). Being OVER is the failure to catch; shorter is fine as long as the 2-3 lead stories are complete. Never flag "too short" as a reason to pad.
+- [ ] Length is tight — **~1,500 words, hard ceiling 1,650** (counted with URLs and markup stripped, the way a reader meets the page). Being OVER is the failure to catch; shorter is fine as long as the 2-3 lead stories are complete. Never flag "too short" as a reason to pad.
 
 **Selection**
 - [ ] The lead story passes the lead test (gravity across sources × sets an agenda × a real seller play) — not just "most bookmarked"
