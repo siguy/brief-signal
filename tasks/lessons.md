@@ -384,3 +384,43 @@ Concrete rules:
   Cost of Outcome (TCO)" — a rep says "TCO" in a meeting and the founder hears
   Total Cost of Ownership. Worse than an undefined acronym, because both sides
   think they understood each other.
+
+## Working method
+
+Derived from the GSI Signal planning sessions (2026-09-07/08), where a six-persona
+review, a coverage audit and five research agents were mostly spent catching my own
+unchecked assertions.
+
+- **Verify anything checkable before asserting it — the information is usually
+  local and free.** I scoped a back-test to the week a mock edition *covered*
+  while it cited reporting three weeks earlier; the citation dates were a
+  ten-second grep away, and getting it wrong meant the validation could never have
+  run. I claimed `signal-digest.js` would surface gate failures and
+  `critique-briefing.js` would keep working, with the repo cloned on disk and both
+  claims false. I put Sharp Tech in a "free" tier when the registry I had already
+  read flags Stratechery — the same subscription — as paywalled. Rule: **if a fact
+  is in a file I can open, open it before writing it down.** If I can't verify it,
+  write "unverified" or leave it out — never a plausible-looking value.
+
+- **Research the ground truth before designing on top of it.** I designed a
+  five-layer pipeline and a scoring rubric before knowing what sources existed.
+  The research, run afterwards, found the source list had *zero primary sources* —
+  all journalism, no filings or official data — and that SEC EDGAR alone covers
+  five of nine topics. That is an architectural input, not a detail. Rule:
+  **sources research comes before pipeline design, not after.**
+
+- **A test built from the same sample that calibrated it cannot fail.** I proposed
+  validating a relevance rubric against the hand-written edition whose stories had
+  supplied the rubric's own top-score examples. Rule: **hand-written editions are
+  smoke tests. The real gate is a held-out period, hand-selected before any
+  scoring runs.**
+
+- **Don't poll a static PR.** I ran eight scheduled check-ins on a docs PR with no
+  CI, all finding nothing, while narrating each one. Rule: **the webhook
+  subscription already covers real events.** Schedule check-ins only where
+  something can actually change on its own — red CI, a moving base branch.
+
+- **Batch corrections; don't narrate every intermediate result.** Five research
+  agents produced five progress reports when one document was asked for. Rule:
+  **wait for the set, deliver once.** Same for PR descriptions — update after the
+  work lands, not between each commit.
