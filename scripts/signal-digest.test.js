@@ -10,9 +10,11 @@
 const assert = require("assert");
 const {
   splitEntries,
+  buildWatchlistSection,
   normalizeUrl,
   parseArgs,
   cited,
+  KB_KINDS,
   FIRST_PARTY_HANDLE,
   FIRST_PARTY_DOMAIN,
   GOOGLE_MENTION,
@@ -261,6 +263,87 @@ test("splitEntries excludes t.co shorteners from an entry's urls", () => {
 test("parseArgs reads --lineup for the pre-draft sweep", () => {
   const args = parseArgs(["--lineup", "drafts/2026-08-10-lineup.md"]);
   assert.strictEqual(args.lineup, "drafts/2026-08-10-lineup.md");
+});
+
+
+// --- Tracked companies (the watchlist tier) ---------------------------------
+
+const { loadWatchlist } = require("./watchlist.js");
+const WATCHLIST = loadWatchlist().companies;
+const company = (name) => WATCHLIST.filter((c) => c.name === name);
+
+function entry(over = {}) {
+  return {
+    source: "Bookmarks",
+    header: "an entry",
+    url: "https://example.com/a",
+    urls: ["https://example.com/a"],
+    grade: null,
+    editorialSignal: null,
+    text: "body text",
+    ...over,
+  };
+}
+
+test("company-news KBs are registered, so the generator reads them too", () => {
+  // generate-briefing.js builds its prompt from KB_KINDS. A source registered
+  // only in the digest is a source the briefing never sees.
+  const kinds = KB_KINDS.map((k) => k.prefix);
+  assert.ok(kinds.includes("company-news-knowledge-base-"), kinds.join(", "));
+  assert.ok(
+    kinds.indexOf("company-news-knowledge-base-") < kinds.indexOf("bookmarks-knowledge-base-"),
+    "the small first-party KBs must stay at the front of the prompt"
+  );
+});
+
+test("the watchlist section groups hits by company and marks coverage", () => {
+  const out = buildWatchlistSection(
+    [
+      entry({ text: "Netflix moved encoding to GPUs", url: "https://a.com/n", urls: ["https://a.com/n"] }),
+      entry({ text: "Citi's CIO on building in-house", url: "https://a.com/c", urls: ["https://a.com/c"] }),
+    ],
+    new Set([normalizeUrl("https://a.com/n")]),
+    WATCHLIST,
+    "the draft"
+  ).join("\n");
+
+  assert.ok(out.includes("**Netflix** — 1 mention"), out);
+  assert.ok(out.includes("**Citi** — 1 mention, 1 not cited in the draft"), out);
+  assert.ok(out.includes("✓ cited"), "the covered item must be marked cited");
+  assert.ok(out.includes("⚠ NOT CITED"), "the uncovered item must be flagged");
+});
+
+test("a company nobody mentioned is named, because the silence is the point", () => {
+  const out = buildWatchlistSection([entry({ text: "Netflix shipped something" })], null, WATCHLIST, "the draft").join("\n");
+  assert.ok(/No signal at all this week:.*Kroger/.test(out), out);
+  assert.ok(!/No signal at all this week:[^\n]*Netflix/.test(out), "a company WITH a mention is not silent");
+});
+
+test("a company whose only mentions are LOW is reported as LOW, never as silent", () => {
+  // The false negative that would matter most: reporting "no signal at all for
+  // Walt Disney" in a week where Disney was discussed, just not gradeably.
+  const out = buildWatchlistSection(
+    [entry({ grade: "LOW", text: "Disney and the streaming bundle" })],
+    null,
+    company("Walt Disney"),
+    "the draft"
+  ).join("\n");
+  assert.ok(out.includes("Only LOW-graded mentions: Walt Disney (1)"), out);
+  assert.ok(!out.includes("No signal at all this week: Walt Disney"), out);
+});
+
+test("a loud company is truncated with an honest overflow count", () => {
+  const many = Array.from({ length: 9 }, (_, i) =>
+    entry({ header: `Netflix item ${i}`, text: "Netflix again", url: `https://a.com/${i}`, urls: [`https://a.com/${i}`] })
+  );
+  const out = buildWatchlistSection(many, null, company("Netflix"), "the draft").join("\n");
+  assert.ok(out.includes("**Netflix** — 9 mentions"), out);
+  assert.ok(out.includes("…and 3 more"), out);
+});
+
+test("an unconfigured watchlist prints a pointer instead of an empty section", () => {
+  const out = buildWatchlistSection([entry()], null, [], "the draft").join("\n");
+  assert.ok(out.includes("config/tracked-companies.json"), out);
 });
 
 if (failed > 0) {

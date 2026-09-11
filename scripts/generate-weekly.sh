@@ -156,6 +156,16 @@ node scripts/fetch-lab-news.js >> "$LOG_FILE" 2>&1 \
   && log "Stage 3c complete: lab news extracted." \
   || log "WARN: Stage 3c failed (lab news). Continuing..."
 
+# Stage 3d: Tracked-company news. Same shape as 3c and for the same reason —
+# a handful of HTTP GETs, inline, and wrapped so a newsroom having a bad day
+# cannot abort the run under `set -e`. The companies are Alexandra's standing
+# watchlist (config/tracked-companies.json); this is the only source in the
+# pipeline that reads an enterprise newsroom directly.
+log "Stage 3d: Fetching tracked-company news (config/tracked-companies.json)..."
+node scripts/fetch-company-news.js >> "$LOG_FILE" 2>&1 \
+  && log "Stage 3d complete: company news extracted." \
+  || log "WARN: Stage 3d failed or some feeds were unreachable. Continuing... (run: npm run companies -- --verify)"
+
 log "--- All extractions complete ---"
 
 # ---------------------------------------------------------------------------
@@ -197,6 +207,12 @@ check_kb_fresh "podcasts-knowledge-base"  || STALE_KBS="${STALE_KBS} podcasts"
 # one means the stage died — and generate-briefing.js accepts any KB up to 14
 # days old, which would silently serve last week's headlines as this week's.
 check_kb_fresh "labnews-knowledge-base" || log "WARN: lab news KB is stale or missing — Stage 3c likely failed. Continuing (lab news never gates the run)."
+
+# Company news, same contract as lab news: checked so "quiet" and "crashed" stay
+# distinguishable, never gating. A week where no tracked company announces
+# anything AI-related is an ordinary week, and the fetcher writes an EMPTY file
+# rather than no file — so a MISSING or STALE one means the stage died.
+check_kb_fresh "company-news-knowledge-base" || log "WARN: company news KB is stale or missing — Stage 3d likely failed. Continuing (company news never gates the run)."
 
 if [ -n "$STALE_KBS" ]; then
   log "ERROR: Refusing to generate briefing with stale KB(s):${STALE_KBS}"
@@ -511,7 +527,7 @@ else
   SIGNAL_ARGS=(--date "$SIGNAL_DATE")
 fi
 if SIGNAL_OUT=$(node scripts/signal-digest.js "${SIGNAL_ARGS[@]}" 2>&1); then
-  SIGNAL_SECTION=$'\n\n<details>\n<summary><b>📊 Signal digest</b> — every graded item, and whether it reached the edition</summary>\n\n'"$SIGNAL_OUT"$'\n\n</details>'
+  SIGNAL_SECTION=$'\n\n<details>\n<summary><b>📊 Signal digest</b> — every graded item, the tracked-company watchlist, and whether each reached the edition</summary>\n\n'"$SIGNAL_OUT"$'\n\n</details>'
 else
   log "WARN: Signal digest failed. Continuing without it."
   SIGNAL_SECTION=$'\n\n## Signal digest\n\n_Digest failed to run — check the log, then `npm run signal` by hand._'

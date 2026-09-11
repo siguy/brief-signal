@@ -1,0 +1,263 @@
+{
+  "note": "Companies the team follows by standing request (Alexandra, 2026-09-11). Read by scripts/watchlist.js, which feeds two consumers: scripts/fetch-company-news.js (pulls each company's own newsroom) and scripts/signal-digest.js (sweeps every knowledge base for mentions). Adding a company is a config edit — no code change.",
+  "standingQuestions": [
+    "What did this company do in cloud, compute or AI — and what does the move say about where its industry is heading?",
+    "How are its leaders deciding in the AI era — what they bought, what they built in-house, what they said publicly about why."
+  ],
+  "aliasRules": "Aliases are matched whole-word and case-insensitively unless the company sets caseSensitive. Every alias must be unambiguous ON ITS OWN, because a noisy watchlist teaches the reader to skip the section and then a real gap goes unread. That is why the list says 'Palo Alto Networks' and never bare 'Palo Alto' (the city appears in startup coverage constantly), why Workday is case-sensitive ('a long workday'), and why tickers that are also common words (K for Kroger, HUBS for HubSpot) are left out.",
+  "topicFilter": {
+    "enabled": true,
+    "note": "A corporate newsroom is mostly store openings, film slates and quarterly numbers. Only items whose title or summary mention one of these survive into the knowledge base; the header records how many were dropped, so the filter is auditable and tunable rather than invisible. Deliberately excludes bare 'model' (business model, model year) and bare 'agent' (travel agent, insurance agent).",
+    "keywords": [
+      "AI",
+      "artificial intelligence",
+      "generative",
+      "genai",
+      "AI agent",
+      "agentic",
+      "machine learning",
+      "LLM",
+      "large language model",
+      "foundation model",
+      "AI model",
+      "chatbot",
+      "copilot",
+      "assistant",
+      "automation",
+      "cloud",
+      "multicloud",
+      "compute",
+      "GPU",
+      "TPU",
+      "data center",
+      "datacenter",
+      "inference",
+      "Google Cloud",
+      "Vertex",
+      "Gemini",
+      "AWS",
+      "Azure",
+      "Microsoft",
+      "NVIDIA",
+      "OpenAI",
+      "Anthropic",
+      "Databricks",
+      "Snowflake",
+      "chief information officer",
+      "chief technology officer",
+      "chief AI officer"
+    ],
+    "stripPhrases": [
+      "Creative Cloud",
+      "Document Cloud",
+      "Experience Cloud"
+    ],
+    "stripPhrasesNote": "Brand names that contain a filter keyword, removed from the text before matching so they cannot carry an off-topic item through. 'Adobe announces new packaging for Creative Cloud in Brazil' got in on the first live run this way. Stripping beats excluding: 'Creative Cloud moves to Google Cloud' still matches on the second, real 'cloud'. Add a phrase here when a brand keeps tripping the filter."
+  },
+  "feedsNote": "URLs here are UNVERIFIED — they were written in a sandbox whose egress policy blocks corporate hosts, so none of them has been fetched. Run `npm run companies -- --verify` once before trusting this file: it reports HTTP status, parsed item count and newest item date per feed, and for anything that fails it reads the company's newsroom page and prints whatever <link rel=alternate> feeds it advertises. A dead URL never breaks the pipeline — the fetcher warns, writes the knowledge base without it, and the header says how many feeds were read.",
+  "companies": [
+    {
+      "name": "Adobe",
+      "industry": "Creative and marketing software",
+      "enabled": true,
+      "aliases": [
+        "Adobe"
+      ],
+      "site": "https://news.adobe.com/",
+      "feeds": [
+        {
+          "label": "Newsroom",
+          "url": "https://news.adobe.com/rss/news.xml",
+          "kind": "rss",
+          "note": "Unverified. Alternates to try: https://blog.adobe.com/en/rss.xml, https://news.adobe.com/rss/news-releases.xml"
+        }
+      ]
+    },
+    {
+      "name": "Workday",
+      "industry": "HR and finance SaaS",
+      "enabled": true,
+      "caseSensitive": true,
+      "aliases": [
+        "Workday",
+        "WDAY"
+      ],
+      "site": "https://newsroom.workday.com/",
+      "feeds": [
+        {
+          "label": "Newsroom",
+          "url": "https://newsroom.workday.com/rss/news-releases.xml",
+          "kind": "rss",
+          "note": "Unverified. Alternates: https://investor.workday.com/rss/news-releases.xml, https://blog.workday.com/en-us/feed.xml"
+        }
+      ]
+    },
+    {
+      "name": "Walt Disney",
+      "industry": "Media and entertainment",
+      "enabled": true,
+      "aliases": [
+        "Disney",
+        "Walt Disney",
+        "Disney+"
+      ],
+      "site": "https://thewaltdisneycompany.com/news/",
+      "feeds": [
+        {
+          "label": "Newsroom",
+          "url": "https://thewaltdisneycompany.com/feed/",
+          "kind": "rss",
+          "note": "Unverified. The site looks WordPress-shaped, hence /feed/. Alternate: https://thewaltdisneycompany.com/news/feed/"
+        }
+      ]
+    },
+    {
+      "name": "Netflix",
+      "industry": "Streaming media",
+      "enabled": true,
+      "aliases": [
+        "Netflix",
+        "NFLX"
+      ],
+      "site": "https://about.netflix.com/en/newsroom",
+      "feeds": [
+        {
+          "label": "Investor news",
+          "url": "https://ir.netflix.net/rss/news-releases.xml",
+          "kind": "rss",
+          "note": "Unverified. Alternates: https://about.netflix.com/rss, https://netflixtechblog.com/feed (engineering, often the better AI/infra signal)"
+        }
+      ]
+    },
+    {
+      "name": "SiriusXM",
+      "industry": "Audio streaming and satellite radio",
+      "enabled": true,
+      "aliases": [
+        "SiriusXM",
+        "Sirius XM"
+      ],
+      "site": "https://investor.siriusxm.com/news-events/press-releases",
+      "feeds": [
+        {
+          "label": "Investor news",
+          "url": "https://investor.siriusxm.com/rss/news-releases.xml",
+          "kind": "rss",
+          "note": "Unverified. Pandora is SiriusXM-owned but is NOT an alias — the word is too ambiguous to match on."
+        }
+      ]
+    },
+    {
+      "name": "Rivian",
+      "industry": "Electric vehicles",
+      "enabled": true,
+      "aliases": [
+        "Rivian",
+        "RIVN"
+      ],
+      "site": "https://rivian.com/newsroom",
+      "feeds": [
+        {
+          "label": "Investor news",
+          "url": "https://investors.rivian.com/rss/news-releases.xml",
+          "kind": "rss",
+          "note": "Unverified. Alternate: https://rivian.com/newsroom/feed"
+        }
+      ]
+    },
+    {
+      "name": "ExxonMobil",
+      "industry": "Energy",
+      "enabled": true,
+      "aliases": [
+        "ExxonMobil",
+        "Exxon Mobil",
+        "Exxon",
+        "XOM"
+      ],
+      "site": "https://corporate.exxonmobil.com/news",
+      "feeds": [
+        {
+          "label": "Newsroom",
+          "url": "https://investor.exxonmobil.com/rss/news-releases.xml",
+          "kind": "rss",
+          "note": "Unverified. Alternate: https://corporate.exxonmobil.com/news/rss"
+        }
+      ]
+    },
+    {
+      "name": "Kroger",
+      "industry": "Grocery retail",
+      "enabled": true,
+      "aliases": [
+        "Kroger"
+      ],
+      "site": "https://www.thekrogerco.com/newsroom/",
+      "feeds": [
+        {
+          "label": "Investor news",
+          "url": "https://ir.kroger.com/rss/news-releases.xml",
+          "kind": "rss",
+          "note": "Unverified. Alternate: https://www.thekrogerco.com/feed/"
+        }
+      ]
+    },
+    {
+      "name": "Palo Alto Networks",
+      "industry": "Cybersecurity",
+      "enabled": true,
+      "aliases": [
+        "Palo Alto Networks",
+        "PANW",
+        "Unit 42",
+        "Cortex XSIAM",
+        "Prisma Cloud"
+      ],
+      "site": "https://www.paloaltonetworks.com/company/newsroom",
+      "feeds": [
+        {
+          "label": "Blog",
+          "url": "https://www.paloaltonetworks.com/blog/feed/",
+          "kind": "rss",
+          "note": "Unverified. Alternate: https://investors.paloaltonetworks.com/rss/news-releases.xml. Bare 'Palo Alto' is deliberately NOT an alias — it is a city that appears in startup coverage every week."
+        }
+      ]
+    },
+    {
+      "name": "Citi",
+      "industry": "Banking and financial services",
+      "enabled": true,
+      "aliases": [
+        "Citigroup",
+        "Citibank",
+        "Citi"
+      ],
+      "site": "https://www.citigroup.com/global/news",
+      "feeds": [
+        {
+          "label": "Newsroom",
+          "url": "https://www.citigroup.com/rss/news.xml",
+          "kind": "rss",
+          "note": "Unverified, and the least confident URL in this file. Alternate: https://www.citigroup.com/global/news/rss"
+        }
+      ]
+    },
+    {
+      "name": "HubSpot",
+      "industry": "CRM and marketing SaaS",
+      "enabled": true,
+      "aliases": [
+        "HubSpot"
+      ],
+      "site": "https://www.hubspot.com/company-news",
+      "feeds": [
+        {
+          "label": "Investor news",
+          "url": "https://ir.hubspot.com/rss/news-releases.xml",
+          "kind": "rss",
+          "note": "Unverified. Alternate: https://blog.hubspot.com/rss.xml (marketing blog — heavy volume, mostly how-to, filter will drop most of it)."
+        }
+      ]
+    }
+  ]
+}

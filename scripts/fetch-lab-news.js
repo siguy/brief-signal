@@ -189,7 +189,11 @@ ${items.length === 0 ? EMPTY_MARKER + "\n" : ""}
 `;
 
   for (const item of items) {
-    md += `## ${item.lab} — ${item.title} (${item.date})\n`;
+    // `item.date || today` is load-bearing, not cosmetic. An undated entry is
+    // kept on purpose (see the filter in main), but rendering it as "(null)"
+    // made the heading fail signal-digest.js's `## … (YYYY-MM-DD)` filter, so
+    // the digest silently dropped an item the briefing prompt could still see.
+    md += `## ${item.lab} — ${item.title} (${item.date || today})\n`;
     md += `**Source:** [${item.lab}](${item.url})\n`;
     if (item.summary) md += `\n${item.summary}\n`;
     md += "\n";
