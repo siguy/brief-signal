@@ -59,7 +59,7 @@ After drafting, add a `featured_topics` list to the new briefing's YAML frontmat
 
 The most common failure is letting the loudest-by-volume cluster in one knowledge base become the lead by default, while a sharper story sits under-weighted in another. Work in this order:
 
-**Step 1 — Model-release scan, first, across ALL THREE knowledge bases.** Before scoring anything else, sweep the bookmarks, playlist, AND podcast KBs (especially the podcast *deep dives* and HIGH-signal episodes) for major model releases and capability milestones. A model that beats a proprietary/frontier model on any real benchmark, tops a leaderboard, or resets price/performance is a **presumptive lead candidate** — even if it appears in only one source or one podcast episode. Do not let a bookmark-heavy story crowd it out. (The Edition #22 miss: Kimi K3 — the first open model to top *every* proprietary model on a benchmark — sat in a single podcast deep dive and was missed while a more-bookmarked release led. That must not repeat.)
+**Step 1 — Model-release scan, first, across EVERY knowledge base.** Before scoring anything else, sweep the bookmarks, playlist, podcast, lab-news AND company-news KBs (especially the podcast *deep dives* and HIGH-signal episodes) for major model releases and capability milestones. A model that beats a proprietary/frontier model on any real benchmark, tops a leaderboard, or resets price/performance is a **presumptive lead candidate** — even if it appears in only one source or one podcast episode. Do not let a bookmark-heavy story crowd it out. (The Edition #22 miss: Kimi K3 — the first open model to top *every* proprietary model on a benchmark — sat in a single podcast deep dive and was missed while a more-bookmarked release led. That must not repeat.)
 
 **Step 2 — Merge same-thesis items into ONE story, and name the tension.** If two items share a thesis, they are one story, not two. Write them as a single story whose spine is the tension or contrast between them. (E.g. Inkling — a *US* open model pitched to escape Chinese open weights — landing the same fortnight as Kimi K3, a *Chinese* open model that leapfrogged the closed frontier: one "open weights leapfrog" story, and the irony IS the story.) Two thin adjacent items are always worse than one story that connects them.
 
@@ -71,7 +71,7 @@ The most common failure is letting the loudest-by-volume cluster in one knowledg
 
 - **A lead is an EVENT, not a theme.** The lead story must be a specific, datable, attributable thing that happened — "Kimi K3 beat every proprietary model on Vercel's benchmark," "Apple baked Claude Code into Xcode," "Curative canceled a $600K Salesforce contract." A theme ("the supply-constrained AI economy," "the AI infrastructure paradox") is a *section heading* — `## The Big Picture: {Theme}` — never the lead itself. When a past lead was weak, it was almost always a theme dressed up as a story.
 
-- **Gravity is countable — measure it.** For each candidate, count how many *distinct knowledge bases* (bookmarks / playlist / podcasts) AND how many *distinct shows or authors* independently surface it. A story carried by three shows across two KBs has real gravity; a loud single-source cluster does not. Higher cross-source count → stronger lead claim. (This is also what the lineup's coverage self-check should report per candidate.)
+- **Gravity is countable — measure it.** For each candidate, count how many *distinct knowledge bases* (bookmarks / playlist / podcasts) AND how many *distinct shows or authors* independently surface it. The first-party feeds — lab news and company news — are **provenance, not gravity**: a company announcing itself is one source however loudly it announces, and two posts from the same newsroom are still one. A story carried by three shows across two KBs has real gravity; a loud single-source cluster does not. Higher cross-source count → stronger lead claim. (This is also what the lineup's coverage self-check should report per candidate.)
 
 **Themes are stable; leads rotate through them — and a new thread can always lead.** The recurring themes (compute scarcity, open weights, sovereignty / who-owns-the-model, the SaaS→agents flip, agent infrastructure, token/value economics) are the briefing's long-term *memory* — they change slowly, and they're the reason a reader who follows every edition understands the market better than someone reading 50 sources cold. Hold them stable. But that memory must never become a cage on selection:
 
@@ -132,6 +132,27 @@ Podcast sources provide opinion, analysis, and predictions — not news. Handle 
 - Don't over-index on one person's take — balance with other sources
 - Don't quote lengthy dialogue — pick the sharpest one-liner
 - A podcast item CAN be a Quick Hit — keep it to one linked sentence and attribute the take to the speaker
+
+---
+
+## Tracked Companies — the standing watchlist
+
+`config/tracked-companies.json` names the companies this team follows by standing request: **Adobe, Workday, Walt Disney, Netflix, SiriusXM, Rivian, ExxonMobil, Kroger, Palo Alto Networks, Citi, HubSpot.** They reach you two ways — a **Company news** knowledge base built from those companies' own newsrooms, and mentions of them anywhere in the other KBs (a podcast guest describing how a bank actually buys AI; a bookmarked thread on a retailer's agent rollout).
+
+Two standing questions, and nothing else:
+
+1. **What did they do in cloud, compute or AI** — and what does the move say about where their industry is heading?
+2. **How are their leaders deciding in this era** — what they bought, what they built in-house, what they said publicly about why, and what they are still undecided on.
+
+**Why a startup briefing carries eleven large enterprises.** These are the buyers our founders sell *into*. A seed-stage founder pitching an AI agent to a grocery chain, a bank or a studio is negotiating against exactly these procurement habits, and a rep who can say "here is how Citi decided that, and here is what it cost them" is more useful in that meeting than one more model benchmark. That is the only reason a watchlist item earns space — never "because it is on the list."
+
+**Rules:**
+
+- **A lens, never a quota.** The watchlist changes what you *notice*, never what you must include. A watchlist item still has to pass Principle 0 — what can a rep do or say with this? — and a week with no watchlist story is a completely normal week. Never manufacture one, and never hand a Big Picture slot to a company move a rep cannot use.
+- **Where it lands.** Quick Hits by default: one linked sentence. A watchlist item earns a Big Picture slot only on the same terms as anything else — a datable event, gravity across distinct sources, and a real seller play.
+- **Name the decision and the decider.** "Citi's CIO said they stopped buying seat-priced copilots because usage never justified them" is signal. "Citi is investing in AI" is a press release. If you cannot name who decided what, it is at best a Quick Hit, and usually nothing.
+- **A newsroom speaks for itself.** Company-news entries are first-party PR: reliable about *what* happened, worthless about whether it matters. Take the fact, drop the adjectives, and attribute an unverifiable claim to its source ("Adobe says…"). Never reproduce a company's own framing of its significance.
+- **A mention is not a story.** These companies get name-checked constantly. Weave a passing mention into a story that already exists, or leave it out — a list of companies that came up this week is not a briefing.
 
 ---
 

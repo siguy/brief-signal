@@ -19,6 +19,7 @@ const {
   formatKnowledgeBase,
   EMPTY_MARKER,
 } = require("./fetch-lab-news.js");
+const { splitEntries } = require("./signal-digest.js");
 
 let passed = 0;
 let failed = 0;
@@ -157,6 +158,22 @@ test("formatKnowledgeBase omits the EMPTY marker when there are items", () => {
     "2026-08-03"
   );
   assert.ok(!md.includes(EMPTY_MARKER));
+});
+
+test("an undated item still gets a date-shaped heading the digest can parse", () => {
+  // Undated entries are kept deliberately (a lab announcement we cannot date is
+  // still worth a line), but "(null)" in the heading fails signal-digest.js's
+  // `## … (YYYY-MM-DD)` filter, so the digest dropped the very item the keep
+  // rule exists to protect.
+  const md = formatKnowledgeBase(
+    [{ lab: "Anthropic", title: "Undated post", url: "https://www.anthropic.com/news/u", date: null, summary: "" }],
+    4,
+    "2026-08-03"
+  );
+  assert.ok(!md.includes("(null)"), "a missing date must fall back to the extraction date");
+  const [entry] = splitEntries({ kind: "labnews", label: "Lab news", content: md });
+  assert.ok(entry, "the entry must survive the digest's heading filter");
+  assert.ok(entry.header.includes("Undated post"), entry.header);
 });
 
 if (failed > 0) {

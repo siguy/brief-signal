@@ -14,6 +14,11 @@
  *
  *   Tier 0 — Google & competitors (advisory). First-party announcements and
  *            Google-specific mentions, flagged when they never reached the draft.
+ *   Watchlist — tracked companies (advisory). Everything the week's sources said
+ *            about the companies the team follows by standing request, grouped by
+ *            company, plus the ones nobody mentioned at all. The silence is the
+ *            point: a sweep that only listed hits could never show you that
+ *            Kroger went unmentioned for five weeks running.
  *   Tier 1 — graded HIGH items.  (pending Step 3a: only podcasts carry grades today)
  *   Tier 2 — per-story depth.    (pending)
  *   Tier 3 — dropped figures.    (pending)
@@ -24,6 +29,11 @@
 
 const fs = require("fs");
 const path = require("path");
+// Tier 0's lanes are hardcoded regexes because the competitor set is a durable
+// editorial decision. The watchlist is not: it is a list Simon and the team
+// edit, so it lives in config/tracked-companies.json and loads through one
+// shared module that degrades to an empty list rather than throwing.
+const { loadWatchlist, matchCompanies } = require("./watchlist.js");
 
 const SKILLS_DIR = path.join(process.env.HOME, "skills");
 const BRIEFINGS_DIR = path.join(__dirname, "..", "content", "briefings");
@@ -39,6 +49,12 @@ const EMPTY_MARKER_RE = /^>\s*\*\*Status:\*\*\s*EMPTY\b/m;
 // ~136k-token prompt would defeat the point of adding it.
 const KB_KINDS = [
   { prefix: "labnews-knowledge-base-", label: "Lab news", kind: "labnews" },
+  // Company news sits second for the same reason lab news sits first: it is
+  // small, first-party, and was added to close a verified blind spot (no source
+  // in this pipeline reads an enterprise newsroom, so a Kroger or Exxon AI move
+  // only arrived if someone on X happened to post about it). Both belong at the
+  // top of the prompt, where recall is best.
+  { prefix: "company-news-knowledge-base-", label: "Company news", kind: "companynews" },
   { prefix: "bookmarks-knowledge-base-", label: "Bookmarks", kind: "bookmarks" },
   { prefix: "podcasts-knowledge-base-", label: "Podcasts", kind: "podcasts" },
   { prefix: "playlist-knowledge-base-", label: "Playlist", kind: "playlist" },
@@ -209,6 +225,89 @@ function line(entry, urls, label = "") {
   return `- ${grade}${entry.header}${mark(entry, urls)}\n  ${entry.source}${entry.url ? ` · ${entry.url}` : ""}`;
 }
 
+// A company with a dozen mentions would otherwise push every other company off
+// the screen, and the scan value of this section is "which of the eleven moved
+// this week", not "read all of Netflix". The overflow line keeps the count
+// honest.
+const MAX_LINES_PER_COMPANY = 6;
+
+// The watchlist sweep. Reads EVERY knowledge base, lab news and company news
+// included — unlike Tier 0, which excludes lab news because every entry there is
+// first-party by construction and would flood a provenance lane. Nothing floods
+// here: a lab post that names Citi is rare, and it is exactly the kind of item
+// the watchlist exists to catch.
+//
+// Grouped by company rather than listed flat, because the question this answers
+// is per-company ("anything at Kroger this week?"), and because grouping is what
+// makes the silence visible — the closing lines name the companies with nothing
+// at all, which no list of hits can show you.
+function buildWatchlistSection(entries, urls, companies, against) {
+  const out = ["### Tracked companies — the watchlist (advisory)", ""];
+
+  if (!companies.length) {
+    out.push("_No watchlist configured — see `config/tracked-companies.json`._", "");
+    return out;
+  }
+
+  // An explicit LOW is a judgment made with the item in full context, so it
+  // filters the same way it does in Tier 0's mention lanes. But a company whose
+  // only mentions were LOW is NOT silent, and reporting it as silent would be a
+  // false negative in the one place this section is supposed to be trustworthy —
+  // so LOW hits are counted separately and reported, just not listed.
+  const hits = new Map(companies.map((c) => [c.name, []]));
+  const lowOnly = new Map(companies.map((c) => [c.name, 0]));
+
+  for (const entry of entries) {
+    for (const company of matchCompanies(entry.text, companies)) {
+      if (entry.grade === "LOW") lowOnly.set(company.name, lowOnly.get(company.name) + 1);
+      else hits.get(company.name).push(entry);
+    }
+  }
+
+  const quiet = [];
+  const low = [];
+  let uncited = 0;
+
+  for (const company of companies) {
+    const mine = hits.get(company.name);
+    if (!mine.length) {
+      if (lowOnly.get(company.name)) low.push(`${company.name} (${lowOnly.get(company.name)})`);
+      else quiet.push(company.name);
+      continue;
+    }
+    const missed = mine.filter((e) => cited(e, urls) === false).length;
+    uncited += missed;
+    const note = urls && missed ? `, ${missed} not cited in ${against}` : "";
+    // A company can have listed hits AND suppressed LOW ones; saying so keeps
+    // the count honest without spending lines on the LOW ones.
+    const lowNote = lowOnly.get(company.name) ? ` (+${lowOnly.get(company.name)} LOW)` : "";
+    out.push(`**${company.name}** — ${mine.length} mention${mine.length === 1 ? "" : "s"}${lowNote}${note}`);
+    // "GCP" is stated, not implied: this section is keyed on neither grade, so
+    // a bare [HIGH] would leave the reader guessing which one it is.
+    out.push(mine.slice(0, MAX_LINES_PER_COMPANY).map((e) => line(e, urls, "GCP")).join("\n"));
+    if (mine.length > MAX_LINES_PER_COMPANY) {
+      out.push(`- …and ${mine.length - MAX_LINES_PER_COMPANY} more`);
+    }
+    out.push("");
+  }
+
+  if (low.length) out.push(`_Only LOW-graded mentions: ${low.join(", ")}._`, "");
+  out.push(
+    quiet.length
+      ? `_No signal at all this week: ${quiet.join(", ")}._`
+      : `_Every tracked company was mentioned somewhere this week._`
+  );
+  out.push("");
+  if (urls && uncited) {
+    out.push(
+      `> **${uncited} watchlist item(s) are not cited in ${against}.** Advisory only — ` +
+        `the watchlist is a lens, never a quota, and a week with no watchlist story is a normal week.`
+    );
+    out.push("");
+  }
+  return out;
+}
+
 function main() {
   const args = parseArgs(process.argv.slice(2));
   const kbs = findKnowledgeBases();
@@ -226,6 +325,7 @@ function main() {
   const urls = draftUrls(draftPath);
   const against = args.lineup ? "the lineup" : "the draft";
   const entries = kbs.flatMap(splitEntries);
+  const watchlist = loadWatchlist();
 
   const out = [];
   out.push(`## Signal digest${date ? ` — ${date}` : ""}${args.lineup ? " (lineup)" : ""}`);
@@ -297,6 +397,11 @@ function main() {
   );
   out.push("");
 
+  // Tracked companies. Placed after Tier 0 because Google and its competitors
+  // are the standing first question for this audience; the watchlist is the
+  // standing second one.
+  out.push(...buildWatchlistSection(entries, urls, watchlist.companies, against));
+
   // HIGH editorial-signal roll-up — the deterministic replacement for the
   // model's self-audit, which Stage 4a no longer emits.
   //
@@ -363,6 +468,7 @@ if (require.main === module) main();
 
 module.exports = {
   splitEntries,
+  buildWatchlistSection,
   EMPTY_MARKER_RE,
   normalizeUrl,
   cited,

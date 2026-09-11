@@ -20,7 +20,8 @@
     "signal": "node scripts/signal-digest.js",
     "braids": "node scripts/braid-ledger.js",
     "labnews": "node scripts/fetch-lab-news.js",
-    "test": "node scripts/generate-briefing.test.js && node scripts/lint-briefing.test.js && node scripts/signal-digest.test.js && node scripts/lineup-digest.test.js && node scripts/braid-ledger.test.js && node scripts/fetch-lab-news.test.js && node fetch-og.test.js && python3 scripts/fetch-bookmarks.test.py && bash scripts/generate-weekly.test.sh && bash scripts/bootstrap-worktree.test.sh"
+    "companies": "node scripts/fetch-company-news.js",
+    "test": "node scripts/generate-briefing.test.js && node scripts/lint-briefing.test.js && node scripts/signal-digest.test.js && node scripts/watchlist.test.js && node scripts/fetch-company-news.test.js && node scripts/lineup-digest.test.js && node scripts/braid-ledger.test.js && node scripts/fetch-lab-news.test.js && node fetch-og.test.js && python3 scripts/fetch-bookmarks.test.py && bash scripts/generate-weekly.test.sh && bash scripts/bootstrap-worktree.test.sh"
   },
   "dependencies": {
     "@google-cloud/text-to-speech": "^6.4.0",

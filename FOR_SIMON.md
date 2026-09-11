@@ -610,3 +610,112 @@ to `content/audio/{date}.mp3` and would have overwritten a published episode. Th
 tests issued the identical request shape directly instead. That is good evidence,
 not proof, and the difference is worth naming rather than glossing.
 
+
+---
+
+## The Watchlist: Eleven Companies the Briefing Now Follows (2026-09-11)
+
+Alexandra gave us a list — Adobe, Workday, Walt Disney, Netflix, SiriusXM,
+Rivian, ExxonMobil, Kroger, Palo Alto Networks, Citi, HubSpot — and two
+questions to carry into it: what these companies do in cloud, compute and AI,
+and how their leaders are making decisions in this era.
+
+The interesting part of the build was realising the two questions have *different
+answers* about where the signal already lives.
+
+The second question, the pipeline already answers well. Founders and VCs talk
+about how big enterprises buy AI constantly — a podcast guest describing why a
+bank abandoned seat-priced copilots is exactly what Alexandra is asking for, and
+it was already sitting in the podcast KB. Nothing needed fetching; the material
+just needed *noticing*.
+
+The first question, the pipeline answered badly, for a structural reason. Every
+source we have is downstream of someone reacting to news. Bookmarks are what
+people posted. Podcasts are what people discussed. Neither reads a newsroom. So
+a Kroger AI announcement reached us only if a founder on X happened to care about
+grocery retail that week — which is to say, almost never. That is the same hole
+`fetch-lab-news.js` was built to close for the labs, and the fix has the same
+shape.
+
+So the change has three parts, and they map cleanly onto "notice", "fetch" and
+"check".
+
+**1. One config file, no code.** `config/tracked-companies.json` holds a company
+per entry: its name, its industry, the aliases that identify it in prose, and
+the feeds to read. Adding a twelfth company is an entry in that file — same
+contract as `config/podcasts.json`, and the same reason: this is a list *you*
+maintain, and a list that needs an engineer is a list that goes stale.
+
+**2. A fifth knowledge base.** `npm run companies` reads those newsrooms and
+writes `~/skills/company-news-knowledge-base-YYYY-MM-DD.md`. It runs as Stage 3d
+on Sunday, inline, never gating — a company having a bad gateway can't cost us
+the briefing. It keeps only items that actually mention AI, cloud or compute,
+because a corporate newsroom is mostly store openings and film slates; the header
+says how many it dropped, so the filter is something you can audit and tune
+rather than a black box.
+
+**3. A watchlist tier in `npm run signal`.** The digest now sweeps *every*
+knowledge base for mentions of the eleven, groups them by company, and marks each
+one cited or NOT CITED against the draft. And it names the companies **nobody
+mentioned at all** — which is the part I'd defend hardest. A section that only
+lists hits can never tell you Kroger has been dark for five weeks. The silence is
+the product.
+
+### The part worth internalising: this feature lives or dies on false positives
+
+A watchlist is a filter, and a filter that cries wolf is worse than no filter,
+because people stop reading it — and then the week Kroger actually shows up,
+nobody looks. So most of the 15 tests on the matcher pin a *false* positive, not
+a true one:
+
+- The list says **"Palo Alto Networks"** and never bare "Palo Alto". The city is
+  in startup coverage every single week.
+- **Workday is case-sensitive.** "It was a long workday" is not a product
+  announcement.
+- **Tickers that are also words are left out** — `K` for Kroger and `HUBS` for
+  HubSpot would match half the English language.
+- **Matching uses lookarounds, not `\b`.** This one is a genuine trap worth
+  understanding: `\b` is defined against *word characters*, so `\bDisney\+\b` can
+  never match anything — the boundary after `+` demands a word character, and the
+  text has a space. The rule you actually want is "not glued to a letter or
+  digit", and that is what `(?<![A-Za-z0-9_])…(?![A-Za-z0-9_])` says.
+
+The first live run found two more, which is the argument for running the thing
+instead of admiring the tests:
+
+- *"Adobe announces new packaging for Creative Cloud in Brazil"* sailed through an
+  AI/cloud filter, because **Creative Cloud contains "cloud"**. The fix is to
+  *strip* known brand names before matching rather than to exclude items that
+  mention them — because "Creative Cloud moves to Google Cloud" is real news, and
+  it still matches on the second "cloud".
+- A company whose feed 404'd was reported as **"no news this week"**. Silence and
+  breakage reading identically is precisely the bug `EMPTY_MARKER` exists to
+  prevent, reintroduced in a new place. They're separate lines now.
+
+### What you have to do before it's real
+
+**Run `npm run companies -- --verify` once.** The feed URLs in the config are
+unverified — they were written in a sandbox whose network policy blocks corporate
+hosts, so not one of them has actually been fetched. `--verify` probes every feed
+and prints its status, item count and newest item date; for anything that fails,
+it reads the company's newsroom page and prints whatever feeds that page
+advertises in its `<head>`, which is usually the right URL handed to you. Fix the
+ones it flags, re-run, and the watchlist is live.
+
+Nothing breaks in the meantime. A dead feed warns, gets skipped, and the file is
+written without it — the company just stays dark until the URL is right, and the
+KB header tells you that's what happened.
+
+### What it deliberately does NOT do
+
+It does not give these companies a standing slot in the briefing. The prompt
+treats the watchlist as **a lens, never a quota**: it changes what the model
+notices, not what it must include, and a watchlist item still has to survive the
+same question as everything else — what can a rep actually do with this? A week
+with no watchlist story is a normal week.
+
+That's a dial, not a law. If Alexandra wants a standing "what the enterprises
+did" line in every edition, it's a paragraph in `scripts/briefing-prompt.md` —
+but make that choice deliberately, because a section that must be filled every
+week is a section that gets padded on quiet weeks, and padding is how a briefing
+loses the reader.
