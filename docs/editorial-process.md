@@ -115,6 +115,11 @@ flowchart TD
   `/refresh-gcp-playbook` skill + 90-day staleness warning in the pipeline)
 
 ## Related docs
+- `docs/information-product-process.md` — the five-stage spine (sources →
+  ranking → analyzing → presenting → feedback) that this pipeline is one
+  implementation of. That doc is product-agnostic and is the shared reference
+  for GSI Signal and future information products; this one is Brief Signal's
+  order of operations.
 - `FOR_SIMON.md` — the narrative history and war stories behind these rules
 - `tasks/lessons.md` — correction rules (review at session start)
 - `docs/internal/gcp-playbook-internal.md` (gitignored) — objection bank +
