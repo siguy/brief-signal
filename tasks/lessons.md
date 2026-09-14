@@ -385,6 +385,32 @@ Concrete rules:
   Total Cost of Ownership. Worse than an undefined acronym, because both sides
   think they understood each other.
 
+### From Edition #30 feedback (2026-09-14)
+
+- **A competitor product launch in a story needs the playbook's counterpart in
+  Our Play — or an explicit "we have no equivalent".** Story 3 cited OpenAI's
+  Agents API launch (managed long-running agents on the Codex harness). Our Play
+  answered with a Cloud Run motion that misdescribed gVisor as a microVM; when
+  that was cut, the story was left with no GCP reply at all — and the playbook
+  had the analogue (Agent Runtime, FKA Agent Engine: managed runtime, Sessions,
+  Memory Bank, evals, on a model-agnostic ADK) two lines away. Simon caught it
+  after merge. Rule: for every competitor product named in a Big Picture story,
+  grep the playbook for the counterpart *before* drafting Our Play; name it with
+  its honest edge (here: model-agnostic harness vs. a lab's harness and models),
+  or state out loud that GCP has no equivalent. Cutting a bad motion is not the
+  fix — replacing it with the grounded one is.
+- **Redrafting in a worktree silently loses the playbook.** `content/gcp-playbook.md`
+  is gitignored, so a linked worktree has no copy and `readGcpPlaybook()`
+  returned `""` without a word. The first redraft named "Gemini 1.5 Flash" and
+  "Gemma 2". Rule: before any `npm run redraft` outside the main checkout,
+  `ls content/gcp-playbook.md` — copy it in if missing (PR #147 adds a loud
+  warning, but the copy is still manual).
+- **Anthropic lab-news dates are sitemap `lastmod`, not publish dates.** A
+  site-wide re-deploy (Sept 9–10) stamped 133 archive posts as "this week";
+  none were. The real date is on the page in a `body-3 agate` div. Rule: never
+  cite an Anthropic lab-news item without checking the page date; durable fix
+  is to read it in `fetch-lab-news.js` (still open).
+
 ## Working method
 
 Derived from the GSI Signal planning sessions (2026-09-07/08), where a six-persona

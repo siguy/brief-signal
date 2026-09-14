@@ -159,7 +159,13 @@ function readThemeRegistry() {
 const PLAYBOOK_PATH = path.join(__dirname, "..", "content", "gcp-playbook.md");
 
 function readGcpPlaybook() {
-  if (!fs.existsSync(PLAYBOOK_PATH)) return "";
+  if (!fs.existsSync(PLAYBOOK_PATH)) {
+    // Gitignored, so a fresh clone or a linked worktree will not have it — and
+    // without it Stage 4b drafts Our Play with no ground truth (Edition #30's
+    // redraft named "Gemini 1.5 Flash" this way). Warn loudly; do not fail.
+    console.warn(`WARN: ${PLAYBOOK_PATH} not found — Our Play will be drafted WITHOUT the GCP playbook. Copy it from the main checkout.`);
+    return "";
+  }
   return fs.readFileSync(PLAYBOOK_PATH, "utf-8");
 }
 

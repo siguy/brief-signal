@@ -152,7 +152,7 @@ wait $PID_PODCASTS_RSS || true
 # decoration: under `set -e` an unwrapped failure here would abort the run before
 # Stage 4, and a lab having a bad gateway must never cost us the briefing.
 log "Stage 3c: Fetching lab news (Anthropic, OpenAI, DeepMind, Google Cloud)..."
-node scripts/fetch-lab-news.js >> "$LOG_FILE" 2>&1 \
+node "$BRIEF_SIGNAL_DIR/scripts/fetch-lab-news.js" >> "$LOG_FILE" 2>&1 \
   && log "Stage 3c complete: lab news extracted." \
   || log "WARN: Stage 3c failed (lab news). Continuing..."
 
