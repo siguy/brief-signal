@@ -558,7 +558,18 @@ async function main() {
   // Parse all VTT files and prepare episodes for extraction
   const prepared = []; // { podcast, episode, transcript }
   const transcripts = {}; // url -> transcript (for deep dive reuse)
+  const cutoff = dateAfter.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
   for (const { podcast, episode } of allEpisodes) {
+    // Recency filter. The flat-playlist scan has no dates, so this is the first
+    // point we know the real upload date. Without it, any of a channel's last 5
+    // uploads not seen in the last 4 raw files slips in — a month-old episode
+    // reads as "new". An unknown date is kept (the date fetch can fail) but warned.
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(episode.upload_date || "")) {
+      warn(`No upload date for ${podcast.name} — "${episode.title}". Keeping it; verify recency by hand.`);
+    } else if (episode.upload_date < cutoff) {
+      log(`  Too old (${episode.upload_date} < ${cutoff}): ${podcast.name} — "${episode.title}". Skipping.`);
+      continue;
+    }
     const vttPath = subtitlePaths.get(episode.video_id);
     if (!vttPath) {
       warn(`No subtitles for ${podcast.name} — "${episode.title}". Skipping.`);
