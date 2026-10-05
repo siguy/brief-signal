@@ -25,57 +25,50 @@ merits; a strong new thread with staying power earns its way into a *new* theme.
 ---
 
 ## Compute Scarcity & the Physical Buildout
-- **Status:** 🟢 hot
-- **Led editions:** #7, #10, #12, #16, #33 · **First seen:** #7 · **Last led:** #33
-- **Where it stands:** Crusoe's $3.9B Series F highlights a 50% data center project failure rate and
-  100-week electrical backlogs, forcing startups into rigid 2028 take-or-pay contracts; SemiAnalysis
-  ClusterMAX 3.0 rates GCP Gold tier and exposes neocloud security flaws.
+- **Status:** 🟢 active
+- **Led editions:** #7, #10, #12, #16 · **First seen:** #7 · **Last led:** #16
+- **Where it stands:** ClusterMAX 3.0 upgrades Google Cloud to Gold tier while exposing neocloud security vulnerabilities and multi-week node failure recovery delays; Claude 5 pre-training on Google TPUs reinforces custom accelerator economics against rising GPU costs.
 
 ## Sovereignty / Who Owns the Model & the Alpha
-- **Status:** 🟢 active
+- **Status:** 🟢 hot
 - **Led editions:** #18, #19, #21, #22, #30 · **First seen:** #18 · **Last led:** #30
 - **Where it stands:** Enterprises fighting to own their model + data layer ("alpha leakage"); Anthropic
   repositioning as "ecosystem, not walled garden" vs. Microsoft's "trust us" Frontier Tuning; the Karp
   "alpha transfer" thread. Tightly coupled with Open Weights (see note).
 
 ## Open Weights Closing / Leapfrogging the Frontier
-- **Status:** 🟢 active
-- **Led editions:** #19, #22, #32 · **First seen:** #19 · **Last led:** #32
-- **Where it stands:** Production token flow flipped 80/20 in favor of open models; Perplexity open-sources
-  pplx-decider-27b at $0.04/M tokens; Jane Street self-hosts open weights on private clusters.
+- **Status:** 🟢 hot, accelerating
+- **Led editions:** #19, #22 · **First seen:** #19 · **Last led:** #22
+- **Where it stands:** Kimi K3 became the first open model to top *every* proprietary model on Vercel's
+  web-engineering benchmark; Inkling opened a US Apache-2.0 base. Open-weight pricing is converging *up*
+  toward closed models.
 
 ## Token / AI-Spend Economics (cost & value migration)
-- **Status:** 🟢 hot, accelerating
-- **Led editions:** #5, #15, #17, #20, #32 · **First seen:** #5 · **Last led:** #32
-- **Where it stands:** Higgsfield scales to $1B run-rate on >80% gross margins via self-hosted open-weight
-  fine-tuning and dynamic routing; leaked Anthropic S-1 shows $8B operating loss and $518B compute obligations;
-  Ramp AI Index shows falling enterprise spend under frontier price wars.
+- **Status:** 🟢 active
+- **Led editions:** #5, #15, #17, #20, #32, #33 · **First seen:** #5 · **Last led:** #33
+- **Where it stands:** Leaked S-1 financials ($518B compute obligations) and production startups ($4M/mo spend at Higgsfield) prove that relying purely on closed APIs caps SaaS margins at 20%–30%, cementing asymmetric multi-model routing and self-hosted open weights (>80% margin) as the standard enterprise architecture.
 
 ## Agent Infrastructure Maturing (harnesses, stateful agents, reliability)
-- **Status:** 🟢 active
+- **Status:** 🟡 active but quiet
 - **Led editions:** #1, #2, #4, #8, #14 · **First seen:** #1 · **Last led:** #14
-- **Where it stands:** OpenAI DevDay introduces dedicated Linux VMs for background agents ("Dots") and
-  native document workspaces ("Space"); the battle moves from stateless prompt APIs to owning persistent
-  enterprise state and memory.
+- **Where it stands:** The memory / long-context problem; durable agents; agent sandboxes; MCP interop.
+  Hasn't *led* since #14 but recurs as supporting signal.
 
 ## SaaS → Agent-Native Flip (build-vs-buy)
 - **Status:** 🟢 active
 - **Led editions:** #6, #9 · **First seen:** #6 · **Last led:** #9
-- **Where it stands:** Enterprises replacing seven-figure SaaS with internal agents — Curative canceled a
-  $600K Salesforce contract; Replit's "self-driving company"; OpenAI Space directly targeting traditional
-  productivity suites.
+- **Where it stands:** OpenAI (Space/Dots) and Microsoft (Copilot Autopilot) turn productivity suites into agent-native execution environments, shifting the enterprise moat from raw model intelligence to accumulated organizational state.
 
 ## The Org Restructuring / Who Builds (solo founders, self-driving companies)
 - **Status:** 🟡 recurring
 - **Led editions:** #3, #15 · **First seen:** #3 · **Last led:** #15
-- **Where it stands:** One-person million-dollar companies; staff going from "doers to directors"; forward
-  deployed engineering (FDE) booming as a bridge for missing agent software.
+- **Where it stands:** One-person million-dollar companies; staff going from "doers to directors." Lives
+  mostly in Quick Hits now.
 
 ## AI Economy / Market Structure (capex vs ROI, IPOs, the $1T theses)
 - **Status:** 🟡 active
 - **Led editions:** #8, #9, #16 · **First seen:** #8 · **Last led:** #16
-- **Where it stands:** Leaked Anthropic S-1 targeting $2T valuation against $42B net loss ($34B accounting);
-  OpenAI raising bridge financing at $1.4T; AMD acquiring World Labs for $8.2B.
+- **Where it stands:** Anthropic ~$2T target valuation and leaked S-1 compute liabilities ($518B); OpenAI IPO watch; enterprise capex vs revenue recovery debates.
 
 ---
 
@@ -86,5 +79,5 @@ merits; a strong new thread with staying power earns its way into a *new* theme.
   got good enough to own), Sovereignty is a *control/ownership* story (enterprises want to own model +
   data). They move on different clocks; when both fire, let the lead sit at their intersection (as #22
   did). Revisit if they stop diverging.
-- This registry was seeded from the 22-edition lead history and is a **living document** — boundaries are
+- This registry was seeded from the 22-edition lead history and is a **first draft** — boundaries are
   meant to be redrawn as the arcs evolve. Updates are proposed per edition and approved on review.
