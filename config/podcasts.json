@@ -32,14 +32,16 @@
     "source": "youtube",
     "channelHandle": "@TheDiaryOfACEO",
     "category": "Founder/Interview",
-    "enabled": true
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-06-08–2026-08-31)"
   },
   {
     "name": "My First Million",
     "source": "youtube",
     "channelHandle": "@MyFirstMillionPod",
     "category": "Founder/Builder",
-    "enabled": true
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-06-08–2026-08-31)"
   },
   {
     "name": "a16z Podcast",
@@ -67,7 +69,8 @@
     "source": "youtube",
     "channelHandle": "@EveryInc",
     "category": "AI/Builder",
-    "enabled": true
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-06-08–2026-08-31)"
   },
   {
     "name": "Latent Space",
@@ -117,8 +120,8 @@
     "rssUrl": "https://feeds.transistor.fm/acquired",
     "transcriptUrl": "https://www.acquired.fm/episodes/",
     "category": "Deep Dive",
-    "enabled": true,
-    "note": "Scrape transcript from acquired.fm — speaker-labeled, highest quality"
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-06-08–2026-08-31). Re-enable when a new episode drops — Acquired publishes infrequently (4-8 eps/yr) and is worth monitoring manually."
   },
   {
     "name": "AI Daily Brief",
@@ -132,14 +135,16 @@
     "source": "rss",
     "rssUrl": "https://anchor.fm/s/751173b0/podcast/rss",
     "category": "GTM",
-    "enabled": true
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-06-08–2026-08-31)"
   },
   {
     "name": "Rethinking with Adam Grant",
     "source": "rss",
     "rssUrl": "https://feeds.acast.com/public/shows/675858676d1777b3683ec351",
     "category": "Leadership",
-    "enabled": true
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-06-08–2026-08-31)"
   },
   {
     "name": "Stratechery",
@@ -149,7 +154,6 @@
     "enabled": false,
     "note": "Paywalled — requires Stratechery Plus subscription for RSS access"
   },
-
   {
     "name": "Dwarkesh Podcast",
     "source": "youtube",
@@ -171,8 +175,8 @@
     "source": "youtube",
     "channelHandle": "@GoogleDeepMind",
     "category": "AI/First-party Lab",
-    "enabled": true,
-    "note": "Hannah Fry. Seasonal (8-10 eps/season, 30-50 min). First-party DeepMind context (Gemini training, AlphaFold, robotics). Channel mixes the podcast with research demos and product clips. Watch first run — duration filter may not catch all non-podcast content (some research talks exceed 20 min)."
+    "enabled": false,
+    "note": "low-signal: 0 podcast episode citations in 12 weeks (2026-06-08–2026-08-31). Noise check: all 'Google DeepMind' briefing mentions were org-level news (talent departures, model releases), not citations of the Hannah Fry podcast. Seasonal cadence may mean the show is between seasons; re-enable when a new season launches."
   },
   {
     "name": "ChinaTalk",
@@ -227,23 +231,23 @@
     "source": "youtube",
     "channelHandle": "@OpenAI",
     "category": "AI/First-party Lab",
-    "enabled": true,
-    "note": "Official OpenAI podcast with researchers and product leads. WARNING: channel mixes the podcast with product demos, Dev Day talks, and ads. Duration filter catches short demos but long marketing content (Dev Day keynotes, etc.) will pass through. Watch first run closely; if noisy, consider disabling and ingesting via dedicated podcast RSS if it becomes available."
+    "enabled": false,
+    "note": "Noise check failed: 0 actual podcast episode citations in 12 weeks (2026-06-08–2026-08-31). All OpenAI references in briefings cited openai.com blog posts and announcements, not @OpenAI YouTube episodes. Original warning about channel noise (Dev Day talks, product demos, keynotes) confirmed — the pipeline is not surfacing usable podcast signal from this channel."
   },
   {
     "name": "Unsupervised Learning (Redpoint)",
     "source": "youtube",
     "channelHandle": "@RedpointAI",
     "category": "VC/AI Builder",
-    "enabled": true,
-    "note": "Redpoint's AI-focused show (distinct from Logan Bartlett). Tight focus on founder product/infra decisions mid-build. Weekly, 30-50 min."
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-06-08–2026-08-31)"
   },
   {
     "name": "Cheeky Pint (Stripe)",
     "source": "youtube",
     "channelHandle": "@stripe",
     "category": "Founder/Builder",
-    "enabled": true,
-    "note": "John Collison's interview series, posted on Stripe's main YouTube channel alongside Stripe Sessions talks and product clips. Guest list is signal-rich (Altman, Brockman, Pichai, Friedman, Spiegel). Verified that most non-podcast content is <20 min (filtered out), but Stripe Sessions keynotes (often 30-90 min) may slip through. Acceptable noise tradeoff given guest quality."
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-06-08–2026-08-31). Original noise concern (Stripe Sessions keynotes slipping through duration filter) appears to have materialized — zero usable podcast signal surfaced in the review window."
   }
 ]
