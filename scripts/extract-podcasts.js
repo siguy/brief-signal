@@ -7,11 +7,12 @@
  * sends transcripts to Gemini for structured intelligence extraction, and
  * writes podcast knowledge base files.
  *
- * Requires: GOOGLE_API_KEY environment variable, yt-dlp installed
+ * Requires: GOOGLE_API_KEY environment variable, yt-dlp installed, and python3 with
+ * mlx_whisper for the caption fallback (scripts/transcribe-youtube-audio.py)
  */
 
 const { GoogleGenAI } = require("@google/genai");
-const { execSync, exec } = require("child_process");
+const { execSync, execFile } = require("child_process");
 const fs = require("fs");
 const path = require("path");
 
@@ -146,75 +147,161 @@ function getRecentUploads(channelHandle, dateAfter) {
   }
 }
 
-function downloadSubtitles(videoId) {
-  const safeId = validateVideoId(videoId);
-  const outPath = path.join(EXTRACTIONS_DIR, safeId);
-  const vttFile = `${outPath}.en.vtt`;
-  if (fs.existsSync(vttFile)) return vttFile;
-  try {
-    execSync(
-      `yt-dlp --skip-download --write-auto-sub --sub-lang en --sub-format vtt -o "${outPath}" "https://www.youtube.com/watch?v=${safeId}"`,
-      { encoding: "utf-8", timeout: 60000 }
-    );
-    return fs.existsSync(vttFile) ? vttFile : null;
-  } catch {
-    return null;
-  }
+// ---------------------------------------------------------------------------
+// Captions
+// ---------------------------------------------------------------------------
+//
+// Why "en-orig" and not "en": many podcast channels now have YouTube's
+// auto-dubbed audio tracks (Ukrainian, Hindi, Spanish...). Each dub gets its own
+// speech-recognition track, and yt-dlp lumps every "translate this into English"
+// variant under the single key "en". Asking for "en" can hand us a
+// machine-TRANSLATED track (URL has &tlang=en, e.g. Ukrainian dub -> English),
+// and YouTube rate-limits translated captions hard (HTTP 429). "en-orig" is the
+// original English speech-recognition track: one request, no translation, and
+// it downloaded fine for the exact videos that 429'd on "en" (2026-10-19).
+// We never fall back to plain auto "en" — a translated track is both throttled
+// and a worse transcript (English audio -> dub -> back to English).
+function captionAttempts(outPath) {
+  return [
+    { label: "auto en-orig", args: ["--write-auto-subs", "--sub-langs", "en-orig"], file: `${outPath}.en-orig.vtt` },
+    { label: "manual en", args: ["--write-subs", "--sub-langs", "en"], file: `${outPath}.en.vtt` },
+  ];
 }
 
-function downloadSubtitleAsync(videoId) {
+// yt-dlp prints a full traceback on failure; the useful part is the last ERROR line.
+function lastYtDlpError(stderr) {
+  const lines = (stderr || "").split("\n").map((l) => l.trim()).filter(Boolean);
+  const errors = lines.filter((l) => l.startsWith("ERROR"));
+  if (errors.length) return errors[errors.length - 1];
+  return lines.length ? lines[lines.length - 1] : "no error output";
+}
+
+// Runs yt-dlp without a shell (args array), and keeps stderr instead of throwing it away.
+function runYtDlp(args, timeout) {
   return new Promise((resolve) => {
-    const safeId = validateVideoId(videoId);
-    const outPath = path.join(EXTRACTIONS_DIR, safeId);
-    const vttFile = `${outPath}.en.vtt`;
-    const dateFile = `${outPath}.date`;
-    // If both cached, return immediately
-    if (fs.existsSync(vttFile) && fs.existsSync(dateFile)) {
-      const date = fs.readFileSync(dateFile, "utf-8").trim();
-      return resolve({ vttPath: vttFile, uploadDate: date });
-    }
-    const url = `https://www.youtube.com/watch?v=${safeId}`;
-    // Download subtitles — must NOT use --print, which disables file writes in yt-dlp
-    exec(
-      `yt-dlp --skip-download --write-auto-sub --sub-lang en --sub-format vtt -o "${outPath}" "${url}"`,
-      { encoding: "utf-8", timeout: 60000 },
-      (subErr) => {
-        const vttPath = fs.existsSync(vttFile) ? vttFile : null;
-        // Fetch upload date separately (--print is safe when no file writes needed)
-        if (!fs.existsSync(dateFile)) {
-          exec(
-            `yt-dlp --skip-download --print "%(upload_date)s" "${url}"`,
-            { encoding: "utf-8", timeout: 30000 },
-            (dateErr, stdout) => {
-              const date = (stdout || "").trim().split("\n")[0];
-              if (date && date !== "NA") {
-                try { fs.writeFileSync(dateFile, date, "utf-8"); } catch {}
-              }
-              resolve({ vttPath, uploadDate: date && date !== "NA" ? date : null });
-            }
-          );
-        } else {
-          const date = fs.readFileSync(dateFile, "utf-8").trim();
-          resolve({ vttPath, uploadDate: date || null });
-        }
-      }
-    );
+    execFile("yt-dlp", args, { encoding: "utf-8", timeout, maxBuffer: 20 * 1024 * 1024 }, (err, stdout, stderr) => {
+      resolve({ ok: !err, stdout: stdout || "", stderr: stderr || (err ? err.message : "") });
+    });
   });
 }
 
-async function downloadAllSubtitles(episodes, concurrency = 4) {
+// Try each caption track in order. Whatever we get is saved as <id>.en.vtt, the
+// one name the rest of the pipeline (and the whisper fallback) reads and writes.
+async function downloadCaptions(videoId, { dir = EXTRACTIONS_DIR, run = runYtDlp } = {}) {
+  const safeId = validateVideoId(videoId);
+  const outPath = path.join(dir, safeId);
+  const vttFile = `${outPath}.en.vtt`;
+  if (fs.existsSync(vttFile)) return { vttPath: vttFile, source: "cache", errors: [] };
+  const url = `https://www.youtube.com/watch?v=${safeId}`;
+  const errors = [];
+  for (const attempt of captionAttempts(outPath)) {
+    // Must NOT use --print here: it disables file writes in yt-dlp
+    const { ok, stderr } = await run(
+      ["--skip-download", ...attempt.args, "--sub-format", "vtt", "-o", outPath, url],
+      60000
+    );
+    if (fs.existsSync(attempt.file)) {
+      if (attempt.file !== vttFile) fs.renameSync(attempt.file, vttFile);
+      return { vttPath: vttFile, source: attempt.label, errors };
+    }
+    errors.push(`${attempt.label}: ${ok ? "no such track" : lastYtDlpError(stderr)}`);
+  }
+  return { vttPath: null, source: null, errors };
+}
+
+async function fetchUploadDate(videoId, { dir = EXTRACTIONS_DIR, run = runYtDlp } = {}) {
+  const safeId = validateVideoId(videoId);
+  const dateFile = path.join(dir, `${safeId}.date`);
+  if (fs.existsSync(dateFile)) return fs.readFileSync(dateFile, "utf-8").trim() || null;
+  // --print is safe here because this call writes no files
+  const { ok, stdout, stderr } = await run(
+    ["--skip-download", "--print", "%(upload_date)s", `https://www.youtube.com/watch?v=${safeId}`],
+    30000
+  );
+  const date = (stdout || "").trim().split("\n")[0];
+  if (!date || date === "NA") {
+    if (!ok) warn(`Upload date lookup failed for ${safeId}: ${lastYtDlpError(stderr)}`);
+    return null;
+  }
+  try { fs.writeFileSync(dateFile, date, "utf-8"); } catch {}
+  return date;
+}
+
+// Date first, then captions — and only for episodes inside the lookback window
+// (dateAfter, YYYYMMDD). Every caption request we skip is one fewer chance to
+// get rate-limited. An unknown date still gets captions (main() keeps it, warned).
+async function downloadAllSubtitles(episodes, concurrency = 4, { dateAfter = null, ...opts } = {}) {
   const subtitles = new Map(); // video_id -> vttPath
   const dates = new Map();     // video_id -> YYYYMMDD
   for (let i = 0; i < episodes.length; i += concurrency) {
     const batch = episodes.slice(i, i + concurrency);
-    const promises = batch.map(async ({ episode }) => {
-      const { vttPath, uploadDate } = await downloadSubtitleAsync(episode.video_id);
-      subtitles.set(episode.video_id, vttPath);
+    await Promise.all(batch.map(async ({ podcast, episode }) => {
+      const uploadDate = await fetchUploadDate(episode.video_id, opts);
       if (uploadDate) dates.set(episode.video_id, uploadDate);
-    });
-    await Promise.all(promises);
+      if (dateAfter && uploadDate && uploadDate < dateAfter) {
+        subtitles.set(episode.video_id, null); // too old — main() skips it anyway
+        return;
+      }
+      const { vttPath, errors } = await downloadCaptions(episode.video_id, opts);
+      subtitles.set(episode.video_id, vttPath);
+      if (!vttPath) {
+        // Loud: say exactly what yt-dlp said, not just "no subtitles"
+        warn(`Caption download failed for ${podcast.name} — "${episode.title}" (${episode.video_id}): ${errors.join(" | ")}`);
+      }
+    }));
   }
   return { subtitles, dates };
+}
+
+// ---------------------------------------------------------------------------
+// Whisper fallback: when captions fail, transcribe the audio locally
+// ---------------------------------------------------------------------------
+
+const WHISPER_HELPER = path.join(__dirname, "transcribe-youtube-audio.py");
+const WHISPER_TIMEOUT_MS = 40 * 60 * 1000; // one long episode, download + transcribe
+// Max episodes to whisper per run (~3-4 min each). 0 turns the fallback off.
+const WHISPER_FALLBACK_MAX = process.env.WHISPER_FALLBACK_MAX !== undefined
+  ? Number(process.env.WHISPER_FALLBACK_MAX)
+  : 25;
+
+function runWhisperHelper(videoId, vttFile) {
+  return new Promise((resolve) => {
+    execFile("python3", [WHISPER_HELPER, videoId, vttFile],
+      { encoding: "utf-8", timeout: WHISPER_TIMEOUT_MS, maxBuffer: 20 * 1024 * 1024 },
+      (err, stdout, stderr) => resolve({ ok: !err, stdout: stdout || "", stderr: stderr || (err ? err.message : "") }));
+  });
+}
+
+async function transcribeWithWhisper(videoId, { dir = EXTRACTIONS_DIR, run = runWhisperHelper } = {}) {
+  const safeId = validateVideoId(videoId);
+  const vttFile = path.join(dir, `${safeId}.en.vtt`);
+  const { ok, stdout, stderr } = await run(safeId, vttFile);
+  for (const line of stdout.split("\n").filter(Boolean)) log(line.replace(/^\[[\d:]+\] /, ""));
+  if (ok && fs.existsSync(vttFile)) return vttFile;
+  warn(`Whisper fallback failed for ${safeId}: ${lastYtDlpError(stderr)}`);
+  return null;
+}
+
+// How much of this week's in-window YouTube podcast audio we actually got text for.
+// Below 80% from captions, something upstream is broken and should be looked at.
+const COVERAGE_WARN_THRESHOLD = 0.8;
+
+function coverageReport({ inWindow, captions, whisper }) {
+  const lines = [];
+  if (inWindow === 0) return { lines: ["Transcript coverage: no in-window episodes"], warn: false };
+  const pct = (n) => `${Math.round((n / inWindow) * 100)}%`;
+  const missing = inWindow - captions - whisper;
+  lines.push(`Transcript coverage: ${captions + whisper}/${inWindow} in-window episodes (${pct(captions + whisper)}) — captions ${captions}, whisper fallback ${whisper}, missing ${missing}`);
+  const captionRate = captions / inWindow;
+  const totalRate = (captions + whisper) / inWindow;
+  const warnNeeded = captionRate < COVERAGE_WARN_THRESHOLD || totalRate < COVERAGE_WARN_THRESHOLD;
+  if (captionRate < COVERAGE_WARN_THRESHOLD) {
+    lines.push(`CAPTION SUCCESS RATE LOW: ${captions}/${inWindow} (${pct(captions)}), below ${COVERAGE_WARN_THRESHOLD * 100}%. Check the "Caption download failed" lines above for yt-dlp's actual error.`);
+  }
+  if (totalRate < COVERAGE_WARN_THRESHOLD) {
+    lines.push(`${missing} in-window episode(s) have NO transcript and will be missing from this week's briefing.`);
+  }
+  return { lines, warn: warnNeeded };
 }
 
 function parseVtt(vttPath) {
@@ -541,10 +628,8 @@ async function main() {
   }
 
   // Download subtitles in parallel (4 at a time) + fetch upload dates
-  log(`Downloading subtitles for ${allEpisodes.length} episodes (4 concurrent)...`);
-  const { subtitles: subtitlePaths, dates: uploadDates } = await downloadAllSubtitles(allEpisodes);
-  const downloaded = [...subtitlePaths.values()].filter(Boolean).length;
-  log(`Subtitles downloaded: ${downloaded}/${allEpisodes.length}`);
+  log(`Fetching upload dates + captions for ${allEpisodes.length} episodes (4 concurrent)...`);
+  const { subtitles: subtitlePaths, dates: uploadDates } = await downloadAllSubtitles(allEpisodes, 4, { dateAfter });
 
   // Apply real upload dates to episodes
   for (const { episode } of allEpisodes) {
@@ -555,24 +640,58 @@ async function main() {
     }
   }
 
-  // Parse all VTT files and prepare episodes for extraction
-  const prepared = []; // { podcast, episode, transcript }
-  const transcripts = {}; // url -> transcript (for deep dive reuse)
+  // Recency filter. The flat-playlist scan has no dates, so this is the first
+  // point we know the real upload date. Without it, any of a channel's last 5
+  // uploads not seen in the last 4 raw files slips in — a month-old episode
+  // reads as "new". An unknown date is kept (the date fetch can fail) but warned.
   const cutoff = dateAfter.replace(/(\d{4})(\d{2})(\d{2})/, "$1-$2-$3");
-  for (const { podcast, episode } of allEpisodes) {
-    // Recency filter. The flat-playlist scan has no dates, so this is the first
-    // point we know the real upload date. Without it, any of a channel's last 5
-    // uploads not seen in the last 4 raw files slips in — a month-old episode
-    // reads as "new". An unknown date is kept (the date fetch can fail) but warned.
+  const inWindow = [];
+  for (const item of allEpisodes) {
+    const { podcast, episode } = item;
     if (!/^\d{4}-\d{2}-\d{2}$/.test(episode.upload_date || "")) {
       warn(`No upload date for ${podcast.name} — "${episode.title}". Keeping it; verify recency by hand.`);
     } else if (episode.upload_date < cutoff) {
       log(`  Too old (${episode.upload_date} < ${cutoff}): ${podcast.name} — "${episode.title}". Skipping.`);
       continue;
     }
+    inWindow.push(item);
+  }
+  const captionCount = inWindow.filter(({ episode }) => subtitlePaths.get(episode.video_id)).length;
+  log(`Captions downloaded: ${captionCount}/${inWindow.length} in-window episodes`);
+
+  // Whisper fallback for in-window episodes YouTube wouldn't give captions for.
+  // One at a time: mlx-whisper saturates the GPU, and Stage 3b (RSS) may be
+  // transcribing at the same moment.
+  let whisperCount = 0;
+  const missing = inWindow.filter(({ episode }) => !subtitlePaths.get(episode.video_id));
+  if (missing.length > 0 && WHISPER_FALLBACK_MAX > 0) {
+    const toTranscribe = missing.slice(0, WHISPER_FALLBACK_MAX);
+    if (missing.length > toTranscribe.length) {
+      warn(`${missing.length} episodes need whisper but WHISPER_FALLBACK_MAX=${WHISPER_FALLBACK_MAX}; ${missing.length - toTranscribe.length} will be skipped.`);
+    }
+    log(`Whisper fallback: transcribing ${toTranscribe.length} episode(s) from audio (~3-4 min each)...`);
+    for (const { podcast, episode } of toTranscribe) {
+      log(`  Whisper: ${podcast.name} — "${episode.title}" (${episode.video_id})`);
+      const vttPath = await transcribeWithWhisper(episode.video_id);
+      if (vttPath) {
+        subtitlePaths.set(episode.video_id, vttPath);
+        whisperCount++;
+      }
+    }
+  } else if (missing.length > 0) {
+    warn(`Whisper fallback disabled (WHISPER_FALLBACK_MAX=0); ${missing.length} episode(s) stay without transcripts.`);
+  }
+
+  const coverage = coverageReport({ inWindow: inWindow.length, captions: captionCount, whisper: whisperCount });
+  for (const line of coverage.lines) (coverage.warn ? warn : log)(line);
+
+  // Parse all VTT files and prepare episodes for extraction
+  const prepared = []; // { podcast, episode, transcript }
+  const transcripts = {}; // url -> transcript (for deep dive reuse)
+  for (const { podcast, episode } of inWindow) {
     const vttPath = subtitlePaths.get(episode.video_id);
     if (!vttPath) {
-      warn(`No subtitles for ${podcast.name} — "${episode.title}". Skipping.`);
+      warn(`No transcript for ${podcast.name} — "${episode.title}" (${episode.video_id}): captions and whisper both failed. Skipping.`);
       continue;
     }
     const transcript = parseVtt(vttPath);
@@ -688,9 +807,23 @@ async function main() {
   log(`MEDIUM signal: ${extractions.filter((e) => e.signal_rating === "MEDIUM").length}`);
   log(`LOW signal: ${extractions.filter((e) => e.signal_rating === "LOW").length}`);
   log(`Deep dives: ${Object.keys(deepDives).length}`);
+  for (const line of coverage.lines) (coverage.warn ? warn : log)(line);
 }
 
-main().catch((err) => {
-  console.error("Fatal error:", err.message || err);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err) => {
+    console.error("Fatal error:", err.message || err);
+    process.exit(1);
+  });
+}
+
+module.exports = {
+  captionAttempts,
+  lastYtDlpError,
+  downloadCaptions,
+  fetchUploadDate,
+  downloadAllSubtitles,
+  transcribeWithWhisper,
+  coverageReport,
+  parseVtt,
+};

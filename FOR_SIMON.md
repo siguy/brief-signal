@@ -610,3 +610,77 @@ to `content/audio/{date}.mp3` and would have overwritten a published episode. Th
 tests issued the identical request shape directly instead. That is good evidence,
 not proof, and the difference is worth naming rather than glossing.
 
+
+## The Half-Empty Podcast Shelf (2026-10-19)
+
+From the 2026-09-27 run on, Stage 3a skipped about half the YouTube podcast
+episodes every week with one quiet line each: `WARN: No subtitles for ... Skipping.`
+On 2026-10-18 that was 24 in-window episodes, including Greg Brockman on No Priors,
+Nathan Lambert on a16z, and the LangChain and Atlassian CEOs on 20VC. We'd been
+patching it by hand two weeks running (whisper recovery on 09-27 and 10-04).
+
+### What was actually happening
+
+Think of a library that started stocking translated editions of every book. You ask
+the librarian for "the English edition". Sometimes she hands you the original, and
+sometimes she hands you an English translation *of the Ukrainian translation*,
+because both are shelved under "English". The translations sit behind a strict
+counter that turns you away after a few requests.
+
+That's what YouTube did. Many podcast channels now have **auto-dubbed** audio
+tracks: YouTube machine-dubs the episode into Ukrainian, Hindi, Spanish and so on.
+Each dub gets its own speech-recognition captions, and each of those can be
+machine-translated into English. yt-dlp (the download tool) files *all* of those
+English variants under one key, `en`. We asked for `en`. For many videos the track
+it picked was a translation. You can see it in the request URL: `lang=uk&tlang=en`
+means "Ukrainian captions, translated to English". YouTube rate-limits translated
+captions hard, so the answer was **HTTP 429: Too Many Requests**.
+
+There's a second track, `en-orig`: the original English speech recognition, with no
+translation step. On 2026-10-19 we asked for `en` on two videos skipped the night
+before and got a 429 on both. Seconds later we asked for `en-orig` on the same two
+videos, and both downloaded first try (~650 KB of transcript each).
+
+### Why we didn't see it sooner
+
+The script ran yt-dlp and **threw its error message away**. The only thing it kept
+was "did a file appear?". So the log said "No subtitles", which sounds like "this
+video has no captions", when the real message was "YouTube is rate-limiting you".
+The fix was a single word, but finding it took far longer than it should have,
+because the evidence had been deleted on the way to the log.
+
+### The fix, in three layers
+
+1. **Ask for the right thing.** Captions come from `en-orig` first, then the
+   uploader's own manual `en` subtitles. We never take the auto `en` key again,
+   because it can be a translation, and a translation is both rate-limited and a
+   worse transcript (English → machine dub → back to English).
+2. **A safety net.** If both caption attempts fail, a new helper,
+   `scripts/transcribe-youtube-audio.py`, downloads the audio and transcribes it
+   locally with mlx-whisper, writing the same `<id>.en.vtt` cache file. This is the
+   manual recovery from 09-27 and 10-04, automated, with the lessons from those
+   nights built in (`condition_on_previous_text=False`, plus a `web_embedded` retry
+   when YouTube says "confirm you're not a bot"). Episodes run one at a time, about
+   3-4 minutes each, capped by `WHISPER_FALLBACK_MAX` (default 25; set it to 0 to
+   turn the fallback off).
+3. **Make failure loud.** Each failed caption download now logs yt-dlp's real ERROR
+   line. At the end comes a coverage line: `captions X, whisper fallback Y,
+   missing Z`. If captions cover less than 80% of in-window episodes, it prints
+   `CAPTION SUCCESS RATE LOW`, even when whisper rescued them all, because a rescued
+   week still means something upstream broke.
+
+There's also a small bonus fix. We now look up each episode's upload date *before*
+asking for captions, and skip captions for episodes outside the 7-day window. Last
+week that would have been about 40 fewer requests to YouTube. Fewer requests means
+fewer chances to get rate-limited.
+
+### The lesson worth keeping
+
+**Never throw away an error message.** "It failed" and "it failed because of X" are
+very different log lines. The first sends you guessing (cookies? concurrency? a
+yt-dlp upgrade?). The second hands you the answer. When you wrap a tool in a
+script, keep its stderr, and log at least the last line of it.
+
+The second lesson: **a fallback should also raise an alarm.** If whisper quietly
+rescued every episode, this bug could have sat unnoticed for months, costing about
+90 extra minutes every Sunday. The coverage warning makes sure that doesn't happen.
