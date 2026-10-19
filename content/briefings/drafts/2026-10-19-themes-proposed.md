@@ -27,7 +27,9 @@ merits; a strong new thread with staying power earns its way into a *new* theme.
 ## Compute Scarcity & the Physical Buildout
 - **Status:** 🟢 active
 - **Led editions:** #7, #10, #12, #16, #33 · **First seen:** #7 · **Last led:** #33
-- **Where it stands:** Jensen Huang attacks hyperscaler custom silicon on fungibility and TCO as data center capex expands past $40B/GW; SemiAnalysis shows Google TPUv7 at 1.67x perf/$ over GB300; CoreWeave debt drops to 15% junk yields, exposing solvency risks in debt-financed neoclouds.
+- **Where it stands:** AWS confirmed sold out past 2028 by Andy Jassy, while CoreWeave secondary debt
+  yields spiked to 15% (CDS at 953 bps), exposing severe refinancing risk among debt-backed neoclouds
+  as gigawatt buildout costs double to $40B+. Advanced in #35.
 
 ## Sovereignty / Who Owns the Model & the Alpha
 - **Status:** 🟢 hot
@@ -39,33 +41,40 @@ merits; a strong new thread with staying power earns its way into a *new* theme.
 ## Open Weights Closing / Leapfrogging the Frontier
 - **Status:** 🟢 hot, accelerating
 - **Led editions:** #19, #22, #34 · **First seen:** #19 · **Last led:** #34
-- **Where it stands:** Meta and Microsoft cut proprietary Claude usage by 33-50% in favor of in-house models; Reflection AI's Beam brings 501B open weights with Day 0 Google Cloud support; open models capture 78.4% of Vercel AI Gateway volume.
+- **Where it stands:** Meta and Microsoft cut Claude usage by up to 50% for margin; Reflection AI's Beam
+  provides a 501B American open alternative; open weights capture 78.4% of token volume on Vercel AI Gateway.
 
 ## Token / AI-Spend Economics (cost & value migration)
 - **Status:** 🟢 active
-- **Led editions:** #5, #15, #17, #20, #32, #35 · **First seen:** #5 · **Last led:** #35
-- **Where it stands:** Gemini 4 Argon resets frontier pricing to $1.99/task (74% below closed rivals), while models split into specialized operational personalities; Character AI files Chapter 11 bankruptcy over a $10M/month compute burn; Ramp deploys Glass meters and router to survive a $1.5M token week.
+- **Led editions:** #5, #15, #17, #20 · **First seen:** #5 · **Last led:** #20
+- **Where it stands:** LangChain's $40k weekly DOM loop and Ramp's $1.5M token week proved falling per-token
+  rates are swamped by 1,000x multi-turn agent query amplification, accelerating harness-level metering and
+  semantic routing. Advanced in #35.
 
 ## Agent Infrastructure Maturing (harnesses, stateful agents, reliability)
-- **Status:** 🟢 active
-- **Led editions:** #1, #2, #4, #8, #14 · **First seen:** #1 · **Last led:** #14
-- **Where it stands:** Frontier reasoning demands System-1 hesitation gating (DiffusionGemma) and model-neutral routing to prevent catastrophic token burn; persistent remote agent execution remains unsolved by primary labs, driving bespoke desktop harnesses and MCP gateways.
+- **Status:** 🟢 hot
+- **Led editions:** #1, #2, #4, #8, #14, #35 · **First seen:** #1 · **Last led:** #35
+- **Where it stands:** Gemini 4 Argon exposed the chasm between raw model intelligence ($1.99/task, 97.5% ARC-AGI-3)
+  and execution harnesses (Antigravity lagging 6-12 months, 21% refactor bench), forcing builders onto decoupled
+  multi-model routing harnesses. Led #35.
 
 ## SaaS → Agent-Native Flip (build-vs-buy)
-- **Status:** 🟢 active
+- **Status:** ⚪ dormant
 - **Led editions:** #6, #9 · **First seen:** #6 · **Last led:** #9
 - **Where it stands:** Enterprises replacing seven-figure SaaS with internal agents — Curative canceled a
-  $600K Salesforce contract; Replit's "self-driving company." Carried #22 as Quick Hits.
+  $600K Salesforce contract; Replit's "self-driving company." Maintenance debt causing some teams to return to commercial SaaS.
 
 ## The Org Restructuring / Who Builds (solo founders, self-driving companies)
 - **Status:** ⚪ dormant
 - **Led editions:** #3, #15 · **First seen:** #3 · **Last led:** #15
-- **Where it stands:** One-person million-dollar companies; staff going from "doers to directors." Has not led since Edition #15; signal lives primarily in Quick Hits and builder workflows.
+- **Where it stands:** One-person million-dollar companies; staff going from "doers to directors." Lives
+  mostly in Quick Hits now.
 
 ## AI Economy / Market Structure (capex vs ROI, IPOs, the $1T theses)
-- **Status:** 🟡 active
+- **Status:** ⚪ dormant
 - **Led editions:** #8, #9, #16 · **First seen:** #8 · **Last led:** #16
-- **Where it stands:** Anthropic ~$3T and a fall IPO; OpenAI IPO watch; bubble / capex-vs-ROI debates.
+- **Where it stands:** Anthropic targeting $2.0T valuation in fall IPO; OpenAI FCF positive watch; capex
+  sustainability debates.
 
 ---
 
