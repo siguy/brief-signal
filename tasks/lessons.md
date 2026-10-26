@@ -463,3 +463,15 @@ unchecked assertions.
   Rule: **before calling a claim unsourced, search loose patterns (numbers alone,
   key nouns) across the KB AND the .vtt transcript.** KB timestamps also drift 1-5
   minutes from the transcript: take timestamps from the .vtt, not the KB.
+
+- **I re-ran last week's story as this week's.** The recut's commit story opened on
+  Jassy's "sold out" line, which Edition #35 had already led with (via Horowitz).
+  Rule: **before finalizing any Big Picture story, grep the previous edition for
+  its key names and numbers; a carried-over fact opens as "last edition X, this
+  week Y" and the story stands on what is new.**
+
+- **I wrote a security angle without Wiz, which Google owns.** The PHP2Shell post
+  named Wiz Research as co-discoverer and listed Wiz detection and free WizOS
+  images, yet the angle led with Cloud Armor alone. Rule: **security angles lead
+  with Google's strongest owned asset in the source (Wiz, Mandiant), and the
+  playbook needs Wiz facts so Stage 4b can do this unprompted.**
