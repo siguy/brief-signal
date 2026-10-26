@@ -176,6 +176,35 @@ out="$(bash -c "
 assert_contains "checkout_base detaches when main is held elsewhere" "$out" "--detach origin/main"
 assert_contains "checkout_base does not abort the run" "$out" "CONTINUED"
 
+# source_inventory: a fresh KB with zero YouTube episodes must reach the PR as an
+# alert (2026-10-25: Edition #36 shipped without them and nothing said so).
+run_inventory() {
+  local home="$1"
+  bash -c "
+    set -euo pipefail
+    HOME='$home'
+    log() { :; }
+    $(extract_function source_inventory)
+    source_inventory
+    echo \"\$SOURCE_TABLE\"
+    echo \"ALERTS=\$SOURCE_ALERTS\"
+    echo CONTINUED
+  " 2>&1
+}
+inv_home="$(mktemp -d)"; mkdir -p "$inv_home/skills"
+printf '### #1 — a bookmark\n### #2 — another\n' > "$inv_home/skills/bookmarks-knowledge-base-2026-10-25.md"
+printf '**Source:** [AI Daily Brief (RSS)](https://x)\n' > "$inv_home/skills/podcasts-knowledge-base-2026-10-25.md"
+out="$(run_inventory "$inv_home")"
+assert_contains "source_inventory alerts on zero YouTube podcasts" "$out" "Zero YouTube podcast episodes"
+assert_contains "source_inventory counts RSS episodes" "$out" "| Podcasts (RSS) | 1 |"
+assert_contains "source_inventory counts bookmarks" "$out" "| Bookmarks | 2 |"
+assert_contains "source_inventory survives a missing playlist KB" "$out" "CONTINUED"
+printf '**Source:** [Latent Space (YouTube)](https://y)\n' >> "$inv_home/skills/podcasts-knowledge-base-2026-10-25.md"
+out="$(run_inventory "$inv_home")"
+assert_contains "source_inventory: no alert when YouTube episodes exist" "$out" "ALERTS=
+CONTINUED"
+rm -rf "$inv_home"
+
 if [ "$failed" -gt 0 ]; then
   echo ""
   echo "generate-weekly.test.sh: $failed FAILED, $passed passed"

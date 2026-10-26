@@ -417,7 +417,11 @@ ${extractions.length === 0 ? EMPTY_MARKER + "\n" : ""}
 ---
 
 `;
+  return md + formatKbEntries(extractions, deepDives);
+}
 
+function formatKbEntries(extractions, deepDives) {
+  let md = "";
   // Sort by editorial signal: HIGH first, then MEDIUM, then LOW
   const order = { HIGH: 0, MEDIUM: 1, LOW: 2 };
   const sorted = [...extractions].sort(
@@ -558,6 +562,79 @@ function formatOrganizedTable(extractions, today) {
   }
 
   return md;
+}
+
+// MERGE, NEVER OVERWRITE. The three dated output files are shared: Stage 3b (RSS)
+// appends to the same raw JSON and KB, and a same-day re-run writes the same
+// names. On 2026-10-25 a manual run at 20:05 extracted the week's episodes; the
+// 21:00 cron run then saw them in the raw file as "previously extracted", found
+// nothing else in window, and overwrote all three files with an empty set.
+// Edition #36 shipped with zero YouTube podcasts and nothing in the PR said so.
+// So: raw entries are merged by video_id (a re-extraction replaces its old
+// entry), the KB and organized table are appended to, and a run with nothing
+// new only touches the files so the freshness guard still sees it.
+function writeOutputs({ extractions, deepDives, today, rawDir = RAW_DIR, skillsDir = SKILLS_DIR }) {
+  // 1. Raw JSON
+  const rawPath = path.join(rawDir, `podcasts-raw-${today}.json`);
+  let existing = [];
+  if (fs.existsSync(rawPath)) {
+    try {
+      const parsed = JSON.parse(fs.readFileSync(rawPath, "utf-8"));
+      if (Array.isArray(parsed)) existing = parsed;
+    } catch {
+      warn(`Existing ${rawPath} is not valid JSON; it will be replaced.`);
+    }
+  }
+  const newIds = new Set(extractions.map((e) => e.video_id).filter(Boolean));
+  const kept = existing.filter((e) => !e.video_id || !newIds.has(e.video_id));
+  const added = extractions.map((e) => ({
+    source: "podcast",
+    video_id: e.video_id,
+    podcast_name: e.podcast_name,
+    episode_title: e.episode_title,
+    episode_number: e.episode_number,
+    date: e.date,
+    url: e.url,
+    duration_min: e.duration_min,
+    signal_rating: e.signal_rating,
+    notable_quotes: e.notable_quotes,
+    consensus_signals: e.consensus_signals,
+    debate_points: e.debate_points,
+    intent_signals: e.intent_signals,
+    gcp_intelligence: e.gcp_intelligence,
+    companies_mentioned: e.companies_mentioned,
+    topics: e.topics,
+    deep_dive: deepDives[e.url] || null,
+    extracted_at: new Date().toISOString(),
+  }));
+  const combined = [...kept, ...added].map((e, i) => ({ ...e, id: String(i + 1) }));
+  fs.mkdirSync(rawDir, { recursive: true });
+  fs.writeFileSync(rawPath, JSON.stringify(combined, null, 2), "utf-8");
+
+  // 2. Knowledge base, 3. organized tables: append when the file already exists
+  fs.mkdirSync(skillsDir, { recursive: true });
+  const kbPath = path.join(skillsDir, `podcasts-knowledge-base-${today}.md`);
+  const orgPath = path.join(skillsDir, `podcasts-organized-${today}.md`);
+  const now = new Date();
+  if (!fs.existsSync(kbPath)) {
+    fs.writeFileSync(kbPath, formatKnowledgeBase(extractions, deepDives, today), "utf-8");
+  } else if (extractions.length === 0) {
+    fs.utimesSync(kbPath, now, now);
+  } else {
+    // The file has real entries now, so a leftover EMPTY marker would be a lie
+    const kb = fs.readFileSync(kbPath, "utf-8").replace(EMPTY_MARKER + "\n", "");
+    fs.writeFileSync(kbPath, kb + formatKbEntries(extractions, deepDives), "utf-8");
+  }
+  if (!fs.existsSync(orgPath)) {
+    fs.writeFileSync(orgPath, formatOrganizedTable(extractions, today), "utf-8");
+  } else if (extractions.length === 0) {
+    fs.utimesSync(orgPath, now, now);
+  } else {
+    const org = fs.readFileSync(orgPath, "utf-8").trimEnd();
+    fs.writeFileSync(orgPath, `${org}\n\n${formatOrganizedTable(extractions, today)}`, "utf-8");
+  }
+
+  return { rawPath, kbPath, orgPath, rawCount: combined.length };
 }
 
 async function main() {
@@ -756,48 +833,9 @@ async function main() {
     }
   }));
 
-  // Write output files
-  // 1. Raw JSON
-  const rawPath = path.join(RAW_DIR, `podcasts-raw-${today}.json`);
-  fs.writeFileSync(
-    rawPath,
-    JSON.stringify(
-      extractions.map((e, i) => ({
-        id: String(i + 1),
-        source: "podcast",
-        video_id: e.video_id,
-        podcast_name: e.podcast_name,
-        episode_title: e.episode_title,
-        episode_number: e.episode_number,
-        date: e.date,
-        url: e.url,
-        duration_min: e.duration_min,
-        signal_rating: e.signal_rating,
-        notable_quotes: e.notable_quotes,
-        consensus_signals: e.consensus_signals,
-        debate_points: e.debate_points,
-        intent_signals: e.intent_signals,
-        gcp_intelligence: e.gcp_intelligence,
-        companies_mentioned: e.companies_mentioned,
-        topics: e.topics,
-        deep_dive: deepDives[e.url] || null,
-        extracted_at: new Date().toISOString(),
-      })),
-      null,
-      2
-    ),
-    "utf-8"
-  );
+  const { rawPath, kbPath, orgPath } = writeOutputs({ extractions, deepDives, today });
   log(`Raw JSON: ${rawPath}`);
-
-  // 2. Knowledge base markdown
-  const kbPath = path.join(SKILLS_DIR, `podcasts-knowledge-base-${today}.md`);
-  fs.writeFileSync(kbPath, formatKnowledgeBase(extractions, deepDives, today), "utf-8");
   log(`Knowledge base: ${kbPath}`);
-
-  // 3. Organized tables
-  const orgPath = path.join(SKILLS_DIR, `podcasts-organized-${today}.md`);
-  fs.writeFileSync(orgPath, formatOrganizedTable(extractions, today), "utf-8");
   log(`Organized tables: ${orgPath}`);
 
   // Summary
@@ -826,4 +864,5 @@ module.exports = {
   transcribeWithWhisper,
   coverageReport,
   parseVtt,
+  writeOutputs,
 };
