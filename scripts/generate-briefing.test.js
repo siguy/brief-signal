@@ -12,6 +12,7 @@ const {
   truncateRepetition,
   countWords,
   readThemeRegistry,
+  readSellerPriorities,
   extractProposedThemes,
   lineupTask,
   stripLineupFences,
@@ -120,6 +121,22 @@ test("readThemeRegistry reads the real content/themes.md", () => {
   const registry = readThemeRegistry();
   assert.ok(registry.length > 0, "expected non-empty registry content");
   assert.ok(/^##\s+/m.test(registry), "expected at least one theme heading");
+});
+
+// --- Seller priorities (content/seller-priorities.md, gitignored) ---------
+
+test("readSellerPriorities returns a string whether or not the local file exists", () => {
+  // Gitignored, so CI and fresh clones have no file: it must degrade to "" with
+  // a warning, never throw and take the whole Stage 4 run down with it.
+  assert.strictEqual(typeof readSellerPriorities(), "string");
+});
+
+test("lineupTask asks for per-story priority fit and an honest coverage report", () => {
+  const task = lineupTask(36);
+  assert.ok(task.includes("priority fit:"), "missing per-story 'priority fit' field");
+  assert.ok(task.includes("**Priority coverage:**"), "missing coverage block (lineup-digest.js parses this exact heading)");
+  assert.ok(task.includes("NO FRESH SIGNAL this week"), "missing the honest-gap wording the digest flags");
+  assert.ok(task.includes("No priorities provided this run"), "missing the skip when no priorities were injected");
 });
 
 test("lineupTask includes theme-tagging and fenced registry instructions", () => {

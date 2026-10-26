@@ -8,7 +8,14 @@
  */
 
 const assert = require("assert");
-const { parseArgs, parseStories, parseRegistryDiff, newThemes, render } = require("./lineup-digest.js");
+const {
+  parseArgs,
+  parseStories,
+  parseRegistryDiff,
+  parsePriorityCoverage,
+  newThemes,
+  render,
+} = require("./lineup-digest.js");
 
 let passed = 0;
 let failed = 0;
@@ -171,6 +178,51 @@ test("parseRegistryDiff stops at the next top-level bold heading", () => {
     ["**Proposed registry update:**", "- One change.", "", "**Something Else:**", "- not a theme"].join("\n")
   );
   assert.strictEqual(diff, "- One change.");
+});
+
+// --- seller-priority coverage ---------------------------------------------
+
+const PRIORITY_LINEUP = [
+  "**The Big Picture (exactly 2-3 stories, lead first):**",
+  "1. **Black October: PHP2Shell and Platform Breaches**",
+  "   - gravity: 3 KBs × 9 distinct shows/authors",
+  "    *   priority fit: Security",
+  "",
+  "**Why the lead beats the runner-up:** Active exploitation.",
+  "",
+  "**Priority coverage:**",
+  "- Committed deals — story 2",
+  "- Security — story 1",
+  "- Gemini Enterprise — NO FRESH SIGNAL this week",
+  "",
+  "**Quick Hits (3-6 candidates):**",
+  "- **[Something](https://example.com/a)** — a quick hit.",
+].join("\n");
+
+test("parseStories captures priority fit whatever the bullet style", () => {
+  const [first] = parseStories(PRIORITY_LINEUP);
+  assert.strictEqual(first.priority, "Security");
+});
+
+test("parsePriorityCoverage reads one line per priority and stops at the next block", () => {
+  const coverage = parsePriorityCoverage(PRIORITY_LINEUP);
+  assert.strictEqual(coverage.length, 3, "Quick Hits must not leak into coverage");
+  assert.match(coverage[2], /Gemini Enterprise/);
+});
+
+test("parsePriorityCoverage returns nothing when the block is absent", () => {
+  assert.deepStrictEqual(parsePriorityCoverage(LINEUP), []);
+});
+
+test("render leads with coverage and flags priority gaps", () => {
+  const out = render({ lineup: PRIORITY_LINEUP, themes: null, themesPath: null });
+  assert.ok(out.indexOf("Seller-priority coverage") < out.indexOf("Themes ↔ stories"), "coverage comes first");
+  assert.match(out, /⚠️ Gemini Enterprise — NO FRESH SIGNAL/);
+  assert.match(out, /\*Priority fit:\* Security/);
+});
+
+test("render omits the coverage section for a lineup without one", () => {
+  assert.ok(!render({ lineup: LINEUP, themes: null, themesPath: null }).includes("Seller-priority coverage"));
 });
 
 // --- args ------------------------------------------------------------------

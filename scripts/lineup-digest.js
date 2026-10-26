@@ -46,7 +46,7 @@ function parseStories(lineup) {
     const head = raw.match(/^(\d+)\.\s+\*\*(.+?)\*\*\s*$/);
     if (head) {
       if (current) stories.push(current);
-      current = { n: head[1], title: head[2], advances: null, gravity: null };
+      current = { n: head[1], title: head[2], advances: null, gravity: null, priority: null };
       continue;
     }
     if (!current) continue;
@@ -60,8 +60,11 @@ function parseStories(lineup) {
     // on some editions and `    *   advances:` on others. Matching only "-" cost
     // the entire mapping on the first live run: titles rendered, every Advances
     // and Gravity line silently vanished.
-    const field = raw.match(/^\s*[-*+]\s*(advances|gravity):\s*(.+)$/i);
-    if (field) current[field[1].toLowerCase()] = field[2].trim();
+    const field = raw.match(/^\s*[-*+]\s*(advances|gravity|priority fit):\s*(.+)$/i);
+    if (field) {
+      const key = field[1].toLowerCase() === "priority fit" ? "priority" : field[1].toLowerCase();
+      current[key] = field[2].trim();
+    }
   }
   if (current) stories.push(current);
   return stories;
@@ -84,6 +87,24 @@ function parseRegistryDiff(lineup) {
   return (end === -1 ? rest : rest.slice(0, end)).join("\n").trim();
 }
 
+// "**Priority coverage:**" — one line per quarterly seller priority saying
+// which story carries it, or that nothing fresh did. It sits FIRST in the PR
+// body because it answers the question Simon asked of Edition #36 ("how does
+// the agent laptop thing get a headline but Black October doesn't?") before he
+// reads a single story. Runs to the next top-level bold heading.
+function parsePriorityCoverage(lineup) {
+  const lines = lineup.split("\n");
+  const start = lines.findIndex((l) => /^\*\*Priority coverage:\*\*/.test(l));
+  if (start === -1) return [];
+  const out = [];
+  for (const l of lines.slice(start + 1)) {
+    if (/^\*\*\S/.test(l)) break;
+    const item = l.match(/^\s*[-*+]\s+(.+)$/);
+    if (item) out.push(item[1].trim());
+  }
+  return out;
+}
+
 // A NEW THEME line is the one registry change that isn't an incremental "moved
 // to" — it proposes a new arc, which is a bigger decision than the rest and
 // deserves to be visible without reading the whole diff.
@@ -97,9 +118,17 @@ function newThemes(diff) {
 function render({ lineup, themes, themesPath }) {
   const stories = parseStories(lineup);
   const diff = parseRegistryDiff(lineup);
-  if (!stories.length && !diff) return "";
+  const coverage = parsePriorityCoverage(lineup);
+  if (!stories.length && !diff && !coverage.length) return "";
 
-  const out = ["## 🗺️ Themes ↔ stories — read this first", ""];
+  const out = [];
+  if (coverage.length) {
+    out.push("## 🎯 Seller-priority coverage");
+    out.push("");
+    for (const c of coverage) out.push(/NO FRESH SIGNAL/i.test(c) ? `- ⚠️ ${c}` : `- ${c}`);
+    out.push("");
+  }
+  out.push("## 🗺️ Themes ↔ stories — read this first", "");
 
   if (stories.length) {
     out.push("**This edition's Big Picture stories and the arcs they advance:**");
@@ -108,6 +137,7 @@ function render({ lineup, themes, themesPath }) {
       out.push(`**${s.n}. ${s.title}**`);
       if (s.advances) out.push(`- *Advances:* ${s.advances}`);
       if (s.gravity) out.push(`- *Gravity:* ${s.gravity}`);
+      if (s.priority) out.push(`- *Priority fit:* ${s.priority}`);
       out.push("");
     }
   }
@@ -157,4 +187,4 @@ function main() {
 
 if (require.main === module) main();
 
-module.exports = { parseArgs, parseStories, parseRegistryDiff, newThemes, render };
+module.exports = { parseArgs, parseStories, parseRegistryDiff, parsePriorityCoverage, newThemes, render };

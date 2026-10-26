@@ -44,6 +44,7 @@ else
   LINKED_PATHS=(
     ".env"
     "content/gcp-playbook.md"
+    "content/seller-priorities.md"
   )
 
   for rel in "${LINKED_PATHS[@]}"; do
