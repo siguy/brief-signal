@@ -160,12 +160,24 @@ function readThemeRegistry() {
 // security surge (a stated priority) was filed as "context-only".
 const PRIORITIES_PATH = path.join(__dirname, "..", "content", "seller-priorities.md");
 
-function readSellerPriorities() {
-  if (!fs.existsSync(PRIORITIES_PATH)) {
-    console.warn(`WARN: ${PRIORITIES_PATH} not found — the lineup will run with NO seller-priority scoring. Copy it from the main checkout (template: content/seller-priorities.example.md).`);
+// Priorities are quarterly, so the file carries an "Expires: YYYY-MM-DD" line.
+// On or after that date it is ignored with a warning: stale guidance steering
+// selection silently is worse than none. Returns "" when the text is past expiry.
+function activePriorities(text, today) {
+  const m = text.match(/^Expires:\s*(\d{4}-\d{2}-\d{2})/m);
+  if (m && today >= m[1]) {
+    console.warn(`WARN: seller priorities expired ${m[1]} — the lineup will run WITHOUT them. Set next quarter's in ${PRIORITIES_PATH}.`);
     return "";
   }
-  return fs.readFileSync(PRIORITIES_PATH, "utf-8");
+  return text;
+}
+
+function readSellerPriorities(today = getTodayDate()) {
+  if (!fs.existsSync(PRIORITIES_PATH)) {
+    console.warn(`WARN: ${PRIORITIES_PATH} not found — the lineup will run with no seller-priority guidance. Copy it from the main checkout (template: content/seller-priorities.example.md).`);
+    return "";
+  }
+  return activePriorities(fs.readFileSync(PRIORITIES_PATH, "utf-8"), today);
 }
 
 // Ground truth for product positioning ("Our Play" + "Where the GCP
@@ -248,7 +260,7 @@ For each story:
 
 **Why the lead beats the runner-up:** {one line}
 
-**Priority coverage:** if no "## Seller Priorities" section was provided above, write "No priorities provided this run". Otherwise one line per priority, in the file's order: {label} — {story number(s), "Quick Hit", or "NO FRESH SIGNAL this week"}. Never stretch a story to fill a priority; an honest gap is the useful answer.
+**Priority coverage:** if no "## Seller Priorities" section was provided above, write "No priorities provided this run". Otherwise one line per priority, in the file's order: {label} — {story number(s), "Quick Hit", or "NO FRESH SIGNAL this week"}. Never stretch a story to fill a priority, and never cut major news because it fits none; an honest gap is the useful answer.
 
 **Continuity:** {which recurring arc from the recent-edition leads this edition advances and how it moves forward — or "new thread"}
 
@@ -478,7 +490,7 @@ async function main() {
   // Same 4a-only reasoning as the registry: a redraft expands an approved lineup.
   const sellerPriorities = redraft ? "" : readSellerPriorities();
   const sellerPrioritiesContext = sellerPriorities
-    ? `\n\n## Seller Priorities (this quarter — score every candidate on fit; report coverage)\n\n${sellerPriorities}`
+    ? `\n\n## Seller Priorities (this quarter — guidance for tie-breaks and coverage; never a reason to drop key news)\n\n${sellerPriorities}`
     : "";
 
   const ai = new GoogleGenAI({ apiKey });
@@ -642,6 +654,7 @@ module.exports = {
   countWords,
   readThemeRegistry,
   readSellerPriorities,
+  activePriorities,
   readGcpPlaybook,
   extractProposedThemes,
   lineupTask,
