@@ -13,6 +13,7 @@ const {
   countWords,
   readThemeRegistry,
   readSellerPriorities,
+  activePriorities,
   extractProposedThemes,
   lineupTask,
   stripLineupFences,
@@ -129,6 +130,17 @@ test("readSellerPriorities returns a string whether or not the local file exists
   // Gitignored, so CI and fresh clones have no file: it must degrade to "" with
   // a warning, never throw and take the whole Stage 4 run down with it.
   assert.strictEqual(typeof readSellerPriorities(), "string");
+});
+
+test("activePriorities drops priorities on and after their Expires date", () => {
+  const text = "# Q4\nExpires: 2027-01-01\n\n1. **Security**";
+  assert.strictEqual(activePriorities(text, "2026-12-31"), text);
+  assert.strictEqual(activePriorities(text, "2027-01-01"), "");
+  assert.strictEqual(activePriorities(text, "2027-03-02"), "");
+});
+
+test("activePriorities keeps a file with no Expires line", () => {
+  assert.strictEqual(activePriorities("1. **Security**", "2030-01-01"), "1. **Security**");
 });
 
 test("lineupTask asks for per-story priority fit and an honest coverage report", () => {
