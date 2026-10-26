@@ -26,6 +26,7 @@ const {
   transcribeWithWhisper,
   coverageReport,
   parseVtt,
+  writeOutputs,
 } = require("./extract-podcasts.js");
 
 const ID = "L4SWQebqhek";
@@ -203,6 +204,56 @@ function fakeYtDlp(plan, calls = []) {
     const p = path.join(dir, "w.en.vtt");
     fs.writeFileSync(p, "WEBVTT\nKind: captions\nLanguage: en\n\n00:00:00.000 --> 00:00:05.000\nWar talk Friday.\n\n01:02:05.300 --> 01:02:07.380\nSecond line.\n");
     assert.strictEqual(parseVtt(p), "War talk Friday. Second line.");
+  });
+
+  // --- writeOutputs: same-day runs merge, never overwrite (2026-10-25 incident) ---
+  const ep = (id, rating = "MEDIUM") => ({
+    video_id: id, podcast_name: "Latent Space", episode_title: `Episode ${id}`,
+    date: "2026-10-22", url: `https://www.youtube.com/watch?v=${id}`, duration_min: 60,
+    signal_rating: rating, notable_quotes: [], consensus_signals: [], debate_points: [],
+    intent_signals: [], gcp_intelligence: null, companies_mentioned: [], topics: [],
+  });
+  const outDirs = () => { const d = tmpDir(); return { rawDir: path.join(d, "raw"), skillsDir: path.join(d, "skills") }; };
+  const readRaw = (dirs) => JSON.parse(fs.readFileSync(path.join(dirs.rawDir, "podcasts-raw-2026-10-25.json"), "utf-8"));
+  const readKb = (dirs) => fs.readFileSync(path.join(dirs.skillsDir, "podcasts-knowledge-base-2026-10-25.md"), "utf-8");
+
+  await test("writeOutputs: a later run that finds nothing keeps the earlier run's episodes", () => {
+    const dirs = outDirs();
+    writeOutputs({ extractions: [ep("AAA", "HIGH"), ep("BBB")], deepDives: {}, today: "2026-10-25", ...dirs });
+    writeOutputs({ extractions: [], deepDives: {}, today: "2026-10-25", ...dirs });
+    assert.deepStrictEqual(readRaw(dirs).map((e) => e.video_id), ["AAA", "BBB"]);
+    assert.ok(readKb(dirs).includes("Episode AAA") && readKb(dirs).includes("Episode BBB"));
+  });
+
+  await test("writeOutputs: keeps RSS entries already in the shared files", () => {
+    const dirs = outDirs();
+    fs.mkdirSync(dirs.rawDir, { recursive: true });
+    fs.mkdirSync(dirs.skillsDir, { recursive: true });
+    fs.writeFileSync(path.join(dirs.rawDir, "podcasts-raw-2026-10-25.json"),
+      JSON.stringify([{ id: "1", video_id: null, podcast_name: "AI Daily Brief", episode_title: "RSS one" }]));
+    fs.writeFileSync(path.join(dirs.skillsDir, "podcasts-knowledge-base-2026-10-25.md"), "# header\n\n## AI Daily Brief — RSS one\n");
+    writeOutputs({ extractions: [ep("AAA")], deepDives: {}, today: "2026-10-25", ...dirs });
+    const raw = readRaw(dirs);
+    assert.deepStrictEqual(raw.map((e) => e.episode_title), ["RSS one", "Episode AAA"]);
+    assert.deepStrictEqual(raw.map((e) => e.id), ["1", "2"]);
+    assert.ok(readKb(dirs).includes("RSS one") && readKb(dirs).includes("Episode AAA"));
+  });
+
+  await test("writeOutputs: re-extracting an episode replaces its raw entry, no duplicate", () => {
+    const dirs = outDirs();
+    writeOutputs({ extractions: [ep("AAA", "LOW")], deepDives: {}, today: "2026-10-25", ...dirs });
+    writeOutputs({ extractions: [ep("AAA", "HIGH")], deepDives: {}, today: "2026-10-25", ...dirs });
+    const raw = readRaw(dirs);
+    assert.strictEqual(raw.length, 1);
+    assert.strictEqual(raw[0].signal_rating, "HIGH");
+  });
+
+  await test("writeOutputs: appending to an empty-marked KB drops the EMPTY marker", () => {
+    const dirs = outDirs();
+    writeOutputs({ extractions: [], deepDives: {}, today: "2026-10-25", ...dirs });
+    assert.ok(readKb(dirs).includes("EMPTY"));
+    writeOutputs({ extractions: [ep("AAA")], deepDives: {}, today: "2026-10-25", ...dirs });
+    assert.ok(!readKb(dirs).includes("EMPTY") && readKb(dirs).includes("Episode AAA"));
   });
 
   console.log(`\n${passed} passed${process.exitCode ? ", some FAILED" : ""}`);
