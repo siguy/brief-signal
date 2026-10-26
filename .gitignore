@@ -25,3 +25,8 @@ vite-signal/
 # fresh clone still builds — it just drafts Our Play without ground truth.
 docs/internal/
 content/gcp-playbook.md
+
+# Quarterly seller priorities — internal sales targets, same reasoning as the
+# playbook. Stage 4a reads it to score lineup candidates; the committed
+# content/seller-priorities.example.md shows the shape.
+content/seller-priorities.md

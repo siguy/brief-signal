@@ -450,3 +450,16 @@ unchecked assertions.
   agents produced five progress reports when one document was asked for. Rule:
   **wait for the set, deliver once.** Same for PR descriptions — update after the
   work lands, not between each commit.
+
+- **The lead doctrine scored "seller-actionability" with no idea what sellers are
+  measured on.** Edition #36 led with an agent-runtime story and filed the Black
+  October security surge as context, while OpenAI's arrival in Model Garden was
+  cut, both squarely on the team's Q4 priorities. Rule: **story selection reads
+  content/seller-priorities.md; a security incident cluster is never
+  "context-only"; the PR body reports per-priority coverage, honest gaps included.**
+
+- **A narrow grep is not proof a quote is fabricated.** I deleted Evan Conrad's
+  real "$11 or $15 an hour" line as unsourced because my search pattern missed it.
+  Rule: **before calling a claim unsourced, search loose patterns (numbers alone,
+  key nouns) across the KB AND the .vtt transcript.** KB timestamps also drift 1-5
+  minutes from the transcript: take timestamps from the .vtt, not the KB.
