@@ -494,3 +494,11 @@ unchecked assertions.
 - **The playlist skill needs the same `en-orig` caption fix the podcast extractor got.**
   Fixes to one YouTube extractor should be checked against the other (`extract-podcasts.js`
   in the repo vs `~/.claude/skills/extract-playlist/SKILL.md` outside it).
+- **The repair pass must only act on deterministic lint, never on the LLM critique.**
+  generate-weekly.sh documented this on 2026-08-03, but repair-briefing.js kept reading
+  critique-<date>.json. On 2026-10-25 the critique demanded a third angle block; the
+  repair added it; the re-lint then failed on "3 angle blocks" and "1713 words" — both
+  created by the repair. Post-repair critique failures are a different, subjective set
+  every week (lead-in diversity, "four obligations"), so they cannot be "fixed" by a
+  rewrite anyway. Fixed 2026-11-01 (repair = lint-only). If a critique rule is truly
+  mechanical (repeated stat, duplicate lead-in word), port it into lint-briefing.js.
