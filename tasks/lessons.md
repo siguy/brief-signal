@@ -475,3 +475,22 @@ unchecked assertions.
   images, yet the angle led with Cloud Armor alone. Rule: **security angles lead
   with Google's strongest owned asset in the source (Wiz, Mandiant), and the
   playbook needs Wiz facts so Stage 4b can do this unprompted.**
+
+### From the 2026-11-01 pre-run check
+
+- **"Going dark" must be verified with `yt-dlp` upload dates, never with aggregator
+  pages or WebSearch.** The 2026-11-01 bimonthly review disabled Dwarkesh Podcast as
+  dormant since July; `yt-dlp --playlist-end 3 --skip-download --print "%(upload_date)s"`
+  on the channel showed uploads on Oct 22, 29 and 30. Use the full (non-flat) extract —
+  `--flat-playlist` prints `NA` for dates. A review run without network access must
+  say "unverified", not "disable".
+- **A channel that 404s every week is a renamed/moved channel, not a quiet one.**
+  `@WeightsBiases` had 404'd on every run since at least 2026-10-25 and nobody noticed
+  because the WARN scrolls past. Gradient Dissent now lives on `@CoreWeaveYT`. When a
+  handle 404s, `ytsearch` the show name and follow the `channel_url`.
+- **Subscriber RSS URLs carry the subscriber's token: `rssUrlEnv` in config, URL only in
+  `.env`.** Stratechery's main feed is full article text (no audio) — `textFeed: true`
+  uses the body as the transcript, with a 3,000-char floor to drop video stubs.
+- **The playlist skill needs the same `en-orig` caption fix the podcast extractor got.**
+  Fixes to one YouTube extractor should be checked against the other (`extract-podcasts.js`
+  in the repo vs `~/.claude/skills/extract-playlist/SKILL.md` outside it).

@@ -32,14 +32,16 @@
     "source": "youtube",
     "channelHandle": "@TheDiaryOfACEO",
     "category": "Founder/Interview",
-    "enabled": true
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-08-10–2026-10-26). General leadership/CEO interview format not surfacing AI-infra content relevant to GCS audience."
   },
   {
     "name": "My First Million",
     "source": "youtube",
     "channelHandle": "@MyFirstMillionPod",
     "category": "Founder/Builder",
-    "enabled": true
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-08-10–2026-10-26). General entrepreneur/side-hustle content not surfacing AI-native or cloud-infra angles."
   },
   {
     "name": "a16z Podcast",
@@ -51,9 +53,10 @@
   {
     "name": "Gradient Dissent",
     "source": "youtube",
-    "channelHandle": "@WeightsBiases",
+    "channelHandle": "@CoreWeaveYT",
     "category": "AI/Builder",
-    "enabled": true
+    "enabled": true,
+    "note": "Lukas Biewald's show now publishes on CoreWeave's channel after the W&B acquisition; @WeightsBiases has 404'd since at least 2026-10-25. CoreWeave channel is mixed (product clips, event cuts) — the 20-min filter and L1 rating do the sorting."
   },
   {
     "name": "Grit (Kleiner Perkins)",
@@ -132,22 +135,33 @@
     "source": "rss",
     "rssUrl": "https://anchor.fm/s/751173b0/podcast/rss",
     "category": "GTM",
-    "enabled": true
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-08-10–2026-10-26). GTM/sales content not surfacing AI-specific insights for the GCS audience."
   },
   {
     "name": "Rethinking with Adam Grant",
     "source": "rss",
     "rssUrl": "https://feeds.acast.com/public/shows/675858676d1777b3683ec351",
     "category": "Leadership",
-    "enabled": true
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-08-10–2026-10-26). General leadership/psychology content not surfacing AI-infra or startup content for GCS audience."
   },
   {
     "name": "Stratechery",
     "source": "rss",
-    "rssUrl": null,
+    "rssUrlEnv": "STRATECHERY_FEED",
+    "textFeed": true,
     "category": "Strategy",
-    "enabled": false,
-    "note": "Paywalled — requires Stratechery Plus subscription for RSS access"
+    "enabled": true,
+    "note": "Ben Thompson's subscriber feed: full article text (Daily Updates, interviews, weekly digest), not audio. textFeed means the body is used as the transcript directly. The URL carries Simon's subscriber token — lives only in .env as STRATECHERY_FEED, never in this file."
+  },
+  {
+    "name": "Sharp Tech (Stratechery)",
+    "source": "rss",
+    "rssUrlEnv": "STRATECHERY_SHARP_TECH_FEED",
+    "category": "Strategy",
+    "enabled": true,
+    "note": "Ben Thompson + Andrew Sharp audio show, subscriber feed with MP3 enclosures (mlx-whisper path). Token-bearing URL lives only in .env."
   },
 
   {
@@ -156,7 +170,7 @@
     "channelHandle": "@DwarkeshPatel",
     "category": "AI/Research",
     "enabled": true,
-    "note": "Dwarkesh Patel. Long-form (90-300 min) interviews with frontier researchers at OpenAI, Anthropic, DeepMind. Surfaces scaling/compute/RL debates weeks ahead of mainstream coverage. Clean podcast channel — no filtering caveats."
+    "note": "Dwarkesh Patel. Long-form (90-300 min) interviews with frontier researchers at OpenAI, Anthropic, DeepMind. Clean podcast channel. The 2026-11-01 review flagged it as going dark from aggregator data alone; yt-dlp on 2026-11-01 showed uploads on Oct 22, 29 and 30 — it is active."
   },
   {
     "name": "Training Data (Sequoia)",
@@ -171,24 +185,24 @@
     "source": "youtube",
     "channelHandle": "@GoogleDeepMind",
     "category": "AI/First-party Lab",
-    "enabled": true,
-    "note": "Hannah Fry. Seasonal (8-10 eps/season, 30-50 min). First-party DeepMind context (Gemini training, AlphaFold, robotics). Channel mixes the podcast with research demos and product clips. Watch first run — duration filter may not catch all non-podcast content (some research talks exceed 20 min)."
+    "enabled": false,
+    "note": "noise check failed: sampled briefings (2026-08-10–2026-10-26) show 9 @GoogleDeepMind-adjacent citations, all traceable to product-release news (EmbeddingGemma, Gemini announcements) — not Hannah Fry podcast episodes. Channel noise exceeds signal."
   },
   {
     "name": "ChinaTalk",
     "source": "youtube",
     "channelHandle": "@ChinaTalkMedia",
     "category": "Geopolitics/AI Supply Chain",
-    "enabled": true,
-    "note": "Jordan Schneider. Export controls, chip flows, DeepSeek/Qwen context — closes the Asia-AI gap. Substack RSS exists at https://www.chinatalk.media/feed but doesn't expose audio enclosures; YouTube is the reliable ingestion path."
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-08-10–2026-10-26). Geopolitics/chip angle not surfacing as field-relevant content in briefings. Re-evaluate if export-controls / China AI ecosystem becomes a recurring GCS conversation."
   },
   {
     "name": "Big Technology Podcast",
     "source": "youtube",
     "channelHandle": "@BigTechnologyPodcast",
     "category": "News/Tech",
-    "enabled": true,
-    "note": "Alex Kantrowitz. Lands CEO interviews (Altman, Nadella, Pichai, Zuckerberg). Sharper enterprise-AI lens than Hard Fork (cultural) or Pivot (market). Clean podcast channel."
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-08-10–2026-10-26). Coverage overlap with Hard Fork and Pivot without differentiated surfacing in briefings."
   },
   {
     "name": "Machine Learning Street Talk",
@@ -211,39 +225,39 @@
     "source": "rss",
     "rssUrl": "https://changelog.com/practicalai/feed",
     "category": "MLOps/Production AI",
-    "enabled": true,
-    "note": "Daniel Whitenack + Chris Benson (Changelog network). Direct hit on the MLOps gap — eval, deployment, fine-tuning logistics, infra cost. RSS feed verified working."
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-08-10–2026-10-26). MLOps/deployment content not surfacing in briefings despite coverage gap theory. Consider replacing with a more founder-facing MLOps show."
   },
   {
     "name": "Interconnects (Nathan Lambert)",
     "source": "youtube",
     "channelHandle": "@natolambert",
     "category": "AI/Open Source",
-    "enabled": true,
-    "note": "Nathan Lambert (AI2). Covers the open-model ecosystem (Llama, Mistral, Qwen, OLMo, DeepSeek) — a category the current list under-covers. Channel mixes podcast interviews with RLHF course lectures; duration filter (>20min) keeps both. Companion Substack RSS at https://www.interconnects.ai/feed mixes essays + podcast — YouTube is cleaner."
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-08-10–2026-10-26). Open-model ecosystem content not surfacing in briefings. Also possible channel is inactive — yt-dlp verification blocked in session, unconfirmed."
   },
   {
     "name": "The OpenAI Podcast",
     "source": "youtube",
     "channelHandle": "@OpenAI",
     "category": "AI/First-party Lab",
-    "enabled": true,
-    "note": "Official OpenAI podcast with researchers and product leads. WARNING: channel mixes the podcast with product demos, Dev Day talks, and ads. Duration filter catches short demos but long marketing content (Dev Day keynotes, etc.) will pass through. Watch first run closely; if noisy, consider disabling and ingesting via dedicated podcast RSS if it becomes available."
+    "enabled": false,
+    "note": "noise check failed: sampled briefings (2026-08-10–2026-10-26) show 11 @OpenAI-adjacent citations, all traceable to model launches, pricing news, and Google Cloud announcements — not podcast episodes. Channel noise confirmed. Re-enable only if a dedicated podcast RSS feed becomes available."
   },
   {
     "name": "Unsupervised Learning (Redpoint)",
     "source": "youtube",
     "channelHandle": "@RedpointAI",
     "category": "VC/AI Builder",
-    "enabled": true,
-    "note": "Redpoint's AI-focused show (distinct from Logan Bartlett). Tight focus on founder product/infra decisions mid-build. Weekly, 30-50 min."
+    "enabled": false,
+    "note": "low-signal: not cited in 12 weeks (2026-08-10–2026-10-26). Note: Logan Bartlett Show (@LoganBartlett, also Redpoint) may be a stronger replacement candidate — confirmed active into 2026 with enterprise-AI founder interviews (ep 150+)."
   },
   {
     "name": "Cheeky Pint (Stripe)",
     "source": "youtube",
     "channelHandle": "@stripe",
     "category": "Founder/Builder",
-    "enabled": true,
-    "note": "John Collison's interview series, posted on Stripe's main YouTube channel alongside Stripe Sessions talks and product clips. Guest list is signal-rich (Altman, Brockman, Pichai, Friedman, Spiegel). Verified that most non-podcast content is <20 min (filtered out), but Stripe Sessions keynotes (often 30-90 min) may slip through. Acceptable noise tradeoff given guest quality."
+    "enabled": false,
+    "note": "noise check failed + low-signal: not cited as podcast content in 12 weeks (2026-08-10–2026-10-26). The one 'Stripe' briefing mention was about Stripe agentic checkout API — not a podcast episode. Channel noise (Stripe Sessions keynotes) confirmed overwhelming podcast signal."
   }
 ]
