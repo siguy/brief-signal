@@ -415,11 +415,11 @@ This is the dedicated space for Google Cloud in each briefing. Everything else i
 | Category | Products | Good trigger |
 |----------|----------|--------------|
 | AI Platform | **Gemini Enterprise Agent Platform (FKA Vertex AI)** — "Agent Platform" for short, Model Garden (200+ models) | AI infrastructure themes |
-| Models | Gemini family (3.x Pro/Flash), Anthropic Claude (Fable 5 + Opus on the Agent Platform), Gemma (open) | Model comparison discussions |
-| Code | Gemini Code Assist, **Antigravity** (agentic IDE), Gemini CLI + Agent Skills | Developer productivity themes |
-| Agents | Agent Studio / Agent Designer (FKA Agent Builder), **Agent Runtime** (FKA Agent Engine), Agent Development Kit (ADK), A2A protocol | Agentic AI patterns |
-| Security | Security Command Center, Mandiant threat intelligence | Security/defense themes |
-| Compute | Cloud Run, GKE, **TPUs (Ironwood GA; TPU 8i inference / 8t training announced Next '26)** | Deployment/scaling themes |
+| Models | Gemini family (**Gemini 4 Argon** GA 2026-10-13; 3.8 Flash; 3.1 Pro Preview), Anthropic Claude (**Opus / Sonnet / Haiku 5.5** GA on the Agent Platform), **OpenAI GPT-6 family in private preview** (since 2026-10-21 — never "GA"), Gemma 4 (open) | Model comparison discussions |
+| Code | Gemini Code Assist, **Antigravity** (agentic IDE + Antigravity CLI; the open-source Gemini CLI was retired 2026-06-18), **Gemini API CLI** (`gemini-api`, a client that runs inside any coding agent, open-source beta) | Developer productivity themes |
+| Agents | Agent Studio / Agent Designer (FKA Agent Builder), **Agent Runtime** (FKA Agent Engine) with Agent Gateway + Agent Identity, Agent Development Kit (ADK), A2A protocol, **Agent Compute Engine** (announced 2026-10-22, preview pending — direction only) | Agentic AI patterns |
+| Security | **Wiz** (part of Google Cloud since 2026-03-11; multi-cloud, Wiz AI-SPM for agents), **Model Armor** (prompt/response screening), Security Command Center AI Protection, Mandiant (AI red teaming, threat intelligence) | Security/defense themes — lead with Wiz where sources support it |
+| Compute | Cloud Run, GKE, **TPUs (Ironwood GA — on-demand only, allowlist for reservations; TPU 8i inference / 8t training announced Next '26, not yet allocatable)**, **TorchTPU** (native PyTorch on TPUs, open source 2026-10-20) | Deployment/scaling themes |
 | Data | BigQuery, AlloyDB, Spanner, Cloud SQL, Looker, Dataplex, **Agentic Data Cloud** (unified for agents, Knowledge Catalog, Data Agent Kit, zero-ETL via Iceberg REST + Cross-Cloud Interconnect), **Gemini Embedding 2** (multimodal embeddings) | Data pipeline / RAG / siloed-data themes |
 | App Platform | Firebase, Cloud Functions | Mobile/web/serverless themes |
 | Program | Google for Startups Cloud ($200K-$350K credits) | Cost/getting-started themes |
@@ -438,7 +438,7 @@ When discussing Google Cloud's Anthropic deal or the multi-model story, frame it
 The reality being framed: Google made a strategic decision to host the strongest models (theirs and Anthropic's) on one platform. That expands the customer's choice — that's the story.
 
 **Capacity framing rule (strict):**
-GCP is supply-constrained too. Anthropic's $200B 5-year commitment is consuming Google's capacity for years. Do not write angles or "Our Play" lines that imply GCP has spare capacity competitors don't:
+GCP is supply-constrained too — Google began buying third-party compute capacity in Q3 '26 (Ashkenazi, Q3 call). Anthropic's commitment of at least ~$114.5B to Google Cloud through July 2033 (Anthropic S-1, 2026-10-26) is consuming Google's capacity for years. Do not write angles or "Our Play" lines that imply GCP has spare capacity competitors don't:
 - ❌ "Come to GCP — we have the GPUs AWS doesn't" (false)
 - ❌ "New compute commitments from customers feeling the AWS/Azure squeeze" (implies GCP has the capacity to absorb)
 - ❌ "Tell founders GCP can handle what AWS can't" (over-claim)
