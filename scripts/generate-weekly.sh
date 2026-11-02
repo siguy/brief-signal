@@ -208,7 +208,26 @@ source_inventory() {
 | Podcasts (YouTube) | ${yt} | \`$(basename "${podcasts:-none}")\` |
 | Podcasts (RSS) | ${rss} | \`$(basename "${podcasts:-none}")\` |
 | Playlist | ${pl} | \`$(basename "${playlist:-none}")\` |"
+  # Channel health. A handle that 404s, or that returns no uploads in the
+  # window, is listed here so it reaches the PR body. @WeightsBiases 404'd on
+  # every run for at least a month (Gradient Dissent had moved to @CoreWeaveYT)
+  # and nobody saw it, because the WARN scrolled past in a 600-line log.
+  # Stage 3a logs "Failed to get uploads for @handle" on an error, and
+  # "Scanning <name> (@handle)..." then "Found N recent, M new" per channel;
+  # the RSS stage's lines are tagged [rss-podcasts] and skipped.
+  local failed zero
+  failed=$(grep -oE 'Failed to get uploads for @[A-Za-z0-9_.-]+' "${LOG_FILE:-/dev/null}" 2>/dev/null \
+    | sed 's/.*for //' | sort -u | tr '\n' ' ' | sed 's/ $//' || true)
+  zero=$(awk '/rss-podcasts/{next}
+              /Scanning .*\(@[^)]+\)/{match($0,/\(@[^)]+\)/); h=substr($0,RSTART+1,RLENGTH-2); next}
+              /Found 0 recent/{if(h!="")print h; h=""; next}
+              /Found [0-9]+ recent/{h=""}' "${LOG_FILE:-/dev/null}" 2>/dev/null \
+    | sort -u | tr '\n' ' ' | sed 's/ $//' || true)
+  SOURCE_TABLE="${SOURCE_TABLE}
+
+**Channel health (Stage 3a):** errors/404: ${failed:-none} · zero uploads in window: ${zero:-none}"
   SOURCE_ALERTS=""
+  [ -n "$failed" ] && SOURCE_ALERTS="${SOURCE_ALERTS}> ⚠️ **Channel handle(s) returned errors: ${failed}.** Renamed or removed on YouTube — fix or remove the entry in config/podcasts.json."$'\n'
   [ "$yt" -eq 0 ] && SOURCE_ALERTS="${SOURCE_ALERTS}> ⚠️ **Zero YouTube podcast episodes in the KB.** This edition was drafted without them. Check Stage 3a in the log before merging."$'\n'
   [ "$bm" -eq 0 ] && SOURCE_ALERTS="${SOURCE_ALERTS}> ⚠️ **Zero bookmarks in the KB.** Stage 1 likely failed (cookies? see docs/cookie-refresh.md)."$'\n'
   [ -n "$SOURCE_ALERTS" ] && log "WARN: source alerts: $(echo "$SOURCE_ALERTS" | tr '\n' ' ')"
