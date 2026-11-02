@@ -259,5 +259,61 @@
     "category": "Founder/Builder",
     "enabled": false,
     "note": "noise check failed + low-signal: not cited as podcast content in 12 weeks (2026-08-10–2026-10-26). The one 'Stripe' briefing mention was about Stripe agentic checkout API — not a podcast episode. Channel noise (Stripe Sessions keynotes) confirmed overwhelming podcast signal."
+  },
+  {
+    "name": "Sourcery (Molly O'Shea)",
+    "source": "youtube",
+    "channelHandle": "@SourceryVC",
+    "category": "VC/Founder",
+    "enabled": true,
+    "note": "Added 2026-11-01 (verified via yt-dlp: latest upload 2026-10-31, 42-70 min, clean founder-interview channel)."
+  },
+  {
+    "name": "Uncapped (Jack Altman)",
+    "source": "youtube",
+    "channelHandle": "@UncappedPod",
+    "category": "VC/Founder",
+    "enabled": true,
+    "note": "Added 2026-11-01 (verified: latest 2026-10-29, ~55 min, clean). Channel now titled 'Uncapped / Benchmark Breakfast'."
+  },
+  {
+    "name": "Decoder (Nilay Patel)",
+    "source": "youtube",
+    "channelHandle": "@DecoderPod",
+    "category": "Tech/Business",
+    "enabled": true,
+    "note": "Added 2026-11-01 (verified: latest 2026-10-29, 42-64 min, clean). NOT @Decoder, which is an unrelated channel. RSS alternative: https://feeds.megaphone.fm/recodedecode"
+  },
+  {
+    "name": "Sequoia Capital",
+    "source": "youtube",
+    "channelHandle": "@SequoiaCapital",
+    "category": "VC/Founder",
+    "enabled": true,
+    "note": "Added 2026-11-01 (verified: latest 2026-10-29, 44-61 min, mostly podcast content incl. Training Data video cuts — the 20-min filter and L1 rating sort the rest)."
+  },
+  {
+    "name": "Invest Like the Best",
+    "source": "rss",
+    "rssUrl": "https://feeds.megaphone.fm/CLS2859450455",
+    "category": "VC/Investing",
+    "enabled": true,
+    "note": "Added 2026-11-01 (verified: latest 2026-10-20, ~61 min). No YouTube handle found; RSS + mlx-whisper path."
+  },
+  {
+    "name": "The Peel (Turner Novak)",
+    "source": "rss",
+    "rssUrl": "https://anchor.fm/s/e231a4ec/podcast/rss",
+    "category": "VC/Founder",
+    "enabled": true,
+    "note": "Added 2026-11-01 (verified: latest 2026-10-29). No YouTube handle found; RSS + mlx-whisper path."
+  },
+  {
+    "name": "Radical Talks (Radical Ventures)",
+    "source": "rss",
+    "rssUrl": "https://anchor.fm/s/2be67168/podcast/rss",
+    "category": "VC/AI Research",
+    "enabled": true,
+    "note": "Added 2026-11-01 (verified: latest 2026-10-29, ~31 min). AI-pure-play fund (Cohere, Waabi); a different VC lens from a16z/Sequoia."
   }
 ]
