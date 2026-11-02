@@ -1,18 +1,25 @@
 #!/usr/bin/env node
 
 /**
- * One-shot repair pass: feed the critique's hard failures (and any linter
- * hard failures) back to Gemini for a minimal, targeted revision of the
- * briefing — so the Monday PR review starts from a clean draft instead of
- * a punch list.
+ * One-shot repair pass: feed the DETERMINISTIC linter's hard failures back to
+ * Gemini for a minimal, targeted revision of the briefing — so the Monday PR
+ * review starts from a clean draft instead of a punch list.
  *
  * Deliberately ONE pass, not a loop: repeated LLM rewrites drift away from
  * the reviewed draft, and anything still failing after one repair should go
  * to the human (surfaced in the PR body, as before).
  *
+ * Linter findings ONLY — never the LLM critique's. generate-weekly.sh has said
+ * since 2026-08-03 that the critique is advisory and must not fire a rewrite,
+ * but this script kept ingesting critique-<date>.json alongside the lint
+ * output. Result on 2026-10-25: the critique demanded a third "Your angle"
+ * block, the repair added it, and the re-lint failed on "3 angle blocks (max
+ * 2)" and "1713 words (ceiling 1650)" — two failures the repair itself
+ * created. The critique still runs and still lands in the PR body; it just
+ * no longer edits the draft. (Changed 2026-11-01.)
+ *
  * Usage: node scripts/repair-briefing.js [YYYY-MM-DD]
- *   (defaults to the most recent briefing; expects a matching
- *    scripts/logs/critique-<date>.json from a prior critique run)
+ *   (defaults to the most recent briefing)
  *
  * Exit codes:
  *   0 — repaired (file rewritten) or nothing to repair
@@ -56,19 +63,7 @@ function stripOuterFence(text) {
 
 function collectFailures(date, briefingMd) {
   const failures = [];
-  const critiqueJson = path.join(LOGS_DIR, `critique-${date}.json`);
-  if (fs.existsSync(critiqueJson)) {
-    try {
-      const critique = JSON.parse(fs.readFileSync(critiqueJson, "utf-8"));
-      for (const f of critique.hard_failures || []) {
-        failures.push(`- RULE: ${f.rule}\n  EVIDENCE: ${f.evidence}\n  FIX: ${f.fix || "(apply the rule)"}`);
-      }
-    } catch (err) {
-      log(`WARN: could not parse ${path.basename(critiqueJson)}: ${err.message}`);
-    }
-  } else {
-    log(`WARN: no critique JSON found at ${path.basename(critiqueJson)} — repairing from linter findings only.`);
-  }
+  // Linter only — see the header for why the critique is deliberately ignored.
   for (const h of lint(briefingMd).hard) {
     // Image-file failures are fixed on disk (re-fetch or replace the file),
     // never by editing the markdown — feeding them to the LLM invites it to
