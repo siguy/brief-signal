@@ -53,9 +53,10 @@
   {
     "name": "Gradient Dissent",
     "source": "youtube",
-    "channelHandle": "@WeightsBiases",
+    "channelHandle": "@CoreWeaveYT",
     "category": "AI/Builder",
-    "enabled": true
+    "enabled": true,
+    "note": "Lukas Biewald's show now publishes on CoreWeave's channel after the W&B acquisition; @WeightsBiases has 404'd since at least 2026-10-25. CoreWeave channel is mixed (product clips, event cuts) — the 20-min filter and L1 rating do the sorting."
   },
   {
     "name": "Grit (Kleiner Perkins)",
@@ -148,10 +149,19 @@
   {
     "name": "Stratechery",
     "source": "rss",
-    "rssUrl": null,
+    "rssUrlEnv": "STRATECHERY_FEED",
+    "textFeed": true,
     "category": "Strategy",
-    "enabled": false,
-    "note": "Paywalled — requires Stratechery Plus subscription for RSS access"
+    "enabled": true,
+    "note": "Ben Thompson's subscriber feed: full article text (Daily Updates, interviews, weekly digest), not audio. textFeed means the body is used as the transcript directly. The URL carries Simon's subscriber token — lives only in .env as STRATECHERY_FEED, never in this file."
+  },
+  {
+    "name": "Sharp Tech (Stratechery)",
+    "source": "rss",
+    "rssUrlEnv": "STRATECHERY_SHARP_TECH_FEED",
+    "category": "Strategy",
+    "enabled": true,
+    "note": "Ben Thompson + Andrew Sharp audio show, subscriber feed with MP3 enclosures (mlx-whisper path). Token-bearing URL lives only in .env."
   },
 
   {
@@ -159,8 +169,8 @@
     "source": "youtube",
     "channelHandle": "@DwarkeshPatel",
     "category": "AI/Research",
-    "enabled": false,
-    "note": "going dark: last confirmed episode ~Jul 1 2026 (>90 days from 2026-11-01 per podcast aggregator data). Re-enable when new episode confirmed. Channel remains high-quality when active; worth monitoring manually."
+    "enabled": true,
+    "note": "Dwarkesh Patel. Long-form (90-300 min) interviews with frontier researchers at OpenAI, Anthropic, DeepMind. Clean podcast channel. The 2026-11-01 review flagged it as going dark from aggregator data alone; yt-dlp on 2026-11-01 showed uploads on Oct 22, 29 and 30 — it is active."
   },
   {
     "name": "Training Data (Sequoia)",

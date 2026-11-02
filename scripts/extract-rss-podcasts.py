@@ -45,6 +45,10 @@ MAX_DEEP_DIVES = 3
 # multi-week catch-up (e.g. LOOKBACK_DAYS=21). generate-weekly.sh exports it for the run.
 LOOKBACK_DAYS = int(os.environ.get("LOOKBACK_DAYS", "7"))
 MIN_DURATION_SEC = 1200  # 20 minutes
+# Text feeds have no duration. A full Stratechery Daily Update runs 10-15k chars;
+# the feed also carries ~1k-char stubs that only point at a video. 3,000 chars is
+# roughly the 20-minute floor above, in reading time.
+MIN_TEXT_CHARS = 3000
 GEMINI_DELAY_SEC = 2
 
 # ---------------------------------------------------------------------------
@@ -133,9 +137,28 @@ def get_mp3_url(entry) -> str | None:
     return None
 
 
+def get_entry_body(entry) -> str | None:
+    """Full article text from a text feed (content:encoded, else description), tags stripped."""
+    html = ""
+    for c in entry.get("content", []) or []:
+        html = c.get("value") or html
+    html = html or entry.get("summary", "") or ""
+    if not html:
+        return None
+    from bs4 import BeautifulSoup
+    return BeautifulSoup(html, "html.parser").get_text(" ", strip=True)
+
+
 def fetch_recent_episodes(podcast: dict) -> list[dict]:
     """Fetch episodes from the last LOOKBACK_DAYS days from an RSS feed."""
+    # A subscriber feed carries the subscriber's token in its URL, so the config
+    # names an env var (rssUrlEnv) and the URL itself lives only in .env.
     rss_url = podcast.get("rssUrl")
+    if not rss_url and podcast.get("rssUrlEnv"):
+        rss_url = os.environ.get(podcast["rssUrlEnv"], "").strip()
+        if not rss_url:
+            warn(f"${podcast['rssUrlEnv']} is not set in .env — skipping {podcast['name']}")
+            return []
     if not rss_url:
         warn(f"No rssUrl for {podcast['name']}")
         return []
@@ -162,6 +185,11 @@ def fetch_recent_episodes(podcast: dict) -> list[dict]:
         if duration_sec is not None and duration_sec < MIN_DURATION_SEC:
             continue
 
+        # Text feeds: the body is the episode. Skip stubs the way short audio is skipped.
+        body = get_entry_body(entry) if podcast.get("textFeed") else None
+        if podcast.get("textFeed") and len(body or "") < MIN_TEXT_CHARS:
+            continue
+
         # Get audio URL
         mp3_url = get_mp3_url(entry)
         episode_url = entry.get("link", "")
@@ -170,6 +198,7 @@ def fetch_recent_episodes(podcast: dict) -> list[dict]:
             "title": entry.get("title", "Unknown"),
             "episode_url": episode_url,
             "mp3_url": mp3_url,
+            "body": body,
             "date": pub_dt.strftime("%Y-%m-%d"),
             "duration_sec": duration_sec,
             "duration_min": (duration_sec + 59) // 60 if duration_sec else None,
@@ -632,7 +661,12 @@ def main() -> None:
             transcript: str | None = None
             has_speaker_labels = False
 
-            if podcast.get("transcriptUrl"):
+            if podcast.get("textFeed"):
+                # Text feed (Stratechery): the article body IS the transcript.
+                # Nothing to download or transcribe.
+                transcript = episode.get("body")
+                has_speaker_labels = False
+            elif podcast.get("transcriptUrl"):
                 # Acquired.fm path: scrape transcript from website
                 log(f"  Scraping transcript from {episode['episode_url']}...")
                 transcript = scrape_acquired_transcript(episode["episode_url"])
