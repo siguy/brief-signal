@@ -350,6 +350,7 @@ The briefing's **compounding layer**: one teachable mental model per edition tha
 - #19 — *Two-layer pricing: intelligence-per-dollar vs. dollars-per-outcome* (diagnose which layer the founder competes on)
 - #23 — *The invoice is an architecture decision* (agentic cost is engineered via harness design, not just priced)
 - #28 — *Architecture sets the slope, not just the level* (a well-built agent gets cheaper at the same task over time via accumulated reusable context; a flat cost-per-task curve is a finding, not a fact of life)
+- #38 — *Persistence is a state problem, not a compute problem* (split agent memory from agent compute so the bill follows the work, not the clock; the tell is a machine that runs 24h for 2h of tool calls)
 
 **#19 and #23 are the ones most often repeated by accident.** Any teach whose core is "judge by cost per outcome, not by token price" IS #19, and any teach whose core is "retry loops and harness design drive the bill" IS #23 — a fresh worked example and a new acronym do not make either one new. Edition #28's first draft shipped exactly that (it opened by citing both, then re-taught them as "Total Cost of Outcome"). Before writing, state in one sentence what this teach knows that every teach in the list above does not. If that sentence is hard to write, pick a different teach.
 
