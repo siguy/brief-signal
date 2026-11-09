@@ -52,6 +52,7 @@ const { GoogleGenAI } = require("@google/genai");
 const { TEXT_MODEL } = require("./models.js");
 const { lint, briefingDate } = require("./lint-briefing.js");
 const { loadSources } = require("./sources.js");
+const { checkWording } = require("./check-wording.js");
 const {
   checkClaimsDetailed,
   checkProducts,
@@ -192,8 +193,11 @@ function factRequest(groups) {
   }));
 }
 
-async function repairFacts(md, sources, ai, report) {
-  const groups = groupByUnit(factFindings(md, sources));
+async function repairFacts(md, sources, ai, report, extra = []) {
+  // `extra`: wording findings from check-wording.js (round one only). Their
+  // units must still be in the draft — B may have rewritten them.
+  const live = extra.filter((f) => md.includes(f.unit) && f.unit.includes(f.claim));
+  const groups = groupByUnit([...factFindings(md, sources), ...live]);
   if (!groups.length) return md;
   const fixedBefore = report.fixed.length;
   log(`A. Fact repair: ${groups.length} paragraph(s), ${groups.reduce((n, g) => n + g.findings.length, 0)} finding(s)`);
@@ -243,6 +247,8 @@ async function repairFacts(md, sources, ai, report) {
     const candidate = after ? out.replace(g.unit, () => after) : removeUnit(out, g.unit);
     // The fix must actually clear this paragraph's findings.
     const still = factFindings(candidate, sources).filter((f) => f.unit === after);
+    // A wording finding is cleared when the unsupported phrase is gone.
+    still.push(...g.findings.filter((f) => f.check === "wording" && after.includes(f.claim)));
     if (still.length) {
       log(`  rejected (${g.section}): ${still.length} finding(s) remain after the rewrite`);
       continue;
@@ -299,10 +305,27 @@ ${md}`;
   }
   // Live-test finding: asked to fix a truncated x.com link, Gemini minted a
   // plausible-looking fake tweet ID that passed the linter. Same for figures.
-  const why = guardViolation(md, repaired, { sources });
+  let why = guardViolation(md, repaired, { sources });
   if (why) {
-    log(`  rejected: ${why}`);
-    return md;
+    // One retry with the objection spelled out — on the #38 replay the first
+    // attempt slipped in an "85%", which the guard rightly refused, leaving
+    // every structural failure unfixed.
+    log(`  rejected: ${why} — retrying once with that feedback`);
+    try {
+      const retry = await ai.models.generateContent({
+        model: TEXT_MODEL,
+        contents: `${userMessage}\n\n## Your previous attempt was rejected\n\nIt ${why}. Do not add any URL, number or product name that is not already in the briefing.`,
+        config: { systemInstruction: systemPrompt, thinkingConfig: { thinkingLevel: "HIGH" } },
+      });
+      repaired = stripOuterFence((retry.text || "").trim());
+      why = !repaired.startsWith("---") || repaired.length < md.length * 0.7 ? "lost frontmatter or too much text" : guardViolation(md, repaired, { sources });
+    } catch (err) {
+      why = `retry failed (${err.message || err})`;
+    }
+    if (why) {
+      log(`  rejected again: ${why}`);
+      return md;
+    }
   }
   const after = collectFailures(date, repaired, sources);
   report.structural = { before: failures.length, after: after.length, fixed: failures.filter((f) => !after.includes(f)) };
@@ -479,11 +502,37 @@ function cutRemaining(md, sources, report) {
   return out;
 }
 
+// Wording the fact repair could not fix: cut the clause that carries it, or —
+// for a short modifier like "former Facebook CSO" or "nationwide" — the
+// phrase itself. A verb can't be deleted without breaking the sentence, so
+// anything left is listed for the editor rather than mangled.
+function resolveWording(md, wording, report) {
+  let out = md;
+  for (const f of wording) {
+    if (!out.includes(f.claim)) continue; // fixed in A
+    const unit = (f.unit && out.includes(f.unit) && f.unit) || out.split("\n").find((l) => l.includes(f.claim));
+    if (!unit) continue;
+    let next = cutClause(unit, f.claim);
+    const words = f.claim.trim().split(/\s+/).length;
+    if (!next && words <= 3 && !/\[|\]/.test(f.claim)) {
+      const cand = unit.replace(f.claim, "").replace(/\s{2,}/g, " ").replace(/\s+([,.;])/g, "$1");
+      if (cand.trim().split(/\s+/).length >= MIN_WORDS_LEFT) next = cand;
+    }
+    if (next) {
+      out = out.replace(unit, () => next);
+      report.cut.push({ section: f.section, sentence: `wording "${f.claim}"`, why: [f.message] });
+    } else {
+      (report.unresolved ||= []).push({ section: f.section, phrase: f.claim, why: f.message });
+    }
+  }
+  return out;
+}
+
 // --- report -------------------------------------------------------------------------------
 
 function renderReport(report) {
   const lines = ["### 🔧 What the pipeline fixed or cut", ""];
-  if (!report.fixed.length && !report.cut.length && !report.structural) {
+  if (!report.fixed.length && !report.cut.length && !report.structural && !report.unresolved?.length) {
     lines.push("_Nothing — the draft passed every fact and structure check._");
     return lines.join("\n");
   }
@@ -503,6 +552,10 @@ function renderReport(report) {
     lines.push("<details><summary>Cut (no source backed them)</summary>", "");
     for (const c of report.cut) lines.push(`- **${c.section}:** ${c.sentence}`, `  - ${c.why.join("; ")}`);
     lines.push("", "</details>");
+  }
+  if (report.unresolved?.length) {
+    lines.push("", "**Wording the pipeline could not fix without breaking the sentence** (rare — check these):", "");
+    for (const u of report.unresolved) lines.push(`- **${u.section}:** "${u.phrase}" — ${u.why}`);
   }
   if (report.structural?.fixed?.length) {
     lines.push("", "<details><summary>Structural fixes</summary>", "", ...report.structural.fixed, "", "</details>");
@@ -542,12 +595,15 @@ async function main() {
   // a Quick Hit to save words. Running A on B's output means the fact fixes are
   // made against the text that ships, and C cuts whatever is still wrong.
   let md = await repairStructure(original, sources, ai, report, date);
-  md = await repairFacts(md, sources, ai, report);
+  const wording = await checkWording(md, sources, ai, log);
+  if (wording.length) log(`Wording check: ${wording.length} phrase(s) the cited sources don't support.`);
+  md = await repairFacts(md, sources, ai, report, wording);
   // Second round: fixing the body can orphan a TLDR figure ("41" left the
   // story, so the TLDR bullet citing it now fails). Rewording that bullet beats
   // C deleting it — on the #38 replay C left the TLDR at 2 of 4 bullets.
   md = await repairFacts(md, sources, ai, report);
   md = cutRemaining(md, sources, report);
+  md = resolveWording(md, wording, report);
   md = await trimOverBudget(md, sources, ai, report, date);
   if (report.cut.length) log(`C. Cut ${report.cut.length} sentence(s) no source backed.`);
 

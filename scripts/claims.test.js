@@ -328,5 +328,34 @@ test("capacity overclaim is flagged, but not when the sentence negates it", () =
   assert.strictEqual(checkCapacityOverclaim(draft({ ourPlay: "Never pretend GCP has unlimited spare capacity." })).hard.length, 0);
 });
 
+// --- wording check: AI suggests, code confirms -------------------------------------------
+
+const { verifyWording, wordingRequest } = require("./check-wording.js");
+
+test("wording: support must be verbatim in the cited source, or the phrase is flagged", () => {
+  const md = draft({
+    story: "Former Facebook CSO Alex Stamos said credit is tight, and debt is \"no bid\" [Jamin Ball on Latent Space (103 min watch, 01:18:20)](https://www.youtube.com/watch?v=P735f1xlpL0).",
+  });
+  const items = wordingRequest(md, sources());
+  assert.strictEqual(items.length, 1);
+  const answers = [
+    {
+      claims: [
+        { phrase: "Former Facebook CSO", support: null }, // no source gives the title
+        { phrase: "credit is tight", support: "the credit markets are totally frozen" }, // invented support
+        { phrase: "\"no bid\"", support: "No bid. No bid." }, // real support
+        { phrase: "not in the draft at all", support: null }, // model misquoted the draft: ignored
+      ],
+    },
+  ];
+  const f = verifyWording(items, answers).map((x) => x.claim);
+  assert.deepStrictEqual(f, ["Former Facebook CSO", "credit is tight"]);
+});
+
+test("wording: a failed model call yields no findings, never a false pass of everything", () => {
+  const md = draft({ story: "Debt is \"no bid\" [Jamin Ball on Latent Space (103 min watch)](https://www.youtube.com/watch?v=P735f1xlpL0)." });
+  assert.deepStrictEqual(verifyWording(wordingRequest(md, sources()), [null]), []);
+});
+
 console.log(`\n${passed} passed, ${failed} failed`);
 if (failed) process.exit(1);
