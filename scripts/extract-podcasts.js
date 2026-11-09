@@ -337,7 +337,7 @@ Date: ${episode.upload_date || "unknown"}
 ${transcript}`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.7-flash",
+    model: "gemini-3.8-flash",
     contents: userMessage,
     config: {
       systemInstruction: systemPrompt,
@@ -365,7 +365,7 @@ ${JSON.stringify(level1Data, null, 2)}
 ${transcript}`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.7-flash",
+    model: "gemini-3.8-flash",
     contents: userMessage,
     config: {
       systemInstruction: deepDivePrompt,
