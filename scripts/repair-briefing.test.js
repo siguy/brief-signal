@@ -2,8 +2,8 @@
 
 /**
  * Tests for repair-briefing.js — the guards and the deterministic cuts.
- * No network: the LLM steps are not exercised here (the #38 replay in
- * docs/fact-checks.md covers them end to end).
+ * No network: the LLM steps are not exercised here (the Edition #38 replay
+ * recorded in tasks/todo.md covers them end to end).
  * Run: node scripts/repair-briefing.test.js
  */
 

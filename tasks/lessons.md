@@ -502,3 +502,30 @@ unchecked assertions.
   every week (lead-in diversity, "four obligations"), so they cannot be "fixed" by a
   rewrite anyway. Fixed 2026-11-01 (repair = lint-only). If a critique rule is truly
   mechanical (repeated stat, duplicate lead-in word), port it into lint-briefing.js.
+
+### From the fact-check build (2026-11-09)
+
+- **A KB line in quotation marks is not a quote.** "Key Numbers" lines look like
+  `- "$20 to $40+" — … (Speaker, 23:00)` but the extractor wrote them; Lemkin's
+  "$20 to $40" and the "40 out of 41" figure lived only there. Rule: **only
+  Notable Quotes, deep-dive `Speaker: "…"` lines, post bodies and lab-news bodies
+  count as evidence (scripts/sources.js); everything else is summary.**
+- **Never let an LLM vouch; let it point.** The wording check asks the model for
+  the source passage behind a phrase, and code checks the passage exists. When
+  the model was allowed to flag whole clauses it called 34 phrases unsupported,
+  most of them supported, and the repair deleted ~250 true words. Rule: **scope
+  an LLM check to what it judges reliably (short titles, scope words, status
+  verbs), and make every finding carry evidence code can confirm.**
+- **Compare a draft to itself with units.** A repaired TLDR's "40 ballot
+  measures" passed because the body had "$40/user/month". Rule: **draft-vs-draft
+  number comparisons match value AND unit ($, %, x); only draft-vs-source is
+  lenient on "$" (speakers say "40 bucks").**
+- **Order rewrites so the fact pass is last.** The whole-document structural
+  repair, run after the paragraph fact repair, trimmed Swyx's re-credit off a
+  Quick Hit. Rule: **structure first, facts second, deterministic cuts third.**
+- **Node's fetch dies at 300 s.** One batched Gemini call with HIGH thinking
+  failed "fetch failed" at exactly 5:01. Rule: **split model work into small
+  parallel calls with one retry; never one big call near five minutes.**
+- **`String.replace(str, replacement)` expands `$1`/`$&` in the replacement.**
+  Briefing text is full of dollar amounts. Rule: **splice draft text with
+  `replace(x, () => y)`, never a bare replacement string.**

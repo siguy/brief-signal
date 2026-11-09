@@ -25,7 +25,8 @@
  *   D. Length touch-up: a section a re-credit pushed a few words over budget
  *      is shortened alone, under the same guards.
  *
- * Order run: B, A, A again (TLDR lines orphaned by body fixes), C, D.
+ * Order run: B, wording check, A, A again, C (body only), A (orphaned TLDR
+ * lines), C, wording leftovers, D.
  *
  * Guards (A and B): a rewrite that adds a URL, a number, or a product name not
  * in the original text or the supplied evidence is rejected and the original
@@ -237,7 +238,9 @@ async function repairFacts(md, sources, ai, report, extra = []) {
     const g = groups[item.id];
     const after = typeof item.paragraph === "string" ? item.paragraph.trim() : null;
     if (!g || after === null || after === g.unit || !out.includes(g.unit)) continue;
-    const evidence = g.findings.map((f) => (f.fix ? f.fix.quote : "")).join("\n");
+    // The show name counts as evidence too: "All-In 295" is an episode number,
+    // not an invented figure (the #37 replay rejected a correct re-credit over it).
+    const evidence = g.findings.map((f) => (f.fix ? `${f.fix.show} ${f.fix.ts || ""} ${f.fix.quote}` : "")).join("\n");
     const allowedUrls = g.findings.filter((f) => f.fix).map((f) => f.fix.url);
     const why = guardViolation(g.unit, after, { evidence, allowedUrls, sources });
     if (why) {
@@ -460,10 +463,10 @@ function cutClause(raw, claim) {
   return out;
 }
 
-function cutRemaining(md, sources, report) {
+function cutRemaining(md, sources, report, { skipKinds = [] } = {}) {
   let out = md;
   for (let pass = 0; pass < 3; pass++) {
-    const groups = groupByUnit(factFindings(out, sources));
+    const groups = groupByUnit(factFindings(out, sources)).filter((g) => !skipKinds.includes(g.kind));
     if (!groups.length) break;
     for (const g of groups) {
       if (!out.includes(g.unit)) continue;
@@ -601,6 +604,10 @@ async function main() {
   // Second round: fixing the body can orphan a TLDR figure ("41" left the
   // story, so the TLDR bullet citing it now fails). Rewording that bullet beats
   // C deleting it — on the #38 replay C left the TLDR at 2 of 4 bullets.
+  md = await repairFacts(md, sources, ai, report);
+  md = cutRemaining(md, sources, report, { skipKinds: ["tldr"] });
+  // A body cut can orphan a TLDR figure; reword those bullets before C may
+  // delete one (the #37 replay ended at 3 of 4 TLDR bullets otherwise).
   md = await repairFacts(md, sources, ai, report);
   md = cutRemaining(md, sources, report);
   md = resolveWording(md, wording, report);
