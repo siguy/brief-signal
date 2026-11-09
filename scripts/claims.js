@@ -110,6 +110,20 @@ function sentencesWithLinks(text) {
   });
 }
 
+// The same split, but returning each sentence's ORIGINAL markdown too, so a
+// failing sentence can be cut from the draft with its links intact.
+function rawSentences(text) {
+  const links = [];
+  const masked = text.replace(/!?\[([^\]]*)\]\(([^)\s]+)\)/g, (all) => {
+    links.push(all);
+    return `\u0001${links.length - 1}\u0001`;
+  });
+  return splitSentences(masked).map((p) => {
+    const raw = p.replace(/\u0001(\d+)\u0001/g, (_, i) => links[+i]);
+    return { raw, prose: sentencesWithLinks(raw)[0]?.prose || "" };
+  });
+}
+
 function labelText(label) {
   return label.replace(/\s*\([^)]*\)\s*$/, "").replace(/\*\*/g, "");
 }
@@ -197,7 +211,7 @@ function extractNumbers(text, { strict = false } = {}) {
       if (!hasUnit && digits.includes(".") && /(?:^|\s)[\w-]*[A-Z-][\w-]*\s$/.test(before)) continue; // "Qwen 3.8", "llm-d 1.0"
       if (/^[-‐]?(?:page|year|day|week|month|hour|minute|person)\b/i.test(text.slice(m.index + raw.length))) continue; // "400-page"
     }
-    out.push({ raw: raw.trim(), value: base * mult, pct, unit, index: m.index });
+    out.push({ raw: raw.trim(), value: base * mult, pct, unit, dollar: Boolean(dollar), index: m.index });
   }
   return out;
 }
@@ -208,8 +222,13 @@ function isDistinctive(n) {
   return n.pct || n.unit || /[$.]/.test(n.raw) || n.value >= 1000;
 }
 
-function sameNumber(a, b) {
+// Draft vs SOURCE comparisons are lenient on "$" (speakers say "40 bucks").
+// Draft vs DRAFT comparisons (TLDR vs body, repeats) pass { strict: true }:
+// on the #38 replay a repaired TLDR's "40 ballot measures" matched the body's
+// "$40/user/month" and passed.
+function sameNumber(a, b, { strict = false } = {}) {
   if (a.pct !== b.pct) return false;
+  if (strict && (Boolean(a.dollar) !== Boolean(b.dollar) || (a.unit || "") !== (b.unit || ""))) return false;
   if (a.value === b.value) return true;
   const rel = Math.abs(a.value - b.value) / Math.max(Math.abs(a.value), Math.abs(b.value));
   return rel < 0.005;
@@ -380,9 +399,12 @@ function verify(matches, links, sources, paragraphLinks, prose = "", distinctive
 }
 
 function fixFrom(entry, quote) {
+  const dur = entry.summary.map((l) => l.match(/\*\*Duration:\*\*\s*(\d+)\s*min/)).find(Boolean);
   return {
     speaker: quote.speaker || entry.author || null,
-    url: entry.url,
+    // Sharp Tech's KB URL carries the subscriber token; a fix must never publish it.
+    url: entry.url.replace(/[?&]access_token=[^&]+/, ""),
+    duration: dur ? `${dur[1]} min` : null,
     ts: quote.ts != null ? fmtTs(quote.ts) : null,
     show: entry.heading.replace(/^#+\s*/, "").replace(/\s*\(\d{4}-\d{2}-\d{2}\).*$/, "").replace(/^\[/, ""),
     quote: quote.text.length > 280 ? `${quote.text.slice(0, 280)}…` : quote.text,
@@ -477,11 +499,14 @@ function checkProducts(md, sources) {
     for (const s of sentencesWithLinks(u.text)) {
       for (const words of productCandidates(s.prose)) {
         const name = words.join(" ");
-        if (seen.has(name) || productKnown(words, corpus)) continue;
-        seen.add(name);
+        const key = `${name}|${u.text}`; // once per paragraph, so repair sees every place it occurs
+        if (seen.has(key) || productKnown(words, corpus)) continue;
+        seen.add(key);
         hard.push({
           check: "products",
           section: u.section,
+          kind: u.kind,
+          unit: u.text,
           sentence: s.prose,
           claim: name,
           message: `Product "${name}" (${u.section}) is not in the GCP playbook, this week's sources, or config/gcp-products.txt — likely invented. Use a real product from the playbook, or cut the sentence.`,
@@ -544,7 +569,7 @@ function checkClaimsDetailed(md, sources) {
     }
   }
   const push = (u, s, claim, reason, fix, message) =>
-    findings.push({ check: "claims", section: u.section, sentence: s.prose, claim, reason, fix: fix || null, message });
+    findings.push({ check: "claims", section: u.section, kind: u.kind, unit: u.text, sentence: s.prose, claim, reason, fix: fix || null, message });
 
   for (const u of all) {
     if (u.kind === "edge") continue; // worked examples are illustrative by design
@@ -556,7 +581,7 @@ function checkClaimsDetailed(md, sources) {
 
       if (u.kind === "tldr") {
         for (const n of nums) {
-          if (!bodyNumbers.some((b) => sameNumber(b, n))) {
+          if (!bodyNumbers.some((b) => sameNumber(b, n, { strict: true }))) {
             push(u, s, n.raw, "tldr-not-in-body", null, `TLDR figure "${n.raw}" does not appear in the body — the TLDR may only summarise sourced body claims.`);
           }
         }
@@ -579,7 +604,7 @@ function checkClaimsDetailed(md, sources) {
           const isGcpClaim = (marker !== -1 && n.index > marker) || gcpClause;
           if (isGcpClaim) {
             const nearProduct = products.some((p) => playbookNear(sources.playbook, p).some((t) => containsNumber(t, n)));
-            const inStory = productFacts.some((f) => products.includes(f.prod) && sameNumber(f.n, n));
+            const inStory = productFacts.some((f) => products.includes(f.prod) && sameNumber(f.n, n, { strict: true }));
             const cited = s.links.length && verify((t) => containsNumber(t, n), s.links, sources, []).ok;
             const plain = !products.length && containsNumber(sources.playbook || "", n);
             if (!nearProduct && !inStory && !cited && !plain) {
@@ -589,7 +614,7 @@ function checkClaimsDetailed(md, sources) {
           }
           const pool = u.kind === "angle" ? storyNumbers.get(u.story) || [] : bodyNumbers;
           const ownCite = s.links.length && verify((t) => containsNumber(t, n), s.links, sources, [], s.prose).ok;
-          if (!ownCite && !containsNumber(sources.playbook || "", n) && !pool.some((b) => sameNumber(b, n))) {
+          if (!ownCite && !containsNumber(sources.playbook || "", n) && !pool.some((b) => sameNumber(b, n, { strict: true }))) {
             push(u, s, n.raw, "unsourced", null, `"${n.raw}" (${u.section}) is not in the story, the GCP playbook, or a founder question — cut it or tie it to a sourced figure.`);
           }
         }
@@ -641,6 +666,7 @@ module.exports = {
   units,
   sentencesWithLinks,
   splitSentences,
+  rawSentences,
   isDistinctive,
   spokenToDigits,
   GCP_CLAIM_MARKER,

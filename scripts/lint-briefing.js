@@ -272,7 +272,7 @@ function checkRepeatedStats(md) {
         if (!isDistinctive(n)) continue;
         // "2x" and "50%" recur as different facts; only specific figures repeat.
         if (n.unit === "x" || (n.pct && n.value % 10 === 0)) continue;
-        const key = `${n.pct ? "%" : ""}${n.value}`;
+        const key = `${n.pct ? "%" : ""}${n.dollar ? "$" : ""}${n.unit || ""}${n.value}`;
         if (!where.has(key)) where.set(key, { raw: n.raw, locs: new Set() });
         where.get(key).locs.add(loc);
       }
