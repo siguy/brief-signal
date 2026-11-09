@@ -15,6 +15,7 @@
  */
 
 const { GoogleGenAI } = require("@google/genai");
+const { TEXT_MODEL } = require("./models.js");
 const fs = require("fs");
 const path = require("path");
 const { execSync } = require("child_process");
@@ -82,7 +83,7 @@ async function main() {
   const ai = new GoogleGenAI({ apiKey });
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.8-flash",
+    model: TEXT_MODEL,
     contents: `Convert this briefing into a spoken-word audio script:\n\n${briefing.content}`,
     config: {
       systemInstruction: systemPrompt,

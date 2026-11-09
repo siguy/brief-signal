@@ -123,6 +123,8 @@ Podcast sources provide opinion, analysis, and predictions — not news. Handle 
 
 **Link format:** `[Speaker on Podcast Name (Nmin, timestamp)](youtube-url)` — e.g., `[Chamath on All-In (62min, 12:34)](https://youtube.com/watch?v=xxx)`
 
+**Say the speaker and show ONCE (machine-checked).** When the sentence already names both, the link wraps the show name instead of repeating them: `Chamath said on [*All-In* (62 min watch, 12:34)](url) that…` — never `Chamath said on *All-In* [Chamath on All-In (62 min watch, 12:34)](url)`. Edition #38 did this seven times.
+
 **Weaving in signal:** Podcast insights should enrich the Big Picture stories, not stand alone. A VC quote about infrastructure spending strengthens a Big Picture story on compute; a founder's tool-stack revelation or a specific company move that isn't a lead becomes a Quick Hit.
 
 **Consensus/debate patterns:** When multiple podcast hosts or guests independently make the same point, that's high-value signal. Call it out: "Three separate VCs flagged concerns about agent infrastructure costs this week." Disagreements are equally valuable — they show where the market is undecided.
@@ -181,7 +183,7 @@ The 2-3 lead stories, ordered as a narrative arc (related stories adjacent). Alw
 
 ![{descriptive alt text}](./images/{slug}.jpg)
 
-{The story. ~200-220 words MAX per story (machine-checked) — usually 1-2 tight paragraphs. Lead with the sharpest fact + source link, give the context that makes it matter, and — when two items are merged — name the tension between them. **When the story is a frontier-lab incident, state the MECHANISM in terms that scale down to a founder's own stack, not just the headline.** A rep who reads "three swarms breached Hugging Face" and thinks "my founder isn't running swarms" has been handed nothing usable; "those improvised message boards were ordinary shared write surfaces, and two agents with write access to the same bucket have the same channel" is the portable part. Every claim carries an inline [link with a time label (2 min read)](url).}
+{The story. ~200-220 words MAX per story (machine-checked) — usually 1-2 tight paragraphs. **A story is an argument, not a cluster.** Its first one or two sentences state the thesis from the lineup: the arc it advances and what moved this week (Edition #38's lead listed Antigravity, DeepSeek, Lemkin, Daytona and Masad with nothing tying them together — the point, "agents left the desk, so cost is now the hours the machine is on", was only in the TLDR). Every source after that is a step in the argument. Then lead with the sharpest fact + source link, give the context that makes it matter, and — when two items are merged — name the tension between them. **When the story is a frontier-lab incident, state the MECHANISM in terms that scale down to a founder's own stack, not just the headline.** A rep who reads "three swarms breached Hugging Face" and thinks "my founder isn't running swarms" has been handed nothing usable; "those improvised message boards were ordinary shared write surfaces, and two agents with write access to the same bucket have the same channel" is the portable part. Every claim carries an inline [link with a time label (2 min read)](url). **Close with "The takeaway:" (machine-checked)** — what it means for Google Cloud and for startup founders, in plain words. This holds for a story with no angle block too; a story with nothing to say to either is a Quick Hit.}
 
 **Your angle with founders** {Include ONLY when a seller can act on the story (Principle 2) — omit entirely for context-only stories like energy/power. When present: 3-4 bullets, roughly 120-150 words (machine-checked), closing with "Where GCP wins:". **At most TWO angle blocks per edition (machine-checked)** — so the third story carries none. Choose the two stories a seller can act on most; do not spread the budget evenly. The four obligations are fixed but the SHAPE MUST VARY between stories in an edition — never run the same lead-in pattern twice. At most ONE question, and only if it reframes. See the shapes in the Section Voice Guide.}
 
@@ -196,7 +198,7 @@ The 2-3 lead stories, ordered as a narrative arc (related stories adjacent). Alw
 Everything else worth a mention — smaller releases, a founder/company move, a builder pattern, a sharp stat. 3-5 bullets, each ONE linked sentence with a time label. This is where former "founder watch" and "builder" items live now, as one-liners. Podcast items are allowed (attribute the take to the speaker). No GCP product positioning here.
 
 - **[{Bold claim} (2 min read)](source-url)** — one sentence expanding on it.
-- **[{Bold claim} (26 min watch)](source-url)** — one sentence, attributed to the speaker if it's a podcast take.
+- **[{Bold claim} (26 min watch)](source-url)** — one sentence, attributed to the speaker if it's a podcast take, that says why a seller should care, not just the stat.
 
 ## Seller's Edge: {The Teach, as a Short Declarative Title}
 
@@ -388,6 +390,8 @@ This is the dedicated space for Google Cloud in each briefing. Everything else i
 
 **Format (strict):** one framing sentence that ties the edition's themes to a single GCP position, then **exactly three bold, named motions**. Each motion follows **Signal → Why GCP wins → The move**: the concrete thing this week's stories show a founder saying or facing → ONE differentiator (with its "why") from the GCP Playbook provided in your context → the specific action the rep takes next (the question to ask, the thing to whiteboard, the eval to propose). No sub-headings. No CTA tack-ons ("Conversation starter", "Try this week"). No standalone product list.
 
+**Every motion must be runnable as written.** Name who it is for ("founders renting raw GPUs, not API users") and a step that exists in the playbook, explained in words a rep can repeat to a founder — "a calendar-mode reservation (a self-service block of up to 90 days)", never a bare "90-day block". If the rep would have to ask "what does that mean?" or "do we even offer that?", the motion is not done (Edition #38: "Put a 90-day block beside the neocloud quote").
+
 **Ground every product claim.** Only claims from the GCP Playbook in your context (or news in this week's KBs) may appear in product positioning. If a play needs a claim that isn't there, gesture at the strategic direction instead of inventing specifics. When no playbook was provided in context, fall back to the product reference table below and keep claims conservative.
 
 **Each motion must be execution detail, not a market-reaction quote (Principle 5).** "Lead with Model Garden, not a single model: run Gemini, Claude, and open weights behind one API; adopt the open weight for the jobs it wins" is a motion. A quote about how the market feels about cloud is not — and a quote that argues *against* using cloud is a hard cut.
@@ -479,9 +483,10 @@ When in doubt: every hyperscaler is squeezed. The GCP story is about *workload m
 ## Writing Pattern
 
 Lead with the punch, link for depth. Within each Big Picture story:
-1. **Open with the boldest fact** + source link
-2. **Give the context that makes it matter** — and when two items are merged, name the tension between them + second link
-3. **The angle block** (if the story has a seller play)
+1. **Open with the thesis** — the arc this story advances and what moved this week, in one or two sentences
+2. **The boldest fact** + source link, then each further source as a step in that argument — when two items are merged, name the tension between them
+3. **"The takeaway:"** — what it means for Google Cloud and for founders
+4. **The angle block** (if the story has a seller play)
 
 Readers are sales reps scanning on Monday morning — they need the "so what" instantly and the link if they want depth. Keep each story to 1-2 tight paragraphs; if it's sprawling past ~220 words, you're including detail the rep won't use.
 

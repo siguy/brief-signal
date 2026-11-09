@@ -22,6 +22,7 @@
  */
 
 const { GoogleGenAI } = require("@google/genai");
+const { TEXT_MODEL } = require("./models.js");
 const fs = require("fs");
 const os = require("os");
 const path = require("path");
@@ -232,7 +233,7 @@ ${briefing}`;
   console.log(`Critiquing ${path.basename(briefingPath)}...`);
   const ai = new GoogleGenAI({ apiKey });
   const response = await ai.models.generateContent({
-    model: "gemini-3.8-flash",
+    model: TEXT_MODEL,
     contents: userMessage,
     config: { systemInstruction, thinkingConfig: { thinkingLevel: "HIGH" } },
   });

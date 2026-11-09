@@ -93,8 +93,8 @@ assert_contains "run_critique reports error" "$out" "STATUS=error"
 # Stage 4c's guard is `[ "$LINT_STATUS" = "hard_failures" ]`. Confirm the state
 # run_lint actually produces is the state that guard matches — the two drifting
 # apart is what made the repair pass unreachable in the first place.
-guard=$(grep -c 'if \[ "\$LINT_STATUS" = "hard_failures" \]; then' "$PIPELINE")
-assert_contains "Stage 4c guard matches run_lint's hard-failure state" "$guard" "1"
+guard=$(grep -c 'if \[ "\$LINT_STATUS" = "hard_failures" \] || \[ "\$LINT_STATUS" = "pass" \]; then' "$PIPELINE")
+assert_contains "Stage 4c guard matches run_lint's hard-failure and pass states" "$guard" "1"
 
 # --- Lineup gate -----------------------------------------------------------
 # The gate's risk is not that it fails loudly — it is that it half-runs. With no
@@ -127,9 +127,15 @@ assert_contains "gate sweeps the digest against the lineup, not a draft" \
 # set out to do, and whether it did it — so they lead; the critique and the
 # several-hundred-line digest follow. An accidental swap buries the editorial
 # call behind a ratings table, which is the bug this ordering fixed.
-body_order=$(grep -o '${THEME_SECTION}${BRAID_SECTION}${CRITIQUE_SECTION}${SIGNAL_SECTION}' "$PIPELINE" | head -1)
-assert_contains "PR body leads with themes and braids, ends with the digest" \
-  "$body_order" '${THEME_SECTION}${BRAID_SECTION}${CRITIQUE_SECTION}${SIGNAL_SECTION}'
+#
+# Since 2026-11-09 the three editorial calls (review-brief.js) lead, then the
+# lineup and braids, then what the repair fixed; the critique and digest stay
+# last, collapsed.
+body_order=$(grep -o '${REVIEW_SECTION}${THEME_SECTION}${BRAID_SECTION}${REPAIR_SECTION}' "$PIPELINE" | head -1)
+assert_contains "PR body leads with the three calls, then themes, braids and repairs" \
+  "$body_order" '${REVIEW_SECTION}${THEME_SECTION}${BRAID_SECTION}${REPAIR_SECTION}'
+body_tail=$(grep -o '${CRITIQUE_SECTION}${SIGNAL_SECTION}' "$PIPELINE" | head -1)
+assert_contains "PR body ends with the critique and the digest" "$body_tail" '${CRITIQUE_SECTION}${SIGNAL_SECTION}'
 
 # The ledger must be skipped under the lineup gate: there is no draft to compare
 # the plan against, and running it would grade the previously published edition.
