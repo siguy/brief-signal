@@ -203,13 +203,10 @@ function build() {
     const briefingDir = path.join(DIST_DIR, 'briefings', b.slug);
     ensureDir(briefingDir);
 
-    // Copy images for this briefing
-    const imagesDir = path.join(CONTENT_DIR, 'images');
-    if (fs.existsSync(imagesDir)) {
-      const destImages = path.join(briefingDir, 'images');
-      ensureDir(destImages);
-      copyDir(imagesDir, destImages);
-    }
+    // Copy only the images this briefing references. Copying the whole
+    // images folder into every edition grew the site past GitHub Pages'
+    // 1 GB limit (38 editions x ~34 MB) and made deploys time out.
+    copyReferencedImages(b.body, path.join(briefingDir, 'images'));
 
     // Copy audio file if it exists
     const audioSrc = getAudioPath(b.slug);
@@ -427,6 +424,25 @@ function build() {
   console.log(`Output: ${DIST_DIR}`);
 }
 
+// Filenames referenced as ./images/<file> in a briefing's markdown.
+function referencedImages(markdown) {
+  const names = new Set();
+  for (const m of markdown.matchAll(/\.\/images\/([^)\s"']+)/g)) names.add(m[1]);
+  return [...names];
+}
+
+function copyReferencedImages(markdown, destDir) {
+  const srcDir = path.join(CONTENT_DIR, 'images');
+  const names = referencedImages(markdown);
+  if (names.length === 0) return;
+  ensureDir(destDir);
+  for (const name of names) {
+    const src = path.join(srcDir, name);
+    if (fs.existsSync(src)) fs.copyFileSync(src, path.join(destDir, name));
+    else console.warn(`WARN: image not found: ${name}`);
+  }
+}
+
 function copyDir(src, dest) {
   for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
     const srcPath = path.join(src, entry.name);
@@ -440,4 +456,6 @@ function copyDir(src, dest) {
   }
 }
 
-build();
+if (require.main === module) build();
+
+module.exports = { referencedImages };
