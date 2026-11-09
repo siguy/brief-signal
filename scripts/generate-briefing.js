@@ -11,6 +11,7 @@
 
 const { GoogleGenAI } = require("@google/genai");
 const { TEXT_MODEL } = require("./models.js");
+const { readProductList } = require("./sources.js");
 const fs = require("fs");
 const path = require("path");
 // One list of KB kinds, shared with the digest. Previously the prefixes were
@@ -196,6 +197,29 @@ function readGcpPlaybook() {
     return "";
   }
   return fs.readFileSync(PLAYBOOK_PATH, "utf-8");
+}
+
+// Edition #38 invented "Cloud Run Sandboxes" because the real product (Agent
+// Substrate) was in none of its sources. The linter now fails any Google
+// product name outside the playbook, the KBs and config/gcp-products.txt —
+// this tells Stage 4b the same rule up front, plus the hand-kept names it
+// could not otherwise know about.
+function factRules() {
+  const extra = readProductList();
+  return (
+    `\n\n## Product naming (checked by the linter)\n\n` +
+    `Name a Google product ONLY if it appears in the GCP Playbook above, in this week's knowledge base, ` +
+    `or in this list. Never coin or extend a product name ("Cloud Run Sandboxes" does not exist). ` +
+    `If no real product fits, describe the capability in plain words instead.` +
+    (extra.length ? `\n\n${extra.map((p) => `- ${p.name}${p.url ? ` — ${p.url}` : ""}`).join("\n")}` : "") +
+    `\n\n## Sourcing numbers and quotes (checked by the linter)\n\n` +
+    `Every number and every quoted phrase must come from what a source SAID: a podcast quote line ` +
+    `('- "…" — Speaker (hh:mm)' or 'Speaker: "…" (hh:mm)'), a bookmark's post or article text, or a lab-news item. ` +
+    `Credit it to the speaker on that line and cite that entry's own link and timestamp. ` +
+    `Numbers that appear ONLY in Takeaway, Budget, Consensus, Debate, Intent Signal, GCP Relevance or Key Numbers ` +
+    `lines are the extractor's summary, not the source — do not use them. Do not compute new figures ` +
+    `(no "$1,265 per bug" from $1.2M / 948). Every cited URL must be one that appears in the knowledge base.`
+  );
 }
 
 function getTodayDate() {
@@ -590,9 +614,11 @@ ${kbContent}${emptySourceNote}${previousContext}`;
 
   console.log(`\nStage 4b: drafting Edition #${edition} (${TEXT_MODEL})...`);
   const gcpPlaybook = readGcpPlaybook();
-  const stage4bSystem = gcpPlaybook
-    ? `${systemPrompt}\n\n## GCP Playbook (ground truth for "Our Play" and "Where the GCP opportunity is" — only claims from this playbook or the week's KBs may appear in product positioning)\n\n${gcpPlaybook}`
-    : systemPrompt;
+  const stage4bSystem = `${
+    gcpPlaybook
+      ? `${systemPrompt}\n\n## GCP Playbook (ground truth for "Our Play" and "Where the GCP opportunity is" — only claims from this playbook or the week's KBs may appear in product positioning)\n\n${gcpPlaybook}`
+      : systemPrompt
+  }${factRules()}`;
   const response = await ai.models.generateContent({
     model: TEXT_MODEL,
     contents: userMessage,
