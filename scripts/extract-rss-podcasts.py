@@ -320,7 +320,7 @@ Date: {episode.get('date', 'unknown')}
 
     try:
         response = client.models.generate_content(
-            model="gemini-3.7-flash",
+            model="gemini-3.8-flash",
             contents=user_message,
             config={
                 "system_instruction": prompt,
@@ -350,7 +350,7 @@ def deep_dive(client, deep_dive_prompt: str, level1_data: dict, transcript: str)
 
     try:
         response = client.models.generate_content(
-            model="gemini-3.7-flash",
+            model="gemini-3.8-flash",
             contents=user_message,
             config={
                 "system_instruction": deep_dive_prompt,

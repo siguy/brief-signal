@@ -39,7 +39,7 @@ If an episode has no subtitles (rare for English content, but it happens), the s
 
 ### Step 4: Level 1 Extraction (Every Episode)
 
-This is where the AI magic happens. The transcript gets sent to **Gemini 3.7 Flash** with a carefully crafted system prompt (`scripts/podcast-extraction-prompt.md`). Gemini returns a structured JSON object containing:
+This is where the AI magic happens. The transcript gets sent to **Gemini 3.8 Flash** with a carefully crafted system prompt (`scripts/podcast-extraction-prompt.md`). Gemini returns a structured JSON object containing:
 
 - **Notable quotes** -- verbatim, with speaker names and timestamps
 - **Consensus signals** -- things hosts/guests treat as obvious ("everyone agrees agents are the next platform shift")
@@ -141,7 +141,7 @@ This fault tolerance is a professional engineering pattern worth internalizing: 
 | Tool | What It Does | Why This One |
 |------|-------------|--------------|
 | **yt-dlp** | Downloads video metadata and subtitles from YouTube | Free, open source, actively maintained. The standard tool for YouTube data extraction. |
-| **Gemini 3.7 Flash** | Reads transcripts and extracts structured intelligence | Fast, cheap, good at following detailed JSON schemas. The Flash model handles long transcripts (1-hour podcast = ~15K words) within its context window without issue. |
+| **Gemini 3.8 Flash** | Reads transcripts and extracts structured intelligence | Fast, cheap, good at following detailed JSON schemas. The Flash model handles long transcripts (1-hour podcast = ~15K words) within its context window without issue. |
 | **Node.js** | Runs the extraction and briefing scripts | Matches the rest of the project (build.js, audio pipeline). Keeps the stack consistent. |
 | **VTT parsing (pure JS)** | Converts YouTube subtitle files to clean text | No external dependency needed. The format is simple enough that a 15-line parser handles it. |
 
@@ -541,6 +541,10 @@ new — 2.5 Flash was thinking all along. What actually changed is the rate card
 ($0.75/$3.75 per million introductory, doubling on 1 January 2027), so the
 weekly run gets more expensive per token even though it uses about the same
 number of them. Worth knowing before the January invoice, not after.
+
+### Update (2026-11-08): 3.7 → 3.8 Flash
+
+We ran the same four checks again, in the same order. They took about five minutes, and that is why the checklist is worth having. 3.8 has the same limits and the same price as 3.7. It found the same three hard failures in Edition #37 and wrote a well-formed lineup. The second swap was cheap because the first one wrote its checklist down.
 
 
 ### Two follow-ups, and what each one taught
