@@ -278,6 +278,8 @@ For each story:
    - gravity: {N distinct KBs × M distinct shows/authors that surface it}
    - changed this week: {the new development, esp. vs. any prior edition on this theme}
    - merges: {what's merged + the tension, or "single"}
+   - thesis: {ONE sentence the story argues — the arc it advances and what moved this week. Not a list of the items merged. If you cannot write it, the items are a cluster, not a story: pick the one that carries the point}
+   - so what: {for Google Cloud: … / for founders: … — one clause each. A story with nothing for either is a Quick Hit, not a Big Picture story}
    - seller play: {one line, or "context-only — no angle"}
    - priority fit: {the Seller Priorities label(s) this story serves, or "none"}
    - advances: {the Theme Registry arc this story moves forward, by name} OR NEW THREAD — candidate theme? {a name, or "one-off, no arc"}

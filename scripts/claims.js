@@ -267,7 +267,10 @@ function normWords(s) {
 function extractQuotes(prose) {
   const out = [];
   for (const m of prose.matchAll(/["“]([^"”]{3,300})["”]/g)) {
-    if (m[1].trim().split(/\s+/).length >= 2) out.push(m[1].trim());
+    // American style puts the sentence's period inside the quote ("…five bucks.");
+    // that punctuation is the draft's, not the speaker's.
+    const q = m[1].trim().replace(/[.,;:!?]+$/, "");
+    if (q.split(/\s+/).length >= 2) out.push(q);
   }
   return out;
 }
@@ -627,7 +630,9 @@ function checkClaimsDetailed(md, sources) {
         const v = verify((t) => containsNumber(t, n), s.links, sources, paraLinks, s.prose, isDistinctive(n));
         if (!v.ok) push(u, s, n.raw, v.reason, v.fix, `"${n.raw}" (${u.section}) ${REASON_TEXT[v.reason]}.${describeFix(v.fix)}`);
       }
-      for (const q of extractQuotes(s.prose)) {
+      // A quote in a paragraph that cites nothing is attributed to no one — a
+      // scare-quoted phrase ('never "we have more"'), not a claim about a source.
+      for (const q of paraLinks.length ? extractQuotes(s.prose) : []) {
         const v = verify((t) => containsQuote(t, q), s.links, sources, paraLinks, s.prose);
         if (!v.ok) push(u, s, `"${q}"`, v.reason, v.fix, `Quote "${q}" (${u.section}) ${REASON_TEXT[v.reason]}.${describeFix(v.fix)}`);
       }

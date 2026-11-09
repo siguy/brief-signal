@@ -529,3 +529,22 @@ unchecked assertions.
 - **`String.replace(str, replacement)` expands `$1`/`$&` in the replacement.**
   Briefing text is full of dollar amounts. Rule: **splice draft text with
   `replace(x, () => y)`, never a bare replacement string.**
+
+### From Edition #38 feedback (2026-11-09)
+
+- **A lead that lists isn't a lead.** Story 1 put Antigravity, DeepSeek, Lemkin,
+  Daytona and Masad side by side with no stated theme or "what moved." Rule:
+  **the first two sentences of every Big Picture story name the arc it advances
+  and what changed this week; every source after that is a step in the argument.**
+- **No story without implications.** The data-center story had no "so what"
+  for Google Cloud or startups, and Simon asked whether it was even the most
+  important. Rule: **every story ends with what it means for GCP and for the
+  founder, even when there's no angle block; if there's nothing to say, demote it.**
+- **Name and show appear once.** "Nathan Labenz … on *The Cognitive Revolution*
+  [Nathan Labenz on The Cognitive Revolution (…)]". Rule: **when the prose
+  credits the speaker and show, the link wraps the show name; the label never
+  repeats them.**
+- **Plays must be runnable.** "Put a 90-day block beside the neocloud quote"
+  was real (calendar-mode reservations) but unexplained and capacity-flavored.
+  Rule: **each play says who it's for and names a step that exists, in plain
+  words.**

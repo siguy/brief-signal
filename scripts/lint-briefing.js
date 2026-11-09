@@ -20,6 +20,7 @@
 const fs = require("fs");
 const path = require("path");
 const { loadSources } = require("./sources.js");
+const { checkDoubleAttribution } = require("./attribution.js");
 const {
   checkClaims,
   checkProductNames,
@@ -330,6 +331,22 @@ function checkCapacityOverclaim(md) {
     // "Never pretend GCP has unlimited spare capacity" states the rule, not the claim.
     const negated = m && NEGATION.test(prose.slice(Math.max(0, m.index - 60), m.index));
     if (m && !negated) hard.push(`Capacity overclaim "${m[0]}" — GCP is supply-constrained too; sell commitment terms and workload mix`);
+  }
+  return { hard, warn: [] };
+}
+
+// Every Big Picture story closes with what it means (briefing-prompt.md, story
+// template). Edition #38's third story had no implications at all, and the
+// first stated its point only in the TLDR. The check is for presence; whether
+// the takeaway is any good is the editor's call.
+const TAKEAWAY = /\b(?:The takeaway|What it means):/;
+function checkStoryTakeaway(md) {
+  const hard = [];
+  for (const s of bigPictureStories(md)) {
+    const prose = s.body.split(ANGLE_HEADING)[0];
+    if (!TAKEAWAY.test(prose)) {
+      hard.push(`Story "${s.title}" has no "The takeaway:" sentence — close with what it means for Google Cloud and for founders`);
+    }
   }
   return { hard, warn: [] };
 }
@@ -650,6 +667,8 @@ function lint(md, sources = null) {
     ["quick-hit-sentences", checkQuickHitSentences],
     ["sellers-edge-standalone", checkSellersEdgeStandalone],
     ["capacity-overclaim", checkCapacityOverclaim],
+    ["double-attribution", checkDoubleAttribution],
+    ["story-takeaway", checkStoryTakeaway],
     ["naming", checkNaming],
     ["images", checkImages],
     ["cross-edition-lead", checkCrossEditionLead],
@@ -717,6 +736,7 @@ module.exports = {
   checkQuickHitSentences,
   checkSellersEdgeStandalone,
   checkCapacityOverclaim,
+  checkStoryTakeaway,
   checkNaming,
   checkImages,
   checkCrossEditionLead,

@@ -283,6 +283,16 @@ test("a TLDR figure must appear in the body", () => {
   assert.ok(f.some((x) => x.reason === "tldr-not-in-body" && x.claim === "948"), JSON.stringify(f));
 });
 
+test("a period inside the closing quote still matches the source", () => {
+  const f = claims(draft({ story: '"No bid. No bid." Jamin Ball said [Jamin Ball on Latent Space (103 min watch, 01:18:20)](https://www.youtube.com/watch?v=P735f1xlpL0).' }));
+  assert.deepStrictEqual(f, []);
+});
+
+test("a scare-quote in a paragraph that cites nothing is not checked as a quote", () => {
+  const f = claims(draft({ story: 'The pitch is commitment terms, never "we have more."' }));
+  assert.deepStrictEqual(f, []);
+});
+
 // --- products -------------------------------------------------------------------------
 
 test('#38: invented "Cloud Run Sandboxes" is flagged; real names pass', () => {
@@ -355,6 +365,33 @@ test("wording: support must be verbatim in the cited source, or the phrase is fl
 test("wording: a failed model call yields no findings, never a false pass of everything", () => {
   const md = draft({ story: "Debt is \"no bid\" [Jamin Ball on Latent Space (103 min watch)](https://www.youtube.com/watch?v=P735f1xlpL0)." });
   assert.deepStrictEqual(verifyWording(wordingRequest(md, sources()), [null]), []);
+});
+
+// --- name and show said twice ----------------------------------------------------------
+
+const { findDoubleAttributions, fixDoubleAttributions } = require("./attribution.js");
+const { checkStoryTakeaway } = require("./lint-briefing.js");
+
+test("#38: 'noted on *Show* [Speaker on Show (...)]' is found and the link moves onto the show name", () => {
+  const md = "Nathan Labenz and Pash Nin noted on *The Cognitive Revolution* [Nathan Labenz on The Cognitive Revolution (87 min watch, 31:40)](https://www.youtube.com/watch?v=ZZwrUPxU1GY), and more.";
+  assert.strictEqual(findDoubleAttributions(md).length, 1);
+  const { md: out } = fixDoubleAttributions(md);
+  assert.strictEqual(
+    out,
+    "Nathan Labenz and Pash Nin noted on [*The Cognitive Revolution* (87 min watch, 31:40)](https://www.youtube.com/watch?v=ZZwrUPxU1GY), and more."
+  );
+  assert.strictEqual(findDoubleAttributions(out).length, 0);
+});
+
+test("a citation whose sentence doesn't name the speaker is left alone", () => {
+  const md = "Credit desks went quiet [Jamin Ball on Latent Space (103 min watch, 01:18:20)](https://www.youtube.com/watch?v=P735f1xlpL0).";
+  assert.strictEqual(findDoubleAttributions(md).length, 0);
+  assert.strictEqual(fixDoubleAttributions(md).md, md);
+});
+
+test("every Big Picture story needs a takeaway sentence", () => {
+  assert.strictEqual(checkStoryTakeaway(draft({ story: "Facts only." })).hard.length, 1);
+  assert.strictEqual(checkStoryTakeaway(draft({ story: "Facts. The takeaway: it matters for GCP." })).hard.length, 0);
 });
 
 console.log(`\n${passed} passed, ${failed} failed`);

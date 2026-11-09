@@ -54,6 +54,7 @@ const { TEXT_MODEL } = require("./models.js");
 const { lint, briefingDate } = require("./lint-briefing.js");
 const { loadSources } = require("./sources.js");
 const { checkWording } = require("./check-wording.js");
+const { fixDoubleAttributions } = require("./attribution.js");
 const {
   checkClaimsDetailed,
   checkProducts,
@@ -331,7 +332,8 @@ ${md}`;
     }
   }
   const after = collectFailures(date, repaired, sources);
-  report.structural = { before: failures.length, after: after.length, fixed: failures.filter((f) => !after.includes(f)) };
+  const earlier = report.structural ? report.structural.fixed : [];
+  report.structural = { before: failures.length, after: after.length, fixed: [...earlier, ...failures.filter((f) => !after.includes(f))] };
   log(`  structural failures ${failures.length} → ${after.length}`);
   return repaired;
 }
@@ -597,7 +599,16 @@ async function main() {
   // re-credit that A just made — on the #38 replay it trimmed Swyx's credit off
   // a Quick Hit to save words. Running A on B's output means the fact fixes are
   // made against the text that ships, and C cuts whatever is still wrong.
-  let md = await repairStructure(original, sources, ai, report, date);
+  // 0. Mechanical rewrites that need no model: "name and show said twice"
+  // becomes a link on the show name (Edition #38 had seven).
+  const attribution = fixDoubleAttributions(original);
+  if (attribution.fixes.length) {
+    log(`0. Fixed ${attribution.fixes.length} double attribution(s).`);
+    (report.structural ||= { before: 0, after: 0, fixed: [] }).fixed.push(
+      ...attribution.fixes.map((f) => `- link moved onto the show name: ${f.speaker} on ${f.show}`)
+    );
+  }
+  let md = await repairStructure(attribution.md, sources, ai, report, date);
   const wording = await checkWording(md, sources, ai, log);
   if (wording.length) log(`Wording check: ${wording.length} phrase(s) the cited sources don't support.`);
   md = await repairFacts(md, sources, ai, report, wording);
