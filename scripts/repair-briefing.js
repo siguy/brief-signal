@@ -29,6 +29,7 @@
 const fs = require("fs");
 const path = require("path");
 const { GoogleGenAI } = require("@google/genai");
+const { TEXT_MODEL } = require("./models.js");
 const { lint } = require("./lint-briefing.js");
 
 const BRIEFINGS_DIR = path.join(__dirname, "..", "content", "briefings");
@@ -124,7 +125,7 @@ ${original}`;
 
   const ai = new GoogleGenAI({ apiKey });
   const response = await ai.models.generateContent({
-    model: "gemini-3.8-flash",
+    model: TEXT_MODEL,
     contents: userMessage,
     config: {
       systemInstruction: systemPrompt,
