@@ -1,0 +1,13 @@
+# Real Google product names the week's sources (playbook + KBs) don't mention.
+#
+# The product check in scripts/claims.js fails any Google-style product name
+# that appears in neither content/gcp-playbook.md, the week's knowledge-base
+# files, nor this list. Edition #38's draft invented "Cloud Run Sandboxes"
+# because the real product (Agent Substrate) was in none of its sources.
+#
+# Add a line ONLY after confirming the product on a first-party Google page.
+# Format:  Product Name | first-party URL | date added
+# The URL also counts as an allowed citation, so a draft may link it.
+
+Agent Substrate | https://cloud.google.com/blog/products/containers-kubernetes/open-infrastructure-for-autonomous-agents-comes-to-cncf/ | 2026-11-09
+GKE Sandbox | https://cloud.google.com/kubernetes-engine/docs/concepts/sandbox-pods | 2026-11-09

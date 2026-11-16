@@ -59,7 +59,7 @@ title: "Test"
 
 ### Story One
 
-Text [Alice on Show A (60 min watch, 5:00)](https://youtube.com/watch?v=aaaaaaaaaaa).
+Text [Alice on Show A (60 min watch, 5:00)](https://youtube.com/watch?v=aaaaaaaaaaa). The takeaway: it matters.
 
 **Your angle with founders:**
 1.  **Where it hurts:** "Q?"
@@ -68,7 +68,7 @@ Text [Alice on Show A (60 min watch, 5:00)](https://youtube.com/watch?v=aaaaaaaa
 
 ### Story Two
 
-Text [Bob on Show B (30 min watch, 10:00)](https://youtube.com/watch?v=bbbbbbbbbbb).
+Text [Bob on Show B (30 min watch, 10:00)](https://youtube.com/watch?v=bbbbbbbbbbb). The takeaway: it matters too.
 
 ## Quick Hits
 

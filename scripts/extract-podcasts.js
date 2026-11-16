@@ -12,6 +12,7 @@
  */
 
 const { GoogleGenAI } = require("@google/genai");
+const { TEXT_MODEL } = require("./models.js");
 const { execSync, execFile } = require("child_process");
 const fs = require("fs");
 const path = require("path");
@@ -337,7 +338,7 @@ Date: ${episode.upload_date || "unknown"}
 ${transcript}`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.8-flash",
+    model: TEXT_MODEL,
     contents: userMessage,
     config: {
       systemInstruction: systemPrompt,
@@ -365,7 +366,7 @@ ${JSON.stringify(level1Data, null, 2)}
 ${transcript}`;
 
   const response = await ai.models.generateContent({
-    model: "gemini-3.8-flash",
+    model: TEXT_MODEL,
     contents: userMessage,
     config: {
       systemInstruction: deepDivePrompt,

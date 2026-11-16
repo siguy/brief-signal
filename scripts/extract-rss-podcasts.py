@@ -25,6 +25,16 @@ from pathlib import Path
 import feedparser
 import requests
 
+
+def text_model():
+    """The pipeline's text model, from config/models.json (shared with the JS
+    scripts via scripts/models.js). GEMINI_TEXT_MODEL overrides it for one run."""
+    override = os.environ.get("GEMINI_TEXT_MODEL", "").strip()
+    if override:
+        return override
+    config = Path(__file__).resolve().parent.parent / "config" / "models.json"
+    return json.loads(config.read_text())["text"]
+
 # ---------------------------------------------------------------------------
 # Paths
 # ---------------------------------------------------------------------------
@@ -320,7 +330,7 @@ Date: {episode.get('date', 'unknown')}
 
     try:
         response = client.models.generate_content(
-            model="gemini-3.8-flash",
+            model=text_model(),
             contents=user_message,
             config={
                 "system_instruction": prompt,
@@ -350,7 +360,7 @@ def deep_dive(client, deep_dive_prompt: str, level1_data: dict, transcript: str)
 
     try:
         response = client.models.generate_content(
-            model="gemini-3.8-flash",
+            model=text_model(),
             contents=user_message,
             config={
                 "system_instruction": deep_dive_prompt,
