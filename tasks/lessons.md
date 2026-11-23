@@ -548,3 +548,8 @@ unchecked assertions.
   was real (calendar-mode reservations) but unexplained and capacity-flavored.
   Rule: **each play says who it's for and names a step that exists, in plain
   words.**
+
+## 2026-11-23 — Scheduled run left mechanical failures for Simon
+- **Mistake:** The Sunday run opened PR #212 with 4 lint/critique hard failures still open and reported them as a punch list, because the task prompt said "open the PR" and nothing about fixing.
+- **Rule:** A briefing PR is not done until lint has 0 HARD, critique passes (house-style false positives overruled and noted), the source-fidelity pass is done (podcast claims vs speaker quotes, bookmark cites vs post text, product claims vs playbook) and Simon has been emailed the PR + review page. The scheduled task prompt now encodes this (STEPS 3-5).
+- **Also:** The critique is non-deterministic and finds new things each run. Loop it (up to 5 rounds) instead of trusting one pass.
