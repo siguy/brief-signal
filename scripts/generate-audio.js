@@ -16,10 +16,23 @@
 
 const textToSpeech = require("@google-cloud/text-to-speech");
 const fs = require("fs");
+const crypto = require("crypto");
 const path = require("path");
 
 const AUDIO_DIR = path.join(__dirname, "..", "content", "audio");
-const MAX_BYTES = 3800; // Stay safely under 4,000-byte API limit for Gemini TTS
+// Stay under the 4,000-byte API limit. Synthesis time grows with chunk size
+// (Nov 2026: ~3,400 bytes took ~115s), so set TTS_MAX_BYTES lower (e.g. 2000)
+// when chunks keep timing out.
+const MAX_BYTES = Number(process.env.TTS_MAX_BYTES) || 3800;
+// Finished chunks live here until the MP3 is built (scripts/logs/ is gitignored).
+const CACHE_ROOT = path.join(__dirname, "logs", "tts-cache");
+// Since Nov 2026 gemini-2.5-pro-tts (now listed by Google as an "earlier"
+// model) is bimodal: a request either answers in roughly 5-75s or never
+// answers at all. The client's default 60s deadline cut off slow-but-good
+// answers; waiting much longer only burns time on dead requests. So: a
+// moderate per-call timeout and several attempts per chunk.
+const CALL_TIMEOUT_MS = 120000;
+const CHUNK_ATTEMPTS = 6;
 
 const DEFAULT_VOICE = "Fenrir";
 // Stays on 2.5 Pro TTS deliberately. gemini-3.1-flash-tts-preview synthesises
@@ -114,6 +127,75 @@ function cleanForTTS(text) {
   return text.replace(/\*+([^*]+)\*+/g, "$1");
 }
 
+/**
+ * Cache key for one chunk: changes whenever anything that affects the audio
+ * changes (text, voice, model, style prompt), so an edited script never
+ * reuses stale audio.
+ */
+function chunkCacheKey(chunk, voiceName) {
+  return crypto
+    .createHash("sha256")
+    .update([MODEL, voiceName, VOICE_PROMPT, chunk].join("\n"))
+    .digest("hex")
+    .slice(0, 16);
+}
+
+/**
+ * Synthesize every chunk, reusing cached audio where it exists. Each chunk
+ * gets CALL_TIMEOUT_MS per attempt and CHUNK_ATTEMPTS attempts; the first
+ * chunk that still fails stops the run, keeping everything finished so far.
+ */
+async function synthesizeAll(client, chunks, { voiceName, cacheDir, log = console.log }) {
+  fs.mkdirSync(cacheDir, { recursive: true });
+  const buffers = [];
+
+  for (let i = 0; i < chunks.length; i++) {
+    const chunk = chunks[i];
+    const label = `Chunk ${i + 1}/${chunks.length}`;
+    const cachePath = path.join(cacheDir, `${i}-${chunkCacheKey(chunk, voiceName)}.mp3`);
+
+    if (fs.existsSync(cachePath)) {
+      log(`  ${label}: cached, reusing`);
+      buffers.push(fs.readFileSync(cachePath));
+      continue;
+    }
+
+    log(`  ${label}: ${Buffer.byteLength(chunk, "utf8")} bytes`);
+    const request = {
+      input: { text: chunk, prompt: VOICE_PROMPT },
+      voice: { languageCode: "en-us", name: voiceName, modelName: MODEL },
+      audioConfig: { audioEncoding: "MP3" },
+    };
+
+    let audio;
+    for (let attempt = 1; attempt <= CHUNK_ATTEMPTS; attempt++) {
+      const started = Date.now();
+      try {
+        const [response] = await client.synthesizeSpeech(request, {
+          timeout: CALL_TIMEOUT_MS,
+          maxRetries: 0,
+        });
+        audio = response.audioContent;
+        log(`    done in ${((Date.now() - started) / 1000).toFixed(0)}s`);
+        break;
+      } catch (err) {
+        const secs = ((Date.now() - started) / 1000).toFixed(0);
+        log(`    attempt ${attempt}/${CHUNK_ATTEMPTS} failed after ${secs}s: ${String(err.message || err).slice(0, 120)}`);
+        if (attempt === CHUNK_ATTEMPTS) {
+          const done = i;
+          throw new Error(
+            `${label} failed ${CHUNK_ATTEMPTS} times. ${done} of ${chunks.length} chunks are saved in ${cacheDir}; re-run to resume.`
+          );
+        }
+      }
+    }
+
+    fs.writeFileSync(cachePath, audio);
+    buffers.push(Buffer.from(audio));
+  }
+  return buffers;
+}
+
 async function main() {
   if (!process.env.GOOGLE_APPLICATION_CREDENTIALS) {
     console.error(
@@ -146,37 +228,19 @@ async function main() {
   console.log(`Voice: ${voiceName} (${MODEL})`);
   console.log(`Prompt: "${VOICE_PROMPT}"`);
 
-  // 4. Synthesize each chunk via Gemini Pro TTS
+  // 4. Synthesize each chunk via Gemini Pro TTS. Finished chunks are saved
+  // to a cache folder, so a retry after a failure only pays for the chunks
+  // that are still missing.
   const client = new textToSpeech.TextToSpeechClient();
-  const audioBuffers = [];
-
-  for (let i = 0; i < chunks.length; i++) {
-    const chunk = chunks[i];
-    const bytes = Buffer.byteLength(chunk, "utf8");
-    console.log(`  Chunk ${i + 1}/${chunks.length}: ${bytes} bytes`);
-
-    const request = {
-      input: {
-        text: chunk,
-        prompt: VOICE_PROMPT,
-      },
-      voice: {
-        languageCode: "en-us",
-        name: voiceName,
-        modelName: MODEL,
-      },
-      audioConfig: {
-        audioEncoding: "MP3",
-      },
-    };
-
-    const [response] = await client.synthesizeSpeech(request);
-    audioBuffers.push(response.audioContent);
-  }
-
+  const cacheDir = path.join(CACHE_ROOT, script.slug);
+  const audioBuffers = await synthesizeAll(client, chunks, {
+    voiceName,
+    cacheDir,
+  });
   // 5. Concatenate MP3 buffers and save
   const combined = Buffer.concat(audioBuffers);
   fs.writeFileSync(mp3Path, combined);
+  fs.rmSync(cacheDir, { recursive: true, force: true });
 
   const sizeMB = (combined.length / (1024 * 1024)).toFixed(1);
   console.log(`\nAudio generated!`);
@@ -186,7 +250,11 @@ async function main() {
   console.log(`\nRun \`npm run build\` to include the audio player on the site.`);
 }
 
-main().catch((err) => {
-  console.error("Fatal error:", err.message || err);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((err) => {
+    console.error("Fatal error:", err.message || err);
+    process.exit(1);
+  });
+}
+
+module.exports = { chunkText, chunkCacheKey, synthesizeAll };
