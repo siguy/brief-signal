@@ -688,3 +688,103 @@ script, keep its stderr, and log at least the last line of it.
 The second lesson: **a fallback should also raise an alarm.** If whisper quietly
 rescued every episode, this bug could have sat unnoticed for months, costing about
 90 extra minutes every Sunday. The coverage warning makes sure that doesn't happen.
+
+## The Fact-Checker That Reads the Footnotes (2026-11-09)
+
+Edition #38's first draft reached you with a product that doesn't exist
+("Cloud Run Sandboxes") and eleven numbers or quotes pinned on the wrong
+person. The "no bid" line was Jamin Ball's, not Martin Casado's. Texas's
+"470 GW" came from no one: it existed only in a line the *extractor* wrote
+while summarising a podcast. Fixing it by hand took an evening and a subagent
+reading transcripts.
+
+### The insight that made it cheap
+
+Every claim in a draft already carries its footnote. A citation like
+`[Jamin Ball on Latent Space (103 min watch, 01:18:20)](url)` holds a
+speaker, a timestamp and a URL, and every URL in the #38 draft (27 of 27)
+appeared word-for-word in that week's knowledge-base files. So checking a
+claim is a library errand, not a research project: follow the footnote to the
+shelf, open the book, and see whether the sentence is in it.
+
+The first plan was to make the writer add hidden "evidence tags" pointing at
+line numbers. Reading the code killed that idea: the writer gets ~690 KB of
+text with no line numbers, so it could never cite "line 919". The footnotes
+were already there; we only had to read them.
+
+### Primary vs summary: the distinction everything hangs on
+
+Inside a KB entry there are two kinds of text:
+
+- **What the source said:** podcast quote lines, a tweet's body, a lab's own
+  announcement. This is evidence.
+- **What our extractor said about it:** Takeaway, Budget, Consensus, Key
+  Numbers. This is a summary, and summaries drift. Lemkin said "more than 20
+  bucks a month"; the Key Numbers line said "$20 to $40+".
+
+`scripts/sources.js` sorts every line into one pile or the other.
+`scripts/claims.js` then asks four questions of each number and quote: is it
+in what the cited source *said*, by the person credited, near the cited
+timestamp, and is the link itself real? When the answer is no and the
+week's sources hold the claim exactly once, it names the right source
+("Correct source: Jamin Ball, Latent Space at 1:18:20").
+
+### The repair: fix what you can, cut what you can't, never invent
+
+The old repair pass rewrote the whole document while being told "you have no
+access to the source material", so it couldn't re-credit anything. The new
+one runs in four steps:
+
+1. **Structure** (length, TLDR shape): the old whole-document pass, now
+   guarded so it can't add a number, link or product name.
+2. **Facts, paragraph by paragraph:** each failing paragraph goes alone to
+   the model, along with the correct source code found. The model may
+   re-credit, drop the claim, or cut the sentence. Code rejects any rewrite
+   that brings something new, and runs the check again to confirm the fix.
+3. **Deterministic cut:** whatever still fails loses the clause that carries
+   it ("—roughly $1,265 per bug") or its sentence. No model involved.
+4. **Trim:** a section a re-credit pushed a few words over budget gets
+   shortened on its own.
+
+The analogy is a copy desk with one rule: an editor may correct a byline or
+strike a sentence, but may never type a fact that isn't on the source sheet.
+
+### Bugs worth remembering
+
+- **The structural pass undid a fact fix.** Run after the fact repair, the
+  whole-document rewrite trimmed Swyx's new credit to save words, and step 3
+  then cut the whole Quick Hit. Fix: structure first, facts last.
+- **Node gives up at five minutes.** One batched call with deep thinking died
+  at exactly 5:01. Fix: one small call per paragraph, in parallel, retried once.
+- **"40" matched "$40".** The TLDR was repaired into "Voters passed 40
+  measures", and it passed because a different story said "$40/user/month".
+  Fix: when the draft is compared with itself, units have to match.
+- **The clause cutter broke links.** A first version cut "from the comma
+  to the next comma" and sliced through a link label, leaving `]]](url)` on
+  the page. Fix: links became unbreakable tokens, only true asides get cut,
+  and the brackets must still balance afterwards.
+- **An over-eager AI judge.** The wording check first flagged 34 phrases as
+  unsupported, most of them supported, and the repair deleted about 250 true
+  words. Fix: narrow it to what a model judges reliably (titles, scope words,
+  status verbs), and make it quote its evidence so code can check it.
+
+### What good engineers notice here
+
+- **Let the model point, never vouch.** Every AI step in this design
+  produces something code can verify: a source passage that must exist, or a
+  rewrite that must pass the same check again. That's what separates a
+  checker from a second opinion.
+- **Test the checker against the past.** We replayed the original #38 draft
+  (the failures we knew about), the corrected #38 (it still had 3 real
+  misses the hand fix let through), and the drafts of earlier editions. The
+  #37 replay turned up two links that 404 on the live site today.
+- **A strict check needs a cheap way out.** The product allowlist would have
+  rejected Agent Substrate, the real fix, because no feed caught its launch.
+  `config/gcp-products.txt` is the escape hatch: one line, with a first-party
+  URL as proof.
+
+### The concept to keep
+
+**Provenance is a property you can compute.** "Is this true?" is hard.
+"Did the cited source say this?" is a string search, once you know which
+text is the source and which is somebody's summary of it.

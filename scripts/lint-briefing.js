@@ -19,6 +19,17 @@
 
 const fs = require("fs");
 const path = require("path");
+const { loadSources } = require("./sources.js");
+const { checkDoubleAttribution } = require("./attribution.js");
+const {
+  checkClaims,
+  checkProductNames,
+  units,
+  sentencesWithLinks,
+  splitSentences,
+  extractNumbers,
+  isDistinctive,
+} = require("./claims.js");
 
 const BRIEFINGS_DIR = path.join(__dirname, "..", "content", "briefings");
 const LOG_FILE = path.join(__dirname, "logs", "lint-briefing.log");
@@ -238,6 +249,104 @@ function checkBannedWords(md) {
   for (const re of BANNED_WORDS) {
     const m = prose.match(re);
     if (m) hard.push(`Banned word "${m[0]}" (marketing-speak per prompt anti-patterns)`);
+  }
+  return { hard, warn: [] };
+}
+
+// --- rules moved here from the LLM critique ----------------------------------
+// The critique (critique-briefing.js) judged these inconsistently and could not
+// trigger a repair. They are string facts about the file, so they belong here.
+
+// briefing-prompt.md: "No statistic, quote, or dollar figure is repeated
+// anywhere in the briefing." The TLDR summarises the body, so it is exempt; a
+// story's angle block may restate its own story's figure (same location).
+function checkRepeatedStats(md) {
+  const hard = [];
+  const where = new Map(); // value key -> Set of locations
+  for (const u of units(md)) {
+    // TLDR summarises the body; Seller's Edge's worked example re-applies a
+    // story's figures by design (briefing-prompt.md, Seller's Edge format).
+    if (u.kind === "tldr" || u.kind === "edge") continue;
+    const loc = u.story ? `story "${u.story}"` : u.section;
+    for (const s of sentencesWithLinks(u.text)) {
+      for (const n of extractNumbers(s.prose, { strict: true })) {
+        if (!isDistinctive(n)) continue;
+        // "2x" and "50%" recur as different facts; only specific figures repeat.
+        if (n.unit === "x" || (n.pct && n.value % 10 === 0)) continue;
+        const key = `${n.pct ? "%" : ""}${n.dollar ? "$" : ""}${n.unit || ""}${n.value}`;
+        if (!where.has(key)) where.set(key, { raw: n.raw, locs: new Set() });
+        where.get(key).locs.add(loc);
+      }
+    }
+  }
+  for (const { raw, locs } of where.values()) {
+    if (locs.size > 1) {
+      hard.push(`Figure "${raw}" appears in ${locs.size} places (${[...locs].join("; ")}) — keep it where it lands hardest, cut the rest`);
+    }
+  }
+  return { hard, warn: [] };
+}
+
+// "- **[Bold claim (2 min read)](url)** — one sentence expanding on it."
+function checkQuickHitSentences(md) {
+  const hard = [];
+  const body = sectionBody(md, /^##\s+Quick Hits/);
+  if (body === null) return { hard, warn: [] };
+  for (const line of body.split("\n").filter((l) => /^\s*-\s+/.test(l))) {
+    const rest = line.replace(/^\s*-\s+\*\*\[[^\]]*\]\([^)]*\)\*\*\s*[—–-]?\s*/, "");
+    const n = splitSentences(rest.replace(/\[([^\]]*)\]\([^)]*\)/g, "$1")).length;
+    if (n > 1) hard.push(`Quick Hit has ${n} sentences after the bold claim (rule: one): "${line.trim().slice(0, 70)}..."`);
+  }
+  return { hard, warn: [] };
+}
+
+// Every Seller's Edge is compiled onto the /sellers-edge library page, where it
+// must read on its own — "as we saw last week" points at nothing there.
+const PAST_EDITION_REF = /\b(?:Edition\s*#\s*\d+|last (?:week|edition|issue)|previous edition|earlier edition|a past edition)\b/i;
+function checkSellersEdgeStandalone(md) {
+  const hard = [];
+  const body = sectionBody(md, /^##\s+Seller's Edge/);
+  if (body === null) return { hard, warn: [] };
+  const m = body.match(PAST_EDITION_REF);
+  if (m) hard.push(`Seller's Edge refers to a past edition ("${m[0]}") — it must stand alone on /sellers-edge`);
+  return { hard, warn: [] };
+}
+
+// briefing-prompt.md "Capacity framing rule (strict)": every hyperscaler is
+// supply-constrained, Google included. Sell terms and workload mix, never abundance.
+const CAPACITY_OVERCLAIM = [
+  /\bmore (?:compute|capacity|GPUs|TPUs) than\b/i,
+  /\bwe have (?:the )?(?:compute|capacity)\b/i,
+  /\b(?:has|have) the capacity to absorb\b/i,
+  /\b(?:abundant|ample|spare|unlimited|guaranteed) (?:compute|capacity)\b/i,
+  /\bno capacity constraints?\b/i,
+  /\bcapacity (?:advantage|surplus)\b/i,
+];
+const NEGATION = /\b(?:never|not|no|don't|doesn't|isn't|nobody|nor|without|avoid|stop)\b[^.]*$/i;
+function checkCapacityOverclaim(md) {
+  const hard = [];
+  const prose = md.replace(/\(([^)\s]+)\)/g, "()");
+  for (const re of CAPACITY_OVERCLAIM) {
+    const m = prose.match(re);
+    // "Never pretend GCP has unlimited spare capacity" states the rule, not the claim.
+    const negated = m && NEGATION.test(prose.slice(Math.max(0, m.index - 60), m.index));
+    if (m && !negated) hard.push(`Capacity overclaim "${m[0]}" — GCP is supply-constrained too; sell commitment terms and workload mix`);
+  }
+  return { hard, warn: [] };
+}
+
+// Every Big Picture story closes with what it means (briefing-prompt.md, story
+// template). Edition #38's third story had no implications at all, and the
+// first stated its point only in the TLDR. The check is for presence; whether
+// the takeaway is any good is the editor's call.
+const TAKEAWAY = /\b(?:The takeaway|What it means):/;
+function checkStoryTakeaway(md) {
+  const hard = [];
+  for (const s of bigPictureStories(md)) {
+    const prose = s.body.split(ANGLE_HEADING)[0];
+    if (!TAKEAWAY.test(prose)) {
+      hard.push(`Story "${s.title}" has no "The takeaway:" sentence — close with what it means for Google Cloud and for founders`);
+    }
   }
   return { hard, warn: [] };
 }
@@ -535,14 +644,31 @@ function checkLength(md) {
 // --- main ------------------------------------------------------------------
 
 
-function lint(md) {
+// `sources` (from sources.js loadSources) turns on the fact checks: product
+// names, and numbers/quotes traced back to what each cited source said. Unit
+// tests that only exercise the structural rules call lint(md) without it.
+function lint(md, sources = null) {
+  const factChecks = sources
+    ? [
+        ["setup", () => ({ hard: sources.problems, warn: [] })],
+        ["products", (m) => checkProductNames(m, sources)],
+        ["claims", (m) => checkClaims(m, sources)],
+      ]
+    : [];
   const checks = [
+    ...factChecks,
     ["urls", checkUrls],
     ["link-syntax", checkLinkSyntax],
     ["tldr", checkTldrHooks],
     ["angle-blocks", checkAngleBlocks],
     ["source-overlap", checkSourceOverlap],
     ["banned-words", checkBannedWords],
+    ["repeated-stats", checkRepeatedStats],
+    ["quick-hit-sentences", checkQuickHitSentences],
+    ["sellers-edge-standalone", checkSellersEdgeStandalone],
+    ["capacity-overclaim", checkCapacityOverclaim],
+    ["double-attribution", checkDoubleAttribution],
+    ["story-takeaway", checkStoryTakeaway],
     ["naming", checkNaming],
     ["images", checkImages],
     ["cross-edition-lead", checkCrossEditionLead],
@@ -575,7 +701,11 @@ function main() {
     process.exit(1);
   }
   log(`Linting ${path.basename(file)}...`);
-  const { hard, warn } = lint(fs.readFileSync(file, "utf-8"));
+  const md = fs.readFileSync(file, "utf-8");
+  const date = briefingDate(md, file);
+  const sources = loadSources(date);
+  log(`  Sources: ${sources.files.length} KB file(s), ${sources.entries.length} entries, playbook ${sources.playbook ? "found" : "MISSING"}`);
+  const { hard, warn } = lint(md, sources);
   warn.forEach((w) => log(`  WARN  ${w}`));
   hard.forEach((h) => log(`  HARD  ${h}`));
   if (hard.length) {
@@ -602,6 +732,11 @@ module.exports = {
   checkAngleBlocks,
   checkSourceOverlap,
   checkBannedWords,
+  checkRepeatedStats,
+  checkQuickHitSentences,
+  checkSellersEdgeStandalone,
+  checkCapacityOverclaim,
+  checkStoryTakeaway,
   checkNaming,
   checkImages,
   checkCrossEditionLead,
